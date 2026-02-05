@@ -97,8 +97,8 @@ header h1 {
 
 .form-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
-    gap: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2.5rem;
 }
 
 .input-group {
@@ -323,6 +323,15 @@ select:focus {
     padding: 1.5rem;
     border-radius: 12px;
     border-left: 4px solid var(--primary-color);
+    margin-top: 2rem !important;
+    text-align: left;
+    box-shadow: var(--shadow-sm);
+}
+
+.recommendation-box strong {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--primary-dark);
 }
 
 /* Modal */

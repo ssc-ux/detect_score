@@ -43,11 +43,18 @@
                 </div>
 
                 <div class="form-grid">
-                    <!-- FVC / DLCO -->
+                    <!-- FVC -->
                     <div class="input-group">
-                        <label for="fvc_dlco">Ratio CVF / DLCO (% prédit)</label>
-                        <input type="number" id="fvc_dlco" step="0.01" placeholder="Ex: 1.8">
-                        <small class="hint">Capacité Vitale Forcée / Capacité de Diffusion</small>
+                        <label for="fvc">CVF (% prédit)</label>
+                        <input type="number" id="fvc" step="0.1" placeholder="Ex: 85">
+                        <small class="hint">Capacité Vitale Forcée</small>
+                    </div>
+
+                    <!-- DLCO -->
+                    <div class="input-group">
+                        <label for="dlco">DLCO (% prédit)</label>
+                        <input type="number" id="dlco" step="0.1" placeholder="Ex: 45">
+                        <small class="hint">Capacité de Diffusion</small>
                     </div>
 
                     <!-- Telangiectasias -->
@@ -127,8 +134,8 @@
                     <div class="decision-area">
                         <div class="score-decision" id="s1-decision">--</div>
                         <div id="bypass-s2-area" class="hidden" style="margin-top: 15px;">
-                            <button id="btn-force-s2" class="btn-secondary btn-small">Forcer l'Étape 2 (ETT
-                                disponible)</button>
+                            <button id="btn-force-s2" class="btn-secondary btn-small">ETT réalisé (Forcer Étape
+                                2)</button>
                         </div>
                     </div>
                 </div>
@@ -192,7 +199,8 @@
 
                     <div class="decision-area">
                         <div class="score-decision" id="s2-decision">--</div>
-                        <div class="recommendation-box" style="margin-top: 20px;">
+                        <div class="recommendation-box" id="s2-rec-box" style="margin-top: 25px; display: none;">
+                            <strong>Conclusion :</strong>
                             <p id="final-recommendation">--</p>
                         </div>
                     </div>

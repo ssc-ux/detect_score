@@ -11,7 +11,8 @@ const THRESHOLDS = {
 const els = {
     step1: {
         inputs: {
-            fvc: document.getElementById('fvc_dlco'),
+            fvc: document.getElementById('fvc'),
+            dlco: document.getElementById('dlco'),
             telang: document.getElementById('telang'),
             aca: document.getElementById('aca'),
             ntprobnp: document.getElementById('ntprobnp'),
@@ -36,7 +37,8 @@ const els = {
         pointsVal: document.getElementById('s2-points-val'),
         probVal: document.getElementById('s2-prob-val'),
         decision: document.getElementById('s2-decision'),
-        rec: document.getElementById('final-recommendation')
+        rec: document.getElementById('final-recommendation'),
+        recBox: document.getElementById('s2-rec-box')
     },
     bypassS2: {
         container: document.getElementById('bypass-s2-area'),
@@ -90,8 +92,13 @@ function getUrateInMgDl() {
 }
 
 function runStep1() {
+    // 1. Gather Inputs
+    const fvc = parseFloat(els.step1.inputs.fvc.value) || 100;
+    const dlco = parseFloat(els.step1.inputs.dlco.value) || 100;
+    const ratio = dlco !== 0 ? fvc / dlco : 1.0;
+
     const inputs = {
-        fvc_dlco: parseFloat(els.step1.inputs.fvc.value) || 0,
+        fvc_dlco: ratio,
         telang: els.step1.inputs.telang.checked,
         aca: els.step1.inputs.aca.checked,
         ntprobnp: parseFloat(els.step1.inputs.ntprobnp.value) || 10,
@@ -101,10 +108,12 @@ function runStep1() {
 
     if (inputs.ntprobnp < 1) inputs.ntprobnp = 1;
 
+    // 2. Calculate
     step1Result = window.DETECT.calculateStep1Exact(inputs);
     const step1Points = window.DETECT.calculateStep1Points(inputs);
     step1Result.points = step1Points.total;
 
+    // 3. Display
     els.step1.resultBox.classList.remove('hidden');
     els.step1.pointsVal.textContent = step1Points.total;
     els.step1.probVal.textContent = (step1Result.step1_probability * 100).toFixed(1);
@@ -151,12 +160,14 @@ function runStep2() {
     if (isReferral) {
         els.step2.decision.textContent = "CATHÉTÉRISME DROIT INDIQUÉ";
         els.step2.decision.className = "score-decision decision-danger";
-        els.step2.rec.textContent = "Le patient présente un risque élevé d'HTAP confirmée (Spécificité atteinte). Un cathétérisme cardiaque droit est recommandé selon l'algorithme DETECT.";
+        els.step2.rec.textContent = "Le patient présente un risque élevé d'HTAP confirmée. Un cathétérisme cardiaque droit (RHC) est recommandé selon l'algorithme DETECT.";
     } else {
-        els.step2.decision.textContent = "PAS D'INDICATION RHC";
+        els.step2.decision.textContent = "PAS D'INDICATION RHC IM MÉDIATE";
         els.step2.decision.className = "score-decision decision-safe";
         els.step2.rec.textContent = "Le risque calculé est faible. Continuer la surveillance annuelle.";
     }
+
+    els.step2.recBox.style.display = 'block';
 }
 
 function updateBar(barEl, value, threshold, max) {
