@@ -61,6 +61,15 @@ const els = {
 let step1Result = null;
 
 function init() {
+    // 0. Force Reset on load (clean state)
+    document.querySelectorAll('input[type="number"]').forEach(i => i.value = '');
+    document.querySelectorAll('input[type="checkbox"]').forEach(i => i.checked = false);
+    els.step1.resultBox.classList.add('hidden');
+    els.step2.section.classList.add('hidden');
+    els.step2.resultBox.classList.add('hidden');
+    els.bypassS2.container.classList.add('hidden');
+    els.step2.recBox.style.display = 'none';
+
     if (localStorage.getItem('detect_beta_accepted') === 'true') {
         els.modal.overlay.style.display = 'none';
     }
