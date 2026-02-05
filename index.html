@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculateur DETECT - Sclérodermie</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Beta Modal -->
+    <div id="beta-modal" class="modal">
+        <div class="modal-content">
+            <h2>🧪 Version Beta Test</h2>
+            <p>Cet outil est actuellement en phase de <strong>beta test</strong>. Les résultats sont fournis à titre
+                <strong>informatif uniquement</strong> et ne constituent pas un avis médical définitif.
+            </p>
+            <p>L'algorithme est basé sur l'article princeps : <br>
+                <a href="https://ard.bmj.com/content/73/7/1340" target="_blank" class="link-article">Coghlan JG, et al.
+                    Ann Rheum Dis 2014;73:1340–1349</a>.
+            </p>
+            <div class="modal-actions">
+                <button id="close-modal" class="btn-primary">J'ai compris</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-container">
+        <header>
+            <h1>DETECT <span class="highlight">Online</span></h1>
+            <p class="subtitle">Dépistage de l'HTAP dans la Sclérodermie Systémique</p>
+        </header>
+
+        <main>
+            <!-- STEP 1 SECTION -->
+            <section id="step1" class="card">
+                <div class="card-header">
+                    <h2>Étape 1 : Évaluation Clinique</h2>
+                    <span class="info-badge">Sensibilité 97%</span>
+                </div>
+
+                <div class="form-grid">
+                    <!-- FVC / DLCO -->
+                    <div class="input-group">
+                        <label for="fvc_dlco">Ratio CVF / DLCO (% prédit)</label>
+                        <input type="number" id="fvc_dlco" step="0.01" placeholder="Ex: 1.8">
+                        <small class="hint">Capacité Vitale Forcée / Capacité de Diffusion</small>
+                    </div>
+
+                    <!-- Telangiectasias -->
+                    <div class="input-group checkbox-group">
+                        <label for="telang">Télangiectasies (Actuelles/Passées)</label>
+                        <input type="checkbox" id="telang">
+                        <span class="checkmark"></span>
+                    </div>
+
+                    <!-- ACA -->
+                    <div class="input-group checkbox-group">
+                        <label for="aca">Anticorps Anti-Centromère (ACA)</label>
+                        <input type="checkbox" id="aca">
+                        <span class="checkmark"></span>
+                    </div>
+
+                    <!-- NT-proBNP -->
+                    <div class="input-group">
+                        <label for="ntprobnp">NT-proBNP (pg/mL)</label>
+                        <input type="number" id="ntprobnp" step="1" placeholder="Ex: 150">
+                    </div>
+
+                    <!-- Urate -->
+                    <div class="input-group">
+                        <label for="urate">Acide Urique (Urate)</label>
+                        <div class="multi-input">
+                            <input type="number" id="urate" step="0.1" placeholder="Ex: 5.0">
+                            <select id="urate_unit">
+                                <option value="mgdl">mg/100mL (mg/dL)</option>
+                                <option value="umol">µmol/L</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- RAD -->
+                    <div class="input-group checkbox-group">
+                        <label for="rad">Déviation Axiale Droite (ECG)</label>
+                        <input type="checkbox" id="rad">
+                        <small class="hint">Axe QRS ≥ 90°</small>
+                    </div>
+                </div>
+
+                <div class="action-area">
+                    <button id="calc-step1" class="btn-primary">Calculer Étape 1</button>
+                    <!-- Didactic Toggle -->
+                    <div class="toggle-container">
+                        <span>Mode Didactique</span>
+                        <label class="switch">
+                            <input type="checkbox" id="didactic-mode" checked>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Result Area Step 1 -->
+                <div id="result-step1" class="result-box hidden">
+                    <div class="score-bars">
+                        <!-- Nomogram Bar -->
+                        <div class="bar-container">
+                            <div class="bar-label">
+                                <span>Nomogramme (Points)</span>
+                                <span class="bar-value"><span id="s1-points-val">--</span> pts</span>
+                            </div>
+                            <div class="bar-track">
+                                <div id="s1-points-bar" class="bar-fill"></div>
+                                <div class="cutoff-marker" style="left: 50%" title="Seuil: 300 pts"></div>
+                            </div>
+                            <div class="bar-legend">Seuil : 300 pts</div>
+                        </div>
+
+                        <!-- Probability Bar -->
+                        <div class="bar-container">
+                            <div class="bar-label">
+                                <span>Formule Exacte (%)</span>
+                                <span class="bar-value"><span id="s1-prob-val">--</span>%</span>
+                            </div>
+                            <div class="bar-track">
+                                <div id="s1-prob-bar" class="bar-fill"></div>
+                                <div class="cutoff-marker" style="left: 5%" title="Seuil: 5%"></div>
+                            </div>
+                            <div class="bar-legend">Seuil : 5%</div>
+                        </div>
+                    </div>
+
+                    <div class="decision-area">
+                        <div class="score-decision" id="s1-decision">--</div>
+                        <div id="bypass-s2-area" class="hidden" style="margin-top: 15px;">
+                            <button id="btn-force-s2" class="btn-secondary btn-small">Forcer l'Étape 2 (ETT
+                                disponible)</button>
+                        </div>
+                    </div>
+
+                    <details id="s1-didactic-details" class="didactic-collapse">
+                        <summary>Afficher les détails du calcul</summary>
+                        <div id="s1-didactic" class="didactic-panel">
+                            <h3>Détails du Calcul (Régression Logistique)</h3>
+                            <ul id="s1-details-list"></ul>
+                        </div>
+                    </details>
+                </div>
+            </section>
+
+            <!-- STEP 2 SECTION -->
+            <section id="step2" class="card hidden">
+                <div class="card-header">
+                    <h2>Étape 2 : Échocardiographie</h2>
+                    <span class="info-badge">Spécificité 35%</span>
+                </div>
+
+                <p class="instruction">Indiqué car le score Étape 1 est positif (Risque élevé).</p>
+
+                <div class="form-grid">
+                    <!-- Right Atrium Area -->
+                    <div class="input-group">
+                        <label for="ra_area">Surface de l'Oreillette Droite (cm²)</label>
+                        <input type="number" id="ra_area" step="0.1" placeholder="Ex: 16">
+                    </div>
+
+                    <!-- TR Velocity -->
+                    <div class="input-group">
+                        <label for="tr_vel">Vélocité IT (Tricuspid Regurgitation) (m/s)</label>
+                        <input type="number" id="tr_vel" step="0.1" placeholder="Ex: 2.8">
+                    </div>
+                </div>
+
+                <div class="action-area">
+                    <button id="calc-step2" class="btn-primary">Calculer Étape 2 (Final)</button>
+                </div>
+
+                <!-- Result Area Step 2 -->
+                <div id="result-step2" class="result-box hidden">
+                    <div class="score-bars">
+                        <!-- Nomogram Bar -->
+                        <div class="bar-container">
+                            <div class="bar-label">
+                                <span>Nomogramme (Points)</span>
+                                <span class="bar-value"><span id="s2-points-val">--</span> pts</span>
+                            </div>
+                            <div class="bar-track">
+                                <div id="s2-points-bar" class="bar-fill"></div>
+                                <div class="cutoff-marker" style="left: 35%" title="Seuil: 35 pts"></div>
+                            </div>
+                            <div class="bar-legend">Seuil : 35 pts</div>
+                        </div>
+
+                        <!-- Probability Bar -->
+                        <div class="bar-container">
+                            <div class="bar-label">
+                                <span>Formule Exacte (%)</span>
+                                <span class="bar-value"><span id="s2-prob-val">--</span>%</span>
+                            </div>
+                            <div class="bar-track">
+                                <div id="s2-prob-bar" class="bar-fill"></div>
+                                <div class="cutoff-marker" style="left: 10%" title="Seuil: 10%"></div>
+                            </div>
+                            <div class="bar-legend">Seuil : 10%</div>
+                        </div>
+                    </div>
+
+                    <div class="decision-area">
+                        <div class="score-decision" id="s2-decision">--</div>
+                    </div>
+
+                    <details id="s2-didactic-details" class="didactic-collapse">
+                        <summary>Afficher les détails du calcul</summary>
+                        <div id="s2-didactic" class="didactic-panel">
+                            <h3>Détails du Calcul</h3>
+                            <ul id="s2-details-list"></ul>
+                            <div class="recommendation-box">
+                                <strong>Recommandation :</strong>
+                                <p id="final-recommendation">--</p>
+                            </div>
+                        </div>
+                    </details>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>Basé sur l'étude DETECT 2013 (Coghlan et al, Ann Rheum Dis). Cet outil est une aide au diagnostic et ne
+                remplace pas le jugement clinique.</p>
+        </footer>
+    </div>
+
+    <script src="logic.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
