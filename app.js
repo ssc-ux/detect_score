@@ -153,13 +153,13 @@ function runStep1() {
     const isHighRisk = step1Result.step1_probability > THRESHOLDS.STEP1_PROB;
 
     if (isHighRisk) {
-        els.step1.decision.textContent = "REFERRER À L'ÉCHO (Positif)";
+        els.step1.decision.textContent = "REFERRER À L'ÉCHO (Risque Élevé)";
         els.step1.decision.className = "score-decision decision-danger";
         els.step2.section.classList.remove('hidden');
-        els.step2.section.scrollIntoView({ behavior: "smooth" });
+        els.step2.section.scrollIntoView({ behavior: "smooth", block: "start" });
         els.bypassS2.container.classList.add('hidden');
     } else {
-        els.step1.decision.textContent = "SURVEILLANCE (Négatif)";
+        els.step1.decision.textContent = "SURVEILLANCE (Risque Faible)";
         els.step1.decision.className = "score-decision decision-safe";
         els.step2.section.classList.add('hidden');
         els.bypassS2.container.classList.remove('hidden');
