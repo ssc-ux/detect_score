@@ -83,19 +83,22 @@ let step1Result = null;
 
 // Initialization
 function init() {
+    // Check if already accepted
+    if (localStorage.getItem('detect_beta_accepted') === 'true') {
+        els.modal.overlay.style.display = 'none';
+    }
+
     els.step1.btn.addEventListener('click', runStep1);
     els.step2.btn.addEventListener('click', runStep2);
     els.didacticMode.addEventListener('change', toggleDidactic);
 
     els.modal.closeBtn.addEventListener('click', () => {
-        els.modal.overlay.style.display = 'none';
+        els.modal.overlay.classList.add('closing');
+        setTimeout(() => {
+            els.modal.overlay.style.display = 'none';
+        }, 400); // Match CSS transition time
         localStorage.setItem('detect_beta_accepted', 'true');
     });
-
-    // Check if already accepted
-    if (localStorage.getItem('detect_beta_accepted') === 'true') {
-        els.modal.overlay.style.display = 'none';
-    }
 }
 
 function getUrateInMgDl() {
