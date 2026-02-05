@@ -259,7 +259,7 @@ select:focus {
 .bar-label {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 12px;
+    margin-bottom: 22px;
     font-weight: 700;
 }
 
@@ -268,6 +268,7 @@ select:focus {
     background: hsl(210, 10%, 92%);
     border-radius: 8px;
     position: relative;
+    margin-bottom: 8px;
 }
 
 .bar-fill {
@@ -278,9 +279,9 @@ select:focus {
 
 .cutoff-marker {
     position: absolute;
-    top: -6px;
-    height: 28px;
-    width: 4px;
+    top: -4px;
+    height: 24px;
+    width: 3px;
     background: var(--text-primary);
     z-index: 10;
 }
@@ -288,12 +289,13 @@ select:focus {
 .cutoff-marker::after {
     content: "SEUIL";
     position: absolute;
-    top: -20px;
+    top: -18px;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     font-weight: 800;
     color: var(--text-primary);
+    white-space: nowrap;
 }
 
 .decision-area {
