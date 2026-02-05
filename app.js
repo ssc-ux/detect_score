@@ -23,8 +23,8 @@ const els = {
         btn: document.getElementById('calc-step1'),
         resultBox: document.getElementById('result-step1'),
         pointsVal: document.getElementById('s1-points-val'),
-        probVal: document.getElementById('s1-prob-val'),
-        decision: document.getElementById('s1-decision')
+        decision: document.getElementById('s1-decision'),
+        details: document.getElementById('s1-details')
     },
     step2: {
         section: document.getElementById('step2'),
@@ -35,10 +35,10 @@ const els = {
         btn: document.getElementById('calc-step2'),
         resultBox: document.getElementById('result-step2'),
         pointsVal: document.getElementById('s2-points-val'),
-        probVal: document.getElementById('s2-prob-val'),
         decision: document.getElementById('s2-decision'),
         rec: document.getElementById('final-recommendation'),
-        recBox: document.getElementById('s2-rec-box')
+        recBox: document.getElementById('s2-rec-box'),
+        details: document.getElementById('s2-details')
     },
     bypassS2: {
         container: document.getElementById('bypass-s2-area'),
@@ -49,12 +49,10 @@ const els = {
         closeBtn: document.getElementById('close-modal')
     },
     s1Bars: {
-        points: document.getElementById('s1-points-bar'),
-        prob: document.getElementById('s1-prob-bar')
+        points: document.getElementById('s1-points-bar')
     },
     s2Bars: {
-        points: document.getElementById('s2-points-bar'),
-        prob: document.getElementById('s2-prob-bar')
+        points: document.getElementById('s2-points-bar')
     }
 };
 
@@ -95,6 +93,36 @@ function getUrateInMgDl() {
     return val;
 }
 
+function renderDetails(container, details, step) {
+    container.innerHTML = '';
+    const labels = {
+        fvc_dlco: "Ratio CVF/DLCO",
+        telang: "Télangiectasies",
+        aca: "Ac. Anti-Centromère",
+        ntprobnp: "NT-proBNP",
+        urate: "Acide Urique",
+        rad: "Déviation Axiale Droite",
+        step1_points: "Points Étape 1 (Report)",
+        ra_area: "Surface OD",
+        tr_vel: "Vélocité IT"
+    };
+
+    let html = '';
+    for (const [key, val] of Object.entries(details)) {
+        if (key === 'total') continue;
+        if (val === 0 && key !== 'fvc_dlco') continue;
+
+        const label = labels[key] || key;
+        html += `
+            <div class="details-row">
+                <span>${label}</span>
+                <span class="details-points">+${val} pts</span>
+            </div>
+        `;
+    }
+    container.innerHTML = html;
+}
+
 function runStep1() {
     // 1. Gather Inputs
     const fvc = parseFloat(els.step1.inputs.fvc.value) || 100;
@@ -120,12 +148,11 @@ function runStep1() {
     // 3. Display
     els.step1.resultBox.classList.remove('hidden');
     els.step1.pointsVal.textContent = step1Points.total;
-    els.step1.probVal.textContent = (step1Result.step1_probability * 100).toFixed(1);
 
     updateBar(els.s1Bars.points, step1Points.total, 300, 600);
-    updateBar(els.s1Bars.prob, step1Result.step1_probability * 100, 5, 100);
+    renderDetails(els.step1.details, step1Points, 1);
 
-    const isHighRisk = step1Result.step1_probability > THRESHOLDS.STEP1_PROB;
+    const isHighRisk = step1Points.total > 300;
 
     if (isHighRisk) {
         els.step1.decision.textContent = "REFERRER À L'ÉCHO (Risque Élevé)";
@@ -154,12 +181,11 @@ function runStep2() {
 
     els.step2.resultBox.classList.remove('hidden');
     els.step2.pointsVal.textContent = resPoints.total;
-    els.step2.probVal.textContent = (res.step2_probability * 100).toFixed(1);
 
     updateBar(els.s2Bars.points, resPoints.total, 35, 100);
-    updateBar(els.s2Bars.prob, res.step2_probability * 100, 10, 100);
+    renderDetails(els.step2.details, resPoints, 2);
 
-    const isReferral = res.step2_probability > THRESHOLDS.STEP2_PROB;
+    const isReferral = resPoints.total > 35;
 
     if (isReferral) {
         els.step2.decision.textContent = "CATHÉTÉRISME DROIT INDIQUÉ";
