@@ -32,10 +32,8 @@
     </div>
 
     <div class="app-container">
-        <header>
-            <h1>DETECT <span class="highlight">Online</span></h1>
-            <p class="subtitle">Dépistage de l'HTAP dans la Sclérodermie Systémique</p>
-        </header>
+        <h1>DETECT <span class="highlight">Online</span></h1>
+        <p class="subtitle">Algorithme de dépistage de l'HTAP dans la SSc</p>
 
         <main>
             <!-- STEP 1 SECTION -->
@@ -94,14 +92,6 @@
 
                 <div class="action-area">
                     <button id="calc-step1" class="btn-primary">Calculer Étape 1</button>
-                    <!-- Didactic Toggle -->
-                    <div class="toggle-container">
-                        <span>Mode Didactique</span>
-                        <label class="switch">
-                            <input type="checkbox" id="didactic-mode" checked>
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
                 </div>
 
                 <!-- Result Area Step 1 -->
@@ -141,14 +131,6 @@
                                 disponible)</button>
                         </div>
                     </div>
-
-                    <details id="s1-didactic-details" class="didactic-collapse">
-                        <summary>Afficher les détails du calcul</summary>
-                        <div id="s1-didactic" class="didactic-panel">
-                            <h3>Détails du Calcul (Régression Logistique)</h3>
-                            <ul id="s1-details-list"></ul>
-                        </div>
-                    </details>
                 </div>
             </section>
 
@@ -210,19 +192,10 @@
 
                     <div class="decision-area">
                         <div class="score-decision" id="s2-decision">--</div>
-                    </div>
-
-                    <details id="s2-didactic-details" class="didactic-collapse">
-                        <summary>Afficher les détails du calcul</summary>
-                        <div id="s2-didactic" class="didactic-panel">
-                            <h3>Détails du Calcul</h3>
-                            <ul id="s2-details-list"></ul>
-                            <div class="recommendation-box">
-                                <strong>Recommandation :</strong>
-                                <p id="final-recommendation">--</p>
-                            </div>
+                        <div class="recommendation-box" style="margin-top: 20px;">
+                            <p id="final-recommendation">--</p>
                         </div>
-                    </details>
+                    </div>
                 </div>
             </section>
         </main>
