@@ -70,10 +70,6 @@ function init() {
     els.bypassS2.container.classList.add('hidden');
     els.step2.recBox.style.display = 'none';
 
-    if (localStorage.getItem('detect_beta_accepted') === 'true') {
-        els.modal.overlay.style.display = 'none';
-    }
-
     els.step1.btn.addEventListener('click', runStep1);
     els.step2.btn.addEventListener('click', runStep2);
 
@@ -88,7 +84,6 @@ function init() {
         setTimeout(() => {
             els.modal.overlay.style.display = 'none';
         }, 400);
-        localStorage.setItem('detect_beta_accepted', 'true');
     });
 }
 

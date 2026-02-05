@@ -29,6 +29,10 @@ body {
     padding: 2rem 1rem;
 }
 
+.hidden {
+    display: none !important;
+}
+
 header {
     text-align: center;
     margin-bottom: 3rem;
