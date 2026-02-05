@@ -55,6 +55,7 @@
                         <label for="dlco">DLCO (% prédit)</label>
                         <input type="number" id="dlco" step="0.1" placeholder="Ex: 45" autocomplete="off">
                         <small class="hint">Capacité de Diffusion</small>
+                        <div id="pts-fvc_dlco" class="points-badge"></div>
                     </div>
 
                     <!-- Telangiectasias -->
@@ -75,6 +76,7 @@
                     <div class="input-group">
                         <label for="ntprobnp">NT-proBNP (pg/mL)</label>
                         <input type="number" id="ntprobnp" step="1" placeholder="Ex: 150" autocomplete="off">
+                        <div id="pts-ntprobnp" class="points-badge"></div>
                     </div>
 
                     <!-- Urate -->
@@ -87,6 +89,7 @@
                                 <option value="umol">µmol/L</option>
                             </select>
                         </div>
+                        <div id="pts-urate" class="points-badge"></div>
                     </div>
 
                     <!-- RAD -->
@@ -116,9 +119,6 @@
                             </div>
                             <div class="bar-legend">Seuil : 300 pts</div>
                         </div>
-
-                        <!-- Details List -->
-                        <div id="s1-details" class="details-box"></div>
                     </div>
 
                     <div class="decision-area">
@@ -144,12 +144,14 @@
                     <div class="input-group">
                         <label for="ra_area">Surface de l'Oreillette Droite (cm²)</label>
                         <input type="number" id="ra_area" step="0.1" placeholder="Ex: 16" autocomplete="off">
+                        <div id="pts-ra_area" class="points-badge"></div>
                     </div>
 
                     <!-- TR Velocity -->
                     <div class="input-group">
                         <label for="tr_vel">Vélocité IT (Tricuspid Regurgitation) (m/s)</label>
                         <input type="number" id="tr_vel" step="0.1" placeholder="Ex: 2.8" autocomplete="off">
+                        <div id="pts-tr_vel" class="points-badge"></div>
                     </div>
                 </div>
 
@@ -172,9 +174,6 @@
                             </div>
                             <div class="bar-legend">Seuil : 35 pts</div>
                         </div>
-
-                        <!-- Details List -->
-                        <div id="s2-details" class="details-box"></div>
                     </div>
 
                     <div class="decision-area">
