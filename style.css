@@ -563,6 +563,15 @@ footer {
     padding: 1rem;
 }
 
+.nomogram-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    margin: 20px 0;
+    border: 1px solid #e2e8f0;
+}
+
 .reference-box {
     background: #f8fafc;
     border: 1px solid #e2e8f0;
