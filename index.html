@@ -198,69 +198,107 @@
                 </section>
             </div>
 
-            <!-- TAB 2: DIDACTIC SIMULATOR -->
+            <!-- TAB 2: PHYSIO-ENGINE SIMULATOR -->
             <div id="tab-simulator" class="tab-content">
                 <section class="card simulator-card">
                     <div class="card-header">
-                        <h2>Simulateur Interactif</h2>
-                        <span class="badge-didactic">Mode Pédagogique</span>
+                        <h2>Physio-Engine DETECT</h2>
+                        <span class="badge-didactic">Moteur Physique</span>
                     </div>
-                    <p class="sim-intro">Modifiez les curseurs pour visualiser l'impact de chaque variable sur le risque
-                        HTAP.</p>
 
-                    <div class="sim-container">
-                        <div class="sim- inputs">
-                            <h3>Variables Cliniques (Étape 1)</h3>
+                    <!-- MASTER CONTROL -->
+                    <div class="master-control-area">
+                        <label for="master-paps" class="master-label">
+                            Tension Pariétale / PAPs (Pression Pulmonaire)
+                            <span class="master-val"><span id="paps-val">25</span> <small>mmHg</small></span>
+                        </label>
+                        <input type="range" id="master-paps" min="15" max="100" value="25" step="1"
+                            class="slider-master">
+                        <div class="slider-ticks">
+                            <span>Normal (20)</span>
+                            <span>HTAP Légère (40)</span>
+                            <span>Sévère (>60)</span>
+                        </div>
+                    </div>
 
-                            <div class="sim-control">
-                                <label>Ratio CVF/DLCO <span id="sim-val-ratio">1.6</span></label>
-                                <input type="range" id="sim-ratio" min="0.5" max="4.0" step="0.1" value="1.6">
-                            </div>
+                    <div class="engine-workspace">
+                        <!-- LEFT: VECTOR HEART -->
+                        <div class="heart-container">
+                            <svg viewBox="0 0 200 240" class="vector-heart">
+                                <!-- Definitions for Gradients -->
+                                <defs>
+                                    <linearGradient id="wall-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" style="stop-color:#ff9a9e;stop-opacity:1" />
+                                        <stop offset="100%" style="stop-color:#fad0c4;stop-opacity:1" />
+                                    </linearGradient>
+                                </defs>
 
-                            <div class="sim-control-row">
-                                <label class="sim-check">
-                                    <input type="checkbox" id="sim-telang"> Télangiectasies
-                                </label>
-                                <label class="sim-check">
-                                    <input type="checkbox" id="sim-aca"> Anti-Centromère
-                                </label>
-                                <label class="sim-check">
-                                    <input type="checkbox" id="sim-rad"> Déviation Axiale D.
-                                </label>
-                            </div>
+                                <!-- Left Ventricle (Background) -->
+                                <path d="M 100,60 Q 50,120 100,220" fill="none" stroke="#e2e8f0" stroke-width="3" />
 
-                            <div class="sim-control">
-                                <label>NT-proBNP (pg/mL) <span id="sim-val-bnp">150</span></label>
-                                <input type="range" id="sim-bnp" min="10" max="2000" step="10" value="150">
-                            </div>
+                                <!-- Right Atrium (Detailed Morphing) -->
+                                <!-- Origin centered for scaling -->
+                                <g id="ra-group" style="transform-origin: 60px 80px;">
+                                    <path id="svg-ra" d="M 60,40 C 30,40 20,80 30,110 C 40,130 60,130 80,120"
+                                        fill="none" stroke="#3b82f6" stroke-width="4" stroke-linecap="round" />
+                                    <text x="35" y="85" font-size="10" fill="#3b82f6" opacity="0.7">OD</text>
+                                </g>
 
-                            <div class="sim-control">
-                                <label>Urate (mg/dL) <span id="sim-val-urate">5.0</span></label>
-                                <input type="range" id="sim-urate" min="2.0" max="15.0" step="0.5" value="5.0">
-                            </div>
+                                <!-- Septum (Paradoxical Motion Target) -->
+                                <!-- Fixed points: Top(100,60), Bottom(100,180). Control point changes. -->
+                                <path id="svg-septum" d="M 100,60 Q 140,120 100,180" fill="none" stroke="#ef4444"
+                                    stroke-width="5" stroke-linecap="round" />
 
-                            <h3 style="margin-top:20px; color: var(--danger-color);">Variables Écho (Étape 2)</h3>
-                            <div class="alert-box">
-                                ℹ️ Notez l'impact majeur de la <strong>Vélocité IT</strong> (reflet des Pressions
-                                Pulmonaires) sur le score final.
-                            </div>
+                                <!-- Right Ventricle Wall -->
+                                <path d="M 100,180 Q 160,150 160,80 Q 140,50 100,60" fill="none" stroke="#ef4444"
+                                    stroke-width="3" opacity="0.4" />
+                                <text x="120" y="140" font-size="10" fill="#ef4444" opacity="0.7">VD</text>
 
-                            <div class="sim-control">
-                                <label>Surface Oreillette Droite (cm²) <span id="sim-val-ra">16</span></label>
-                                <input type="range" id="sim-ra" min="10" max="40" step="1" value="16">
-                            </div>
+                                <!-- Valves & Jet -->
+                                <line x1="100" y1="60" x2="140" y2="80" stroke="#cbd5e1" stroke-width="2" />
 
-                            <div class="sim-control">
-                                <label>Vélocité IT (m/s) <span id="sim-val-tr">2.5</span></label>
-                                <input type="range" id="sim-tr" min="1.0" max="5.0" step="0.1" value="2.5">
+                                <!-- TR JET PARTICLES (Animated) -->
+                                <g id="svg-tr-jet">
+                                    <!-- Multiple lines representing flow -->
+                                    <line class="jet-particle" x1="110" y1="70" x2="90" y2="90" stroke="blue"
+                                        stroke-width="3" stroke-dasharray="5,5" />
+                                    <line class="jet-particle" x1="115" y1="75" x2="95" y2="95" stroke="blue"
+                                        stroke-width="2" stroke-dasharray="4,4" />
+                                    <line class="jet-particle" x1="105" y1="65" x2="85" y2="85" stroke="blue"
+                                        stroke-width="2" stroke-dasharray="3,3" />
+                                </g>
+                            </svg>
+                            <div class="heart-legend">
+                                Visualisation Hémodynamique
                             </div>
                         </div>
 
-                        <div class="sim-results">
-                            <div class="gauge-container">
-                                <h4>Score Total (Nomogramme)</h4>
-                                <div class="gauge-value" id="sim-total-score">--</div>
-                                <div class="gauge-decision" id="sim-decision">--</div>
+                        <!-- RIGHT: DATA DASHBOARD -->
+                        <div class="physio-data">
+                            <h3>Variables DETECT Live</h3>
+
+                            <div class="data-card">
+                                <span class="data-label">Vélocité IT (Jet)</span>
+                                <span class="data-value"><span id="phy-tr-vel">--</span> m/s</span>
+                                <small>Reflet direct de (PAPs - POD)</small>
+                            </div>
+
+                            <div class="data-card">
+                                <span class="data-label">Surface OD</span>
+                                <span class="data-value"><span id="phy-ra-area">--</span> cm²</span>
+                                <small>Dilatation sous pression</small>
+                            </div>
+
+                            <div class="data-card">
+                                <span class="data-label">NT-proBNP</span>
+                                <span class="data-value"><span id="phy-bnp">--</span> pg/mL</span>
+                                <small>Marqueur de stress pariétal</small>
+                            </div>
+
+                            <div class="detect-live-result">
+                                <h4>Score DETECT SimulÃ©</h4>
+                                <div class="live-score" id="phy-detect-score">--</div>
+                                <div class="live-decision" id="phy-detect-decision">--</div>
                             </div>
                         </div>
                     </div>
@@ -308,6 +346,7 @@
     </div>
 
     <script src="logic.js"></script>
+    <script src="physio.js"></script>
     <script src="app.js"></script>
 </body>
 
