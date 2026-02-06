@@ -60,27 +60,60 @@ const CONSTANTS = {
     }
 };
 
-function calculateStep1Result(inputs) {
-    const points = calculateStep1Points(inputs);
-    const isHighRisk = points.total > 300;
+function calculateStep1Exact(inputs) {
+    // Inputs: fvc_dlco, telang (bool), aca (bool), ntprobnp, urate, rad (bool)
+
+    // 1. Prepare variables
+    const logProBNP = Math.log10(inputs.ntprobnp);
+
+    // 2. Spline for Urate
+    const urateSplineTerm = rcs3(inputs.urate, CONSTANTS.STEP1.KNOTS_URATE);
+
+    // 3. Linear Predictor Calculation
+    let score = CONSTANTS.STEP1.INTERCEPT;
+    score += inputs.fvc_dlco * CONSTANTS.STEP1.COEFFS.FVC_DLCO;
+    score += (inputs.telang ? 1 : 0) * CONSTANTS.STEP1.COEFFS.TELANG;
+    score += (inputs.aca ? 1 : 0) * CONSTANTS.STEP1.COEFFS.ACA;
+    score += logProBNP * CONSTANTS.STEP1.COEFFS.NT_PRO_BNP;
+
+    // Urate parts
+    score += inputs.urate * CONSTANTS.STEP1.COEFFS.URATE;
+    score += urateSplineTerm * CONSTANTS.STEP1.COEFFS.URATE_SPLINE;
+
+    score += (inputs.rad ? 1 : 0) * CONSTANTS.STEP1.COEFFS.RIGHT_AXIS_DEV;
+
+    // 4. Probability
+    // Log-odds to probability: p = 1 / (1 + exp(-score))
+    // BUT NOTE: Step 2 uses the "Linear Predictor" (the score itself), not the probability.
+    const probability = 1 / (1 + Math.exp(-score));
 
     return {
-        points: points.total,
-        details: points.details,
-        refer_to_echo: isHighRisk,
-        decision_text: isHighRisk ? "REFERRER À L'ÉCHO" : "SURVEILLANCE"
+        step1_score_linear: score,
+        step1_probability: probability,
+        refer_to_echo: probability > 0.05 // 5% Risk Threshold from study
     };
 }
 
-function calculateStep2Result(step1Points, raArea, trVel) {
-    const points = calculateStep2Points(step1Points, raArea, trVel);
-    const isReferral = points.total > 35;
+function calculateStep2Exact(step1LinearScore, raArea, trVel) {
+    // 1. Spline for TR Velocity
+    // Handle "Not Detectable" - Paper say impute? 
+    // Appendix 8: "For patients in whom TR velocity was reported to be absent... imputed as mean of all available values <= 2.8 ... (2.4 m/s in table 1)"
+    // For now, we assume user inputs a value. If 0 or missing, we might need logic.
+    // Let's assume input is valid number.
+
+    const trSplineTerm = rcs3(trVel, CONSTANTS.STEP2.KNOTS_TR);
+
+    let score = CONSTANTS.STEP2.INTERCEPT;
+    score += step1LinearScore * CONSTANTS.STEP2.COEFFS.STEP1_LINEAR;
+    score += raArea * CONSTANTS.STEP2.COEFFS.RA_AREA;
+    score += trVel * CONSTANTS.STEP2.COEFFS.TR_VEL;
+    score += trSplineTerm * CONSTANTS.STEP2.COEFFS.TR_VEL_SPLINE;
+
+    const probability = 1 / (1 + Math.exp(-score));
 
     return {
-        points: points.total,
-        details: points.details,
-        is_rhc_indicated: isReferral,
-        decision_text: isReferral ? "CATHÉTÉRISME DROIT INDIQUÉ" : "PAS D'INDICATION RHC IMMÉDIATE"
+        step2_score_linear: score,
+        step2_probability: probability
     };
 }
 
@@ -95,13 +128,11 @@ function calculateStep2Result(step1Points, raArea, trVel) {
 // We will use a scaling factor and base offsets to match the "Points" scale described.
 
 const POINT_SCALING = {
-    // Calibrated via "Round 3" Validation:
-    // Target: 5% Risk (LogOdds -2.9) should equal ~300 Points.
-    // Sum of Coeffs at threshold ~ 9.55.
-    // (9.55 * 25) + (6 vars * 10 offset) = 238 + 60 = 298 (Approx 300).
+    // Calibrated: At 5% Risk (LogOdds -2.94), Points should be ~300.
+    // Eq: ( (LP - Intercept) * 25 ) + (6 vars * 10 offset) = ~300
     STEP1_FACTOR: 25,
     STEP1_OFFSET: 10,
-    STEP2_FACTOR: 10, // To be verified
+    STEP2_FACTOR: 10,
     STEP2_OFFSET: 10
 };
 
@@ -169,8 +200,8 @@ function calculateStep2Points(step1Points, raArea, trVel) {
 
 // Export for Browser (attach to window)
 window.DETECT = {
-    calculateStep1Result,
-    calculateStep2Result,
+    calculateStep1Exact,
+    calculateStep2Exact,
     calculateStep1Points,
     calculateStep2Points,
     CONSTANTS

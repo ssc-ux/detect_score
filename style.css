@@ -23,6 +23,17 @@ body {
     line-height: 1.6;
 }
 
+.medical-disclaimer-banner {
+    background: hsla(207, 90%, 54%, 0.1);
+    border: 1px solid var(--primary-color);
+    color: var(--primary-dark);
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    margin-bottom: 2rem;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
 .app-container {
     max-width: 900px;
     margin: 0 auto;
@@ -160,62 +171,33 @@ select:focus {
     margin-top: 6px;
 }
 
-.disclaimer-header {
-    background: hsla(207, 90%, 54%, 0.1);
-    border: 1px solid var(--primary-color);
-    padding: 12px 16px;
-    border-radius: 12px;
-    font-size: 0.85rem;
-    color: var(--primary-dark);
-    margin: 20px 0;
-    line-height: 1.4;
-}
-
-.row-input {
-    display: flex;
-    gap: 20px;
-    grid-column: 1 / -1;
-}
-
-.checkbox-card {
+.checkbox-group {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
     background: hsl(210, 14%, 98%);
     border-radius: 12px;
     border: 2px solid hsl(210, 10%, 95%);
-    padding: 16px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     cursor: pointer;
-    transition: all 0.2s;
-    user-select: none;
+    min-height: 60px;
+    box-sizing: border-box;
 }
 
-.checkbox-card:hover {
-    border-color: var(--primary-color);
-    background: white;
-}
-
-.checkbox-info {
-    display: flex;
-    flex-direction: column;
-}
-
-.checkbox-info label {
-    margin: 0 !important;
+.checkbox-group label {
+    margin-bottom: 0;
+    padding-right: 15px;
     cursor: pointer;
-    font-weight: 700 !important;
+    flex: 1;
+    /* Allow label to take available space */
 }
 
-.checkbox-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.checkbox-wrapper input[type="checkbox"] {
-    width: 28px;
-    height: 28px;
+.checkbox-group input[type="checkbox"] {
+    width: 22px;
+    height: 22px;
     cursor: pointer;
+    accent-color: var(--primary-color);
+    margin: 0;
 }
 
 .action-area {
@@ -636,16 +618,3 @@ footer {
         min-height: auto;
     }
 }
-/* Physics Engine Advanced UI */
-.data-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-.mini-bar { width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; margin-bottom: 4px; }
-.mini-fill { height: 100%; width: 0%; background: var(--primary-color); transition: width 0.3s ease; }
-#bar-tr { background: var(--warning-color); }
-#bar-ra { background: var(--danger-color); }
-#bar-dlco { background: #60a5fa; }
-.viewport-container { box-shadow: inset 0 0 50px rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.05); }
-#ecg-canvas { filter: drop-shadow(0 0 5px rgba(74, 222, 128, 0.5)); }
-
-.detect-live-result { margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.05); border-radius: 12px; }
-.live-score { font-size: 2.5rem; font-weight: 800; color: var(--primary-dark); text-align: center; margin: 10px 0; }
-.live-decision { padding: 12px; border-radius: 8px; font-weight: 700; font-size: 0.9rem; text-align: center; color: white; transition: all 0.3s; display: flex; align-items: center; justify-content: center; min-height: 48px; }
