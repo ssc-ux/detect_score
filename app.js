@@ -244,21 +244,21 @@ function updateLiveStep1() {
     const fvc = parseFloat(els.step1.inputs.fvc.value);
     const dlco = parseFloat(els.step1.inputs.dlco.value);
     if (!isNaN(fvc) && !isNaN(dlco)) {
-        els.step1.badges.fvc_dlco.textContent = `+${points.fvc_dlco} pts`;
+        els.step1.badges.fvc_dlco.textContent = `+${points.details.fvc_dlco} pts`;
     } else {
         els.step1.badges.fvc_dlco.textContent = '';
     }
 
-    els.step1.badges.telang.textContent = `+${points.telang} pts`;
-    els.step1.badges.aca.textContent = `+${points.aca} pts`;
+    els.step1.badges.telang.textContent = `+${points.details.telang} pts`;
+    els.step1.badges.aca.textContent = `+${points.details.aca} pts`;
 
-    if (els.step1.inputs.ntprobnp.value) els.step1.badges.ntprobnp.textContent = `+${points.ntprobnp} pts`;
+    if (els.step1.inputs.ntprobnp.value) els.step1.badges.ntprobnp.textContent = `+${points.details.ntprobnp} pts`;
     else els.step1.badges.ntprobnp.textContent = '';
 
-    if (els.step1.inputs.urate.value) els.step1.badges.urate.textContent = `+${points.urate} pts`;
+    if (els.step1.inputs.urate.value) els.step1.badges.urate.textContent = `+${points.details.urate} pts`;
     else els.step1.badges.urate.textContent = '';
 
-    els.step1.badges.rad.textContent = `+${points.rad} pts`;
+    els.step1.badges.rad.textContent = `+${points.details.rad} pts`;
 }
 
 function updateLiveStep2() {
@@ -268,10 +268,10 @@ function updateLiveStep2() {
     // Use 0 as base points since we just want to see the contribution of Step 2 variables
     const points = window.DETECT.calculateStep2Points(0, ra, tr);
 
-    if (els.step2.inputs.ra.value) els.step2.badges.ra_area.textContent = `+${points.ra_area} pts`;
+    if (els.step2.inputs.ra.value) els.step2.badges.ra_area.textContent = `+${points.details.ra_area} pts`;
     else els.step2.badges.ra_area.textContent = '';
 
-    if (els.step2.inputs.tr.value) els.step2.badges.tr_vel.textContent = `+${points.tr_vel} pts`;
+    if (els.step2.inputs.tr.value) els.step2.badges.tr_vel.textContent = `+${points.details.tr_vel} pts`;
     else els.step2.badges.tr_vel.textContent = '';
 }
 
