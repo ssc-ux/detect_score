@@ -35,159 +35,272 @@
         <h1>DETECT <span class="highlight">Online</span></h1>
         <p class="subtitle">Algorithme de dépistage de l'HTAP dans la SSc</p>
 
+        <nav class="tab-nav">
+            <button class="tab-btn active" data-tab="tab-calculator">🧮 Calculateur</button>
+            <button class="tab-btn" data-tab="tab-simulator">🎓 Simulateur Didactique</button>
+            <button class="tab-btn" data-tab="tab-nomogram">📊 Source Nomogramme</button>
+        </nav>
+
         <main>
-            <!-- STEP 1 SECTION -->
-            <section id="step1" class="card">
-                <div class="card-header">
-                    <h2>Étape 1 : Évaluation Clinique</h2>
-                </div>
-
-                <div class="form-grid">
-                    <!-- FVC -->
-                    <div class="input-group">
-                        <label for="fvc">CVF (% prédit)</label>
-                        <input type="number" id="fvc" step="0.1" placeholder="Ex: 85" autocomplete="off">
-                        <small class="hint">Capacité Vitale Forcée</small>
+            <!-- TAB 1: CALCULATOR (Existing Tool) -->
+            <div id="tab-calculator" class="tab-content active">
+                <!-- STEP 1 SECTION -->
+                <section id="step1" class="card">
+                    <div class="card-header">
+                        <h2>Étape 1 : Évaluation Clinique</h2>
                     </div>
 
-                    <!-- DLCO -->
-                    <div class="input-group">
-                        <label for="dlco">DLCO (% prédit)</label>
-                        <input type="number" id="dlco" step="0.1" placeholder="Ex: 45" autocomplete="off">
-                        <small class="hint">Capacité de Diffusion</small>
-                        <div id="pts-fvc_dlco" class="points-badge"></div>
-                    </div>
-
-                    <!-- Telangiectasias -->
-                    <div class="input-group checkbox-group">
-                        <label for="telang">Télangiectasies (Actuelles/Passées)</label>
-                        <input type="checkbox" id="telang">
-                        <span class="checkmark"></span>
-                        <div id="pts-telang" class="points-badge"></div>
-                    </div>
-
-                    <!-- ACA -->
-                    <div class="input-group checkbox-group">
-                        <label for="aca">Anticorps Anti-Centromère (ACA)</label>
-                        <input type="checkbox" id="aca">
-                        <span class="checkmark"></span>
-                        <div id="pts-aca" class="points-badge"></div>
-                    </div>
-
-                    <!-- NT-proBNP -->
-                    <div class="input-group">
-                        <label for="ntprobnp">NT-proBNP (pg/mL)</label>
-                        <input type="number" id="ntprobnp" step="1" placeholder="Ex: 150" autocomplete="off">
-                        <div id="pts-ntprobnp" class="points-badge"></div>
-                    </div>
-
-                    <!-- Urate -->
-                    <div class="input-group">
-                        <label for="urate">Acide Urique (Urate)</label>
-                        <div class="multi-input">
-                            <input type="number" id="urate" step="0.1" placeholder="Ex: 5.0" autocomplete="off">
-                            <select id="urate_unit">
-                                <option value="mgdl">mg/100mL (mg/dL)</option>
-                                <option value="umol">µmol/L</option>
-                            </select>
+                    <div class="form-grid">
+                        <!-- FVC -->
+                        <div class="input-group">
+                            <label for="fvc">CVF (% prédit)</label>
+                            <input type="number" id="fvc" step="0.1" placeholder="Ex: 85" autocomplete="off">
+                            <small class="hint">Capacité Vitale Forcée</small>
                         </div>
-                        <div id="pts-urate" class="points-badge"></div>
-                    </div>
 
-                    <!-- RAD -->
-                    <div class="input-group checkbox-group">
-                        <label for="rad">Déviation Axiale Droite (ECG)</label>
-                        <input type="checkbox" id="rad">
-                        <small class="hint">Axe QRS ≥ 90°</small>
-                        <div id="pts-rad" class="points-badge"></div>
-                    </div>
-                </div>
+                        <!-- DLCO -->
+                        <div class="input-group">
+                            <label for="dlco">DLCO (% prédit)</label>
+                            <input type="number" id="dlco" step="0.1" placeholder="Ex: 45" autocomplete="off">
+                            <small class="hint">Capacité de Diffusion</small>
+                            <div id="pts-fvc_dlco" class="points-badge"></div>
+                        </div>
 
-                <div class="action-area">
-                    <button id="calc-step1" class="btn-primary">Calculer Étape 1</button>
-                </div>
+                        <!-- Telangiectasias -->
+                        <div class="input-group checkbox-group">
+                            <label for="telang">Télangiectasies (Actuelles/Passées)</label>
+                            <input type="checkbox" id="telang">
+                            <span class="checkmark"></span>
+                            <div id="pts-telang" class="points-badge"></div>
+                        </div>
 
-                <!-- Result Area Step 1 -->
-                <div id="result-step1" class="result-box hidden">
-                    <div class="score-bars">
-                        <!-- Nomogram Bar -->
-                        <div class="bar-container">
-                            <div class="bar-label">
-                                <span>Nomogramme (Points)</span>
-                                <span class="bar-value"><span id="s1-points-val">--</span> pts</span>
+                        <!-- ACA -->
+                        <div class="input-group checkbox-group">
+                            <label for="aca">Anticorps Anti-Centromère (ACA)</label>
+                            <input type="checkbox" id="aca">
+                            <span class="checkmark"></span>
+                            <div id="pts-aca" class="points-badge"></div>
+                        </div>
+
+                        <!-- NT-proBNP -->
+                        <div class="input-group">
+                            <label for="ntprobnp">NT-proBNP (pg/mL)</label>
+                            <input type="number" id="ntprobnp" step="1" placeholder="Ex: 150" autocomplete="off">
+                            <div id="pts-ntprobnp" class="points-badge"></div>
+                        </div>
+
+                        <!-- Urate -->
+                        <div class="input-group">
+                            <label for="urate">Acide Urique (Urate)</label>
+                            <div class="multi-input">
+                                <input type="number" id="urate" step="0.1" placeholder="Ex: 5.0" autocomplete="off">
+                                <select id="urate_unit">
+                                    <option value="mgdl">mg/100mL (mg/dL)</option>
+                                    <option value="umol">µmol/L</option>
+                                </select>
                             </div>
-                            <div class="bar-track">
-                                <div id="s1-points-bar" class="bar-fill"></div>
-                                <div class="cutoff-marker" style="left: 50%" title="Seuil: 300 pts"></div>
+                            <div id="pts-urate" class="points-badge"></div>
+                        </div>
+
+                        <!-- RAD -->
+                        <div class="input-group checkbox-group">
+                            <label for="rad">Déviation Axiale Droite (ECG)</label>
+                            <input type="checkbox" id="rad">
+                            <small class="hint">Axe QRS ≥ 90°</small>
+                            <div id="pts-rad" class="points-badge"></div>
+                        </div>
+                    </div>
+
+                    <div class="action-area">
+                        <button id="calc-step1" class="btn-primary">Calculer Étape 1</button>
+                    </div>
+
+                    <!-- Result Area Step 1 -->
+                    <div id="result-step1" class="result-box hidden">
+                        <div class="score-bars">
+                            <!-- Nomogram Bar -->
+                            <div class="bar-container">
+                                <div class="bar-label">
+                                    <span>Nomogramme (Points)</span>
+                                    <span class="bar-value"><span id="s1-points-val">--</span> pts</span>
+                                </div>
+                                <div class="bar-track">
+                                    <div id="s1-points-bar" class="bar-fill"></div>
+                                    <div class="cutoff-marker" style="left: 50%" title="Seuil: 300 pts"></div>
+                                </div>
+                                <div class="bar-legend">Seuil : 300 pts</div>
                             </div>
-                            <div class="bar-legend">Seuil : 300 pts</div>
                         </div>
-                    </div>
 
-                    <div class="decision-area">
-                        <div class="score-decision" id="s1-decision">--</div>
-                        <div id="bypass-s2-area" class="hidden" style="margin-top: 15px;">
-                            <button id="btn-force-s2" class="btn-secondary btn-small">ETT réalisé (Forcer Étape
-                                2)</button>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- STEP 2 SECTION -->
-            <section id="step2" class="card hidden">
-                <div class="card-header">
-                    <h2>Étape 2 : Échocardiographie</h2>
-                </div>
-
-                <p class="instruction">Indiqué car le score Étape 1 est positif (Risque élevé).</p>
-
-                <div class="form-grid">
-                    <!-- Right Atrium Area -->
-                    <div class="input-group">
-                        <label for="ra_area">Surface de l'Oreillette Droite (cm²)</label>
-                        <input type="number" id="ra_area" step="0.1" placeholder="Ex: 16" autocomplete="off">
-                        <div id="pts-ra_area" class="points-badge"></div>
-                    </div>
-
-                    <!-- TR Velocity -->
-                    <div class="input-group">
-                        <label for="tr_vel">Vélocité IT (Tricuspid Regurgitation) (m/s)</label>
-                        <input type="number" id="tr_vel" step="0.1" placeholder="Ex: 2.8" autocomplete="off">
-                        <div id="pts-tr_vel" class="points-badge"></div>
-                    </div>
-                </div>
-
-                <div class="action-area">
-                    <button id="calc-step2" class="btn-primary">Calculer Étape 2 (Final)</button>
-                </div>
-
-                <!-- Result Area Step 2 -->
-                <div id="result-step2" class="result-box hidden">
-                    <div class="score-bars">
-                        <!-- Nomogram Bar -->
-                        <div class="bar-container">
-                            <div class="bar-label">
-                                <span>Nomogramme (Points)</span>
-                                <span class="bar-value"><span id="s2-points-val">--</span> pts</span>
+                        <div class="decision-area">
+                            <div class="score-decision" id="s1-decision">--</div>
+                            <div id="bypass-s2-area" class="hidden" style="margin-top: 15px;">
+                                <button id="btn-force-s2" class="btn-secondary btn-small">ETT réalisé (Forcer Étape
+                                    2)</button>
                             </div>
-                            <div class="bar-track">
-                                <div id="s2-points-bar" class="bar-fill"></div>
-                                <div class="cutoff-marker" style="left: 35%" title="Seuil: 35 pts"></div>
-                            </div>
-                            <div class="bar-legend">Seuil : 35 pts</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- STEP 2 SECTION -->
+                <section id="step2" class="card hidden">
+                    <div class="card-header">
+                        <h2>Étape 2 : Échocardiographie</h2>
+                    </div>
+
+                    <p class="instruction">Indiqué car le score Étape 1 est positif (Risque élevé).</p>
+
+                    <div class="form-grid">
+                        <!-- Right Atrium Area -->
+                        <div class="input-group">
+                            <label for="ra_area">Surface de l'Oreillette Droite (cm²)</label>
+                            <input type="number" id="ra_area" step="0.1" placeholder="Ex: 16" autocomplete="off">
+                            <div id="pts-ra_area" class="points-badge"></div>
+                        </div>
+
+                        <!-- TR Velocity -->
+                        <div class="input-group">
+                            <label for="tr_vel">Vélocité IT (Tricuspid Regurgitation) (m/s)</label>
+                            <input type="number" id="tr_vel" step="0.1" placeholder="Ex: 2.8" autocomplete="off">
+                            <div id="pts-tr_vel" class="points-badge"></div>
                         </div>
                     </div>
 
-                    <div class="decision-area">
-                        <div class="score-decision" id="s2-decision">--</div>
-                        <div class="recommendation-box" id="s2-rec-box" style="margin-top: 25px; display: none;">
-                            <strong>Conclusion :</strong>
-                            <p id="final-recommendation">--</p>
+                    <div class="action-area">
+                        <button id="calc-step2" class="btn-primary">Calculer Étape 2 (Final)</button>
+                    </div>
+
+                    <!-- Result Area Step 2 -->
+                    <div id="result-step2" class="result-box hidden">
+                        <div class="score-bars">
+                            <!-- Nomogram Bar -->
+                            <div class="bar-container">
+                                <div class="bar-label">
+                                    <span>Nomogramme (Points)</span>
+                                    <span class="bar-value"><span id="s2-points-val">--</span> pts</span>
+                                </div>
+                                <div class="bar-track">
+                                    <div id="s2-points-bar" class="bar-fill"></div>
+                                    <div class="cutoff-marker" style="left: 35%" title="Seuil: 35 pts"></div>
+                                </div>
+                                <div class="bar-legend">Seuil : 35 pts</div>
+                            </div>
+                        </div>
+
+                        <div class="decision-area">
+                            <div class="score-decision" id="s2-decision">--</div>
+                            <div class="recommendation-box" id="s2-rec-box" style="margin-top: 25px; display: none;">
+                                <strong>Conclusion :</strong>
+                                <p id="final-recommendation">--</p>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </section>
+                </section>
+            </div>
+
+            <!-- TAB 2: DIDACTIC SIMULATOR -->
+            <div id="tab-simulator" class="tab-content">
+                <section class="card simulator-card">
+                    <div class="card-header">
+                        <h2>Simulateur Interactif</h2>
+                        <span class="badge-didactic">Mode Pédagogique</span>
+                    </div>
+                    <p class="sim-intro">Modifiez les curseurs pour visualiser l'impact de chaque variable sur le risque
+                        HTAP.</p>
+
+                    <div class="sim-container">
+                        <div class="sim- inputs">
+                            <h3>Variables Cliniques (Étape 1)</h3>
+
+                            <div class="sim-control">
+                                <label>Ratio CVF/DLCO <span id="sim-val-ratio">1.6</span></label>
+                                <input type="range" id="sim-ratio" min="0.5" max="4.0" step="0.1" value="1.6">
+                            </div>
+
+                            <div class="sim-control-row">
+                                <label class="sim-check">
+                                    <input type="checkbox" id="sim-telang"> Télangiectasies
+                                </label>
+                                <label class="sim-check">
+                                    <input type="checkbox" id="sim-aca"> Anti-Centromère
+                                </label>
+                                <label class="sim-check">
+                                    <input type="checkbox" id="sim-rad"> Déviation Axiale D.
+                                </label>
+                            </div>
+
+                            <div class="sim-control">
+                                <label>NT-proBNP (pg/mL) <span id="sim-val-bnp">150</span></label>
+                                <input type="range" id="sim-bnp" min="10" max="2000" step="10" value="150">
+                            </div>
+
+                            <div class="sim-control">
+                                <label>Urate (mg/dL) <span id="sim-val-urate">5.0</span></label>
+                                <input type="range" id="sim-urate" min="2.0" max="15.0" step="0.5" value="5.0">
+                            </div>
+
+                            <h3 style="margin-top:20px; color: var(--danger-color);">Variables Écho (Étape 2)</h3>
+                            <div class="alert-box">
+                                ℹ️ Notez l'impact majeur de la <strong>Vélocité IT</strong> (reflet des Pressions
+                                Pulmonaires) sur le score final.
+                            </div>
+
+                            <div class="sim-control">
+                                <label>Surface Oreillette Droite (cm²) <span id="sim-val-ra">16</span></label>
+                                <input type="range" id="sim-ra" min="10" max="40" step="1" value="16">
+                            </div>
+
+                            <div class="sim-control">
+                                <label>Vélocité IT (m/s) <span id="sim-val-tr">2.5</span></label>
+                                <input type="range" id="sim-tr" min="1.0" max="5.0" step="0.1" value="2.5">
+                            </div>
+                        </div>
+
+                        <div class="sim-results">
+                            <div class="gauge-container">
+                                <h4>Score Total (Nomogramme)</h4>
+                                <div class="gauge-value" id="sim-total-score">--</div>
+                                <div class="gauge-decision" id="sim-decision">--</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- TAB 3: NOMOGRAM SOURCE -->
+            <div id="tab-nomogram" class="tab-content">
+                <section class="card">
+                    <div class="card-header">
+                        <h2>Source du Calcul</h2>
+                    </div>
+
+                    <div class="nomogram-display">
+                        <p>L'algorithme DETECT est basé sur le nomogramme validé dans l'étude princeps.</p>
+
+                        <div class="nomogram-placeholder">
+                            <!-- Placeholder specific for the requested photo -->
+                            <div
+                                style="background:#f0f2f5; height:400px; display:flex; align-items:center; justify-content:center; border-radius:12px; margin:20px 0; border:2px dashed #ccc; color:#666;">
+                                [ Insérer ici l'image de la Figure 3 de l'étude Coghlan et al. 2014 ]
+                            </div>
+                        </div>
+
+                        <div class="reference-box">
+                            <strong>Référence :</strong><br>
+                            Coghlan JG, Denton CP, Grünig E, et al. <br>
+                            <em>Evidence-based detection of pulmonary arterial hypertension in systemic sclerosis: the
+                                DETECT study.</em><br>
+                            Ann Rheum Dis 2014;73:1340–1349.
+                        </div>
+
+                        <p style="margin-top:20px; font-size:0.9rem;">
+                            <strong>Note :</strong> Ce calculateur en ligne reproduit fidèlement les points attribués
+                            par ce nomogramme pour chaque variable, assurant une concordance parfaite avec la méthode
+                            papier.
+                        </p>
+                    </div>
+                </section>
+            </div>
         </main>
 
         <footer>

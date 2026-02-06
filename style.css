@@ -391,6 +391,189 @@ footer {
     font-size: 0.9rem;
 }
 
+/* Tabs */
+.tab-nav {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.tab-btn {
+    background: transparent;
+    border: 2px solid transparent;
+    padding: 10px 20px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: 20px;
+    transition: all 0.2s;
+}
+
+.tab-btn:hover {
+    background: hsla(207, 90%, 54%, 0.05);
+    color: var(--primary-color);
+}
+
+.tab-btn.active {
+    background: white;
+    box-shadow: var(--shadow-sm);
+    color: var(--primary-color);
+    border-color: rgba(0, 0, 0, 0.05);
+}
+
+.tab-content {
+    display: none;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Simulator Styles */
+.simulator-card {
+    border-left: 5px solid var(--warning-color);
+}
+
+.badge-didactic {
+    background: var(--warning-color);
+    color: #fff;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.sim-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+@media (min-width: 768px) {
+    .sim-container {
+        flex-direction: row;
+    }
+
+    .sim-inputs {
+        flex: 3;
+    }
+
+    .sim-results {
+        flex: 2;
+        position: sticky;
+        top: 20px;
+        align-self: flex-start;
+    }
+}
+
+.sim-control {
+    margin-bottom: 1.5rem;
+}
+
+.sim-control label {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.sim-control input[type=range] {
+    width: 100%;
+    accent-color: var(--primary-color);
+    cursor: pointer;
+}
+
+.sim-control-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.sim-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f5f7fa;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.alert-box {
+    background: hsla(35, 100%, 63%, 0.1);
+    color: #d97706;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+/* Simulator Gauge */
+.gauge-container {
+    background: var(--text-primary);
+    color: white;
+    padding: 2rem;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: var(--shadow-lg);
+}
+
+.gauge-value {
+    font-size: 3.5rem;
+    font-weight: 800;
+    line-height: 1;
+    margin: 1rem 0;
+    background: linear-gradient(to right, #4ade80, #f87171);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.gauge-decision {
+    font-size: 1.2rem;
+    font-weight: 600;
+    padding: 8px;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+/* Nomogram Tab */
+.nomogram-display {
+    text-align: center;
+    padding: 1rem;
+}
+
+.reference-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 1rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    display: inline-block;
+    text-align: left;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .card {

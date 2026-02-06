@@ -109,6 +109,102 @@ function init() {
             els.modal.overlay.style.display = 'none';
         }, 400);
     });
+
+    initTabs();
+    initSimulator();
+}
+
+// --- TABS LOGIC ---
+function initTabs() {
+    const tabs = document.querySelectorAll('.tab-btn');
+    const contents = document.querySelectorAll('.tab-content');
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            // Remove active
+            tabs.forEach(t => t.classList.remove('active'));
+            contents.forEach(c => c.classList.remove('active'));
+
+            // Add active
+            tab.classList.add('active');
+            const target = tab.dataset.tab;
+            document.getElementById(target).classList.add('active');
+        });
+    });
+}
+
+// --- SIMULATOR LOGIC ---
+const simEls = {
+    inputs: {
+        ratio: document.getElementById('sim-ratio'),
+        telang: document.getElementById('sim-telang'),
+        aca: document.getElementById('sim-aca'),
+        rad: document.getElementById('sim-rad'),
+        bnp: document.getElementById('sim-bnp'),
+        urate: document.getElementById('sim-urate'),
+        ra: document.getElementById('sim-ra'),
+        tr: document.getElementById('sim-tr')
+    },
+    displays: {
+        ratio: document.getElementById('sim-val-ratio'),
+        bnp: document.getElementById('sim-val-bnp'),
+        urate: document.getElementById('sim-val-urate'),
+        ra: document.getElementById('sim-val-ra'),
+        tr: document.getElementById('sim-val-tr'),
+        total: document.getElementById('sim-total-score'),
+        decision: document.getElementById('sim-decision')
+    }
+};
+
+function initSimulator() {
+    // Attach listeners to all sim inputs
+    Object.values(simEls.inputs).forEach(input => {
+        input.addEventListener('input', updateSimulator);
+        input.addEventListener('change', updateSimulator);
+    });
+    // Initial run
+    updateSimulator();
+}
+
+function updateSimulator() {
+    // 1. Update Value Displays
+    simEls.displays.ratio.textContent = simEls.inputs.ratio.value;
+    simEls.displays.bnp.textContent = simEls.inputs.bnp.value;
+    simEls.displays.urate.textContent = simEls.inputs.urate.value;
+    simEls.displays.ra.textContent = simEls.inputs.ra.value;
+    simEls.displays.tr.textContent = simEls.inputs.tr.value;
+
+    // 2. Prepare Inputs for Calculation
+    const simData = {
+        fvc_dlco: parseFloat(simEls.inputs.ratio.value),
+        telang: simEls.inputs.telang.checked,
+        aca: simEls.inputs.aca.checked,
+        ntprobnp: parseFloat(simEls.inputs.bnp.value),
+        urate: parseFloat(simEls.inputs.urate.value),
+        rad: simEls.inputs.rad.checked,
+        ra_area: parseFloat(simEls.inputs.ra.value),
+        tr_vel: parseFloat(simEls.inputs.tr.value)
+    };
+
+    // 3. Calc Step 1 Points
+    const s1Points = window.DETECT.calculateStep1Points(simData);
+
+    // 4. Calc Step 2 Points (using Step 1 Total as base)
+    const s2Points = window.DETECT.calculateStep2Points(s1Points.total, simData.ra_area, simData.tr_vel);
+
+    // 5. Update Gauge
+    const total = s2Points.total;
+    simEls.displays.total.textContent = total + " pts";
+
+    if (total > 35) {
+        simEls.displays.decision.textContent = "⚠️ RHC INDIQUÉ";
+        simEls.displays.decision.style.background = "var(--danger-color)";
+        simEls.displays.decision.style.color = "white";
+    } else {
+        simEls.displays.decision.textContent = "✅ SURVEILLANCE";
+        simEls.displays.decision.style.background = "var(--success-color)";
+        simEls.displays.decision.style.color = "white";
+    }
 }
 
 function getUrateInMgDl() {
