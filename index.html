@@ -43,104 +43,97 @@
         </nav>
 
         <main>
+            <!-- TAB 1: CALCULATOR (Existing Tool) -->
             <div id="tab-calculator" class="tab-content active">
-                <div class="medical-disclaimer-banner">
-                    ⚠️ <strong>Dépistage SSc-HTAP</strong> : Cet outil s'adresse aux patients atteints de Sclérodermie
-                    Systémique (SSc) évoluant depuis plus de 3 ans et avec une DLCO < 60%. </div>
-                        <!-- STEP 1 SECTION -->
-                        <section id="step1" class="card">
-                            <div class="card-header">
-                                <h2>Étape 1 : Évaluation Clinique</h2>
+                <!-- STEP 1 SECTION -->
+                <section id="step1" class="card">
+                    <div class="card-header">
+                        <h2>Étape 1 : Évaluation Clinique</h2>
+                    </div>
+
+                    <div class="form-grid">
+                        <!-- FVC -->
+                        <!-- FVC -->
+                        <div class="input-group">
+                            <label for="fvc">
+                                CVF (% prédit)
+                                <!-- Points for FVC/DLCO Combo will show here -->
+                            </label>
+                            <input type="number" id="fvc" step="0.1" placeholder="Ex: 85" autocomplete="off">
+                            <small class="hint">Capacité Vitale Forcée</small>
+                        </div>
+
+                        <!-- DLCO -->
+                        <div class="input-group">
+                            <label for="dlco">
+                                DLCO (% prédit)
+                                <span id="pts-fvc_dlco" class="points-badge"></span>
+                            </label>
+                            <input type="number" id="dlco" step="0.1" placeholder="Ex: 45" autocomplete="off">
+                            <small class="hint">Capacité de Diffusion</small>
+                        </div>
+
+                        <!-- Telangiectasias -->
+                        <div class="input-group checkbox-group">
+                            <label for="telang">
+                                Télangiectasies (Actuelles/Passées)
+                                <span id="pts-telang" class="points-badge"></span>
+                            </label>
+                            <input type="checkbox" id="telang">
+                            <span class="checkmark"></span>
+                        </div>
+
+                        <!-- ACA -->
+                        <div class="input-group checkbox-group">
+                            <label for="aca">
+                                Anticorps Anti-Centromère (ACA)
+                                <span id="pts-aca" class="points-badge"></span>
+                            </label>
+                            <input type="checkbox" id="aca">
+                            <span class="checkmark"></span>
+                        </div>
+
+                        <!-- NT-proBNP -->
+                        <div class="input-group">
+                            <label for="ntprobnp">
+                                NT-proBNP (pg/mL)
+                                <span id="pts-ntprobnp" class="points-badge"></span>
+                            </label>
+                            <input type="number" id="ntprobnp" step="1" placeholder="Ex: 150" autocomplete="off">
+                        </div>
+
+                        <!-- Urate -->
+                        <div class="input-group">
+                            <label for="urate">
+                                Acide Urique (Urate)
+                                <span id="pts-urate" class="points-badge"></span>
+                            </label>
+                            <div class="multi-input">
+                                <input type="number" id="urate" step="0.1" placeholder="Ex: 5.0" autocomplete="off">
+                                <select id="urate_unit">
+                                    <option value="mgdl">mg/100mL (mg/dL)</option>
+                                    <option value="umol">µmol/L</option>
+                                </select>
                             </div>
+                        </div>
 
-                            <div class="form-grid">
-                                <!-- FVC -->
-                                <!-- FVC -->
-                                <label for="fvc">
-                                    CVF (% prédit)
-                                </label>
-                                <input type="number" id="fvc" step="0.1" placeholder="Ex: 85" autocomplete="off">
-                                <small class="hint">Capacité Vitale Forcée. Le ratio CVF/DLCO est un marqueur fort
-                                    d'atteinte vasculaire.</small>
-                            </div>
+                        <!-- RAD -->
+                        <div class="input-group checkbox-group">
+                            <label for="rad">
+                                Déviation Axiale Droite (ECG)
+                                <span id="pts-rad" class="points-badge"></span>
+                            </label>
+                            <input type="checkbox" id="rad">
+                            <span class="checkmark"></span>
+                        </div>
+                    </div>
 
-                            <!-- DLCO -->
-                            <div class="input-group">
-                                <label for="dlco">
-                                    DLCO (% prédit)
-                                    <span id="pts-fvc_dlco" class="points-badge"></span>
-                                </label>
-                                <input type="number" id="dlco" step="0.1" placeholder="Ex: 45" autocomplete="off">
-                                <small class="hint">Capacité de Diffusion</small>
-                            </div>
+                    <div class="action-area">
+                        <button id="calc-step1" class="btn-primary">Calculer Étape 1</button>
+                    </div>
 
-                            <!-- Telangiectasias -->
-                            <div class="input-group checkbox-group"
-                                onclick="const ck = this.querySelector('input'); ck.checked = !ck.checked; updateLiveStep1();">
-                                <label for="telang">
-                                    Télangiectasies (Actuelles/Passées)
-                                    <small style="display:block; font-weight: normal; font-size: 0.75rem;">Petites
-                                        taches rouges dilatées (visage, mains, lèvres).</small>
-                                    <span id="pts-telang" class="points-badge"></span>
-                                </label>
-                                <input type="checkbox" id="telang" onclick="event.stopPropagation();">
-                                <span class="checkmark"></span>
-                            </div>
-
-                            <!-- ACA -->
-                            <div class="input-group checkbox-group">
-                                <label for="aca">
-                                    Anticorps Anti-Centromère (ACA)
-                                    <span id="pts-aca" class="points-badge"></span>
-                                </label>
-                                <input type="checkbox" id="aca">
-                                <span class="checkmark"></span>
-                            </div>
-
-                            <!-- NT-proBNP -->
-                            <div class="input-group">
-                                <label for="ntprobnp">
-                                    NT-proBNP (pg/mL)
-                                    <span id="pts-ntprobnp" class="points-badge"></span>
-                                </label>
-                                <input type="number" id="ntprobnp" step="1" placeholder="Ex: 150" autocomplete="off">
-                            </div>
-
-                            <!-- Urate -->
-                            <div class="input-group">
-                                <label for="urate">
-                                    Acide Urique (Urate)
-                                    <span id="pts-urate" class="points-badge"></span>
-                                </label>
-                                <div class="multi-input">
-                                    <input type="number" id="urate" step="0.1" placeholder="Ex: 5.0" autocomplete="off">
-                                    <select id="urate_unit">
-                                        <option value="mgdl">mg/100mL (mg/dL)</option>
-                                        <option value="umol">µmol/L</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <!-- RAD -->
-                            <div class="input-group checkbox-group"
-                                onclick="const ck = this.querySelector('input'); ck.checked = !ck.checked; updateLiveStep1();">
-                                <label for="rad">
-                                    Déviation Axiale Droite (ECG)
-                                    <small style="display:block; font-weight: normal; font-size: 0.75rem;">Axe QRS >
-                                        +90° sur le dernier ECG.</small>
-                                    <span id="pts-rad" class="points-badge"></span>
-                                </label>
-                                <input type="checkbox" id="rad" onclick="event.stopPropagation();">
-                                <span class="checkmark"></span>
-                            </div>
-                </div>
-
-                <div class="action-area">
-                    <button id="calc-step1" class="btn-primary">Calculer Étape 1</button>
-                </div>
-
-                <!-- Result Area Step 1 -->
-                <!-- ... -->
+                    <!-- Result Area Step 1 -->
+                    <!-- ... -->
                 </section>
 
                 <!-- STEP 2 SECTION -->

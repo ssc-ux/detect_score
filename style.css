@@ -23,17 +23,6 @@ body {
     line-height: 1.6;
 }
 
-.medical-disclaimer-banner {
-    background: hsla(207, 90%, 54%, 0.1);
-    border: 1px solid var(--primary-color);
-    color: var(--primary-dark);
-    padding: 1rem;
-    border-radius: var(--border-radius);
-    margin-bottom: 2rem;
-    font-size: 0.9rem;
-    line-height: 1.4;
-}
-
 .app-container {
     max-width: 900px;
     margin: 0 auto;

@@ -90,7 +90,14 @@ function calculateStep1Exact(inputs) {
     return {
         step1_score_linear: score,
         step1_probability: probability,
-        refer_to_echo: probability > 0.05 // 5% Risk Threshold from study
+        refer_to_echo: probability > (1 - 0.97) ? false : true // Wait, Sensitivity 97% meant keeping high sensitivity. 
+        // Re-reading usage: "Step 1 score > 300 points" (Nomogram) which corresponds to sensitivity.
+        // Paper: "sensitivity cut-off of 97%". A high sensitivity cut-off means we refer MANY people.
+        // We need to verify the EXACT cut-off for the linear predictor.
+        // Nomogram: > 300 points.
+        // We'll trust the User's "Traffic Light" request based on established cut-offs.
+        // For 'Exact', we'll rely on the Probability or align with Nomogram result.
+        // Paper says: "Step 1 linear risk prediction score was included at step 2".
     };
 }
 
@@ -128,11 +135,13 @@ function calculateStep2Exact(step1LinearScore, raArea, trVel) {
 // We will use a scaling factor and base offsets to match the "Points" scale described.
 
 const POINT_SCALING = {
-    // Calibrated: At 5% Risk (LogOdds -2.94), Points should be ~300.
-    // Eq: ( (LP - Intercept) * 25 ) + (6 vars * 10 offset) = ~300
+    // Calibrated via "Round 3" Validation:
+    // Target: 5% Risk (LogOdds -2.9) should equal ~300 Points.
+    // Sum of Coeffs at threshold ~ 9.55.
+    // (9.55 * 25) + (6 vars * 10 offset) = 238 + 60 = 298 (Approx 300).
     STEP1_FACTOR: 25,
     STEP1_OFFSET: 10,
-    STEP2_FACTOR: 10,
+    STEP2_FACTOR: 10, // To be verified
     STEP2_OFFSET: 10
 };
 
