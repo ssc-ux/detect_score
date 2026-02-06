@@ -126,29 +126,29 @@ function init() {
             console.error("Physio Engine Failed:", e);
         }
     }
-
-    // Explicitly init modal last to ensure it works
-    initModal();
 }
 
+// Separate Init for Modal to be safe
 function initModal() {
     const overlay = document.getElementById('beta-modal');
     const closeBtn = document.getElementById('close-modal');
 
     if (closeBtn && overlay) {
-        // Remove existing listeners by cloning (optional but ensures clean slate) or just add new one
         closeBtn.onclick = (e) => {
-            e.preventDefault();
+            e.preventDefault(); // Prevent default if it was a submit (it's not but safe)
             overlay.classList.add('closing');
             setTimeout(() => {
                 overlay.style.display = 'none';
             }, 400);
         };
-        console.log("Modal listener attached.");
-    } else {
-        console.warn("Modal elements not found for init.");
     }
 }
+
+// Run on Load
+document.addEventListener("DOMContentLoaded", () => {
+    initModal();
+    init();
+});
 
 // --- TABS LOGIC ---
 function initTabs() {
