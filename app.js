@@ -82,8 +82,8 @@ function init() {
     els.bypassS2.container.classList.add('hidden');
     els.step2.recBox.style.display = 'none';
 
-    els.step1.btn.addEventListener('click', runStep1);
-    els.step2.btn.addEventListener('click', runStep2);
+    if (els.step1.btn) els.step1.btn.addEventListener('click', runStep1);
+    if (els.step2.btn) els.step2.btn.addEventListener('click', runStep2);
 
     // Live Listeners
     Object.values(els.step1.inputs).forEach(input => {
@@ -97,21 +97,29 @@ function init() {
         input.addEventListener('change', updateLiveStep2);
     });
 
-    els.bypassS2.btn.addEventListener('click', () => {
-        els.step2.section.classList.remove('hidden');
-        els.step2.section.scrollIntoView({ behavior: "smooth", block: "start" });
-        els.bypassS2.container.classList.add('hidden');
-    });
+    if (els.bypassS2.btn) {
+        els.bypassS2.btn.addEventListener('click', () => {
+            els.step2.section.classList.remove('hidden');
+            els.step2.section.scrollIntoView({ behavior: "smooth", block: "start" });
+            els.bypassS2.container.classList.add('hidden');
+        });
+    }
 
-    els.modal.closeBtn.addEventListener('click', () => {
-        els.modal.overlay.classList.add('closing');
-        setTimeout(() => {
-            els.modal.overlay.style.display = 'none';
-        }, 400);
-    });
+    if (els.modal.closeBtn) {
+        els.modal.closeBtn.addEventListener('click', () => {
+            els.modal.overlay.classList.add('closing');
+            setTimeout(() => {
+                els.modal.overlay.style.display = 'none';
+            }, 400);
+        });
+    }
 
     initTabs();
-    initSimulator();
+
+    // START PHYSIO ENGINE
+    if (window.Physio) {
+        window.Physio.init();
+    }
 }
 
 // --- TABS LOGIC ---
@@ -128,83 +136,10 @@ function initTabs() {
             // Add active
             tab.classList.add('active');
             const target = tab.dataset.tab;
-            document.getElementById(target).classList.add('active');
+            const targetEl = document.getElementById(target);
+            if (targetEl) targetEl.classList.add('active');
         });
     });
-}
-
-// --- SIMULATOR LOGIC ---
-const simEls = {
-    inputs: {
-        ratio: document.getElementById('sim-ratio'),
-        telang: document.getElementById('sim-telang'),
-        aca: document.getElementById('sim-aca'),
-        rad: document.getElementById('sim-rad'),
-        bnp: document.getElementById('sim-bnp'),
-        urate: document.getElementById('sim-urate'),
-        ra: document.getElementById('sim-ra'),
-        tr: document.getElementById('sim-tr')
-    },
-    displays: {
-        ratio: document.getElementById('sim-val-ratio'),
-        bnp: document.getElementById('sim-val-bnp'),
-        urate: document.getElementById('sim-val-urate'),
-        ra: document.getElementById('sim-val-ra'),
-        tr: document.getElementById('sim-val-tr'),
-        total: document.getElementById('sim-total-score'),
-        decision: document.getElementById('sim-decision')
-    }
-};
-
-function initSimulator() {
-    // Attach listeners to all sim inputs
-    Object.values(simEls.inputs).forEach(input => {
-        input.addEventListener('input', updateSimulator);
-        input.addEventListener('change', updateSimulator);
-    });
-    // Initial run
-    updateSimulator();
-}
-
-function updateSimulator() {
-    // 1. Update Value Displays
-    simEls.displays.ratio.textContent = simEls.inputs.ratio.value;
-    simEls.displays.bnp.textContent = simEls.inputs.bnp.value;
-    simEls.displays.urate.textContent = simEls.inputs.urate.value;
-    simEls.displays.ra.textContent = simEls.inputs.ra.value;
-    simEls.displays.tr.textContent = simEls.inputs.tr.value;
-
-    // 2. Prepare Inputs for Calculation
-    const simData = {
-        fvc_dlco: parseFloat(simEls.inputs.ratio.value),
-        telang: simEls.inputs.telang.checked,
-        aca: simEls.inputs.aca.checked,
-        ntprobnp: parseFloat(simEls.inputs.bnp.value),
-        urate: parseFloat(simEls.inputs.urate.value),
-        rad: simEls.inputs.rad.checked,
-        ra_area: parseFloat(simEls.inputs.ra.value),
-        tr_vel: parseFloat(simEls.inputs.tr.value)
-    };
-
-    // 3. Calc Step 1 Points
-    const s1Points = window.DETECT.calculateStep1Points(simData);
-
-    // 4. Calc Step 2 Points (using Step 1 Total as base)
-    const s2Points = window.DETECT.calculateStep2Points(s1Points.total, simData.ra_area, simData.tr_vel);
-
-    // 5. Update Gauge
-    const total = s2Points.total;
-    simEls.displays.total.textContent = total + " pts";
-
-    if (total > 35) {
-        simEls.displays.decision.textContent = "⚠️ RHC INDIQUÉ";
-        simEls.displays.decision.style.background = "var(--danger-color)";
-        simEls.displays.decision.style.color = "white";
-    } else {
-        simEls.displays.decision.textContent = "✅ SURVEILLANCE";
-        simEls.displays.decision.style.background = "var(--success-color)";
-        simEls.displays.decision.style.color = "white";
-    }
 }
 
 function getUrateInMgDl() {
@@ -327,7 +262,7 @@ function runStep2() {
         els.step2.decision.className = "score-decision decision-danger";
         els.step2.rec.textContent = "Le patient présente un risque élevé d'HTAP confirmée. Un cathétérisme cardiaque droit (RHC) est recommandé selon l'algorithme DETECT.";
     } else {
-        els.step2.decision.textContent = "PAS D'INDICATION RHC IM MÉDIATE";
+        els.step2.decision.textContent = "PAS D'INDICATION RHC IMMÉDIATE";
         els.step2.decision.className = "score-decision decision-safe";
         els.step2.rec.textContent = "Le risque calculé est faible. Continuer la surveillance annuelle.";
     }
