@@ -147,8 +147,8 @@ const Physio = {
         this.uniforms = {
             uTime: { value: 0 },
             uPapsNorm: { value: 0.0 },
-            uBaseColor: { value: new THREE.Color(0x34495e) },
-            uStressColor: { value: new THREE.Color(0xe74c3c) }
+            uBaseColor: { value: new THREE.Color(0x3b82f6) }, // Bright Blue
+            uStressColor: { value: new THREE.Color(0xef4444) } // Bright Red
         };
 
         const vShader = `
@@ -172,8 +172,9 @@ const Physio = {
             uniform float uPapsNorm;
             varying float vGlow;
             void main() {
-                vec3 color = mix(uBaseColor, uStressColor, uPapsNorm * 0.8);
-                gl_FragColor = vec4(color + vGlow * 0.8, 0.5 + vGlow * 0.5);
+                vec3 color = mix(uBaseColor, uStressColor, uPapsNorm);
+                float alpha = 0.5 + (vGlow * 0.5);
+                gl_FragColor = vec4(color + (vGlow * 1.5), alpha);
             }
         `;
         this.organMat = new THREE.ShaderMaterial({
@@ -182,7 +183,8 @@ const Physio = {
             fragmentShader: fShader,
             transparent: true,
             side: THREE.DoubleSide,
-            blending: THREE.AdditiveBlending
+            depthWrite: false,
+            blending: THREE.NormalBlending
         });
     },
 
@@ -383,11 +385,11 @@ const Physio = {
 
     updateDetectScore: function (trVel, raArea, bnp) {
         const simInputs = {
-            fvc_dlco: 1.6,
-            telang: true,
-            aca: true,
+            fvc_dlco: 1.1,
+            telang: false,
+            aca: false,
             ntprobnp: bnp,
-            urate: 5.0,
+            urate: 4.5,
             rad: false,
             ra_area: raArea,
             tr_vel: trVel
