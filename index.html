@@ -233,99 +233,137 @@
                                 </div>
                             </div>
 
-                            <div class="engine-workspace">
-                                <!-- LEFT: VECTOR HEART -->
-                                <div class="heart-container" style="padding: 0; overflow: hidden; background: #0b1121;">
-                                    <div id="heart-3d-container"
-                                        style="width: 100%; height: 400px; position: relative;">
-                                        <!-- Canvas will be injected here by Three.js -->
+                            <div class="engine-workspace" style="display: flex; gap: 20px; align-items: flex-start;">
+                                <!-- LEFT: 3D VIEWPORT -->
+                                <div class="viewport-container"
+                                    style="flex: 2; position: relative; background: #0b1121; border-radius: 12px; overflow: hidden; height: 500px;">
+                                    <div id="heart-3d-container" style="width: 100%; height: 100%;">
+                                        <!-- Three.js Viewport -->
                                     </div>
-                                    <div class="heart-legend"
-                                        style="position:absolute; bottom:10px; left:10px; color: rgba(255,255,255,0.7); z-index: 10;">
-                                        Visualisation 3D Temps Réel
+                                    <!-- ECG Overlay -->
+                                    <div id="ecg-overlay"
+                                        style="position: absolute; top: 20px; left: 20px; width: 220px; height: 110px; pointer-events: none; background: rgba(0,0,0,0.5); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); padding: 10px;">
+                                        <canvas id="ecg-canvas" width="200" height="80"></canvas>
+                                        <div id="ecg-label"
+                                            style="color: #4ade80; font-family: monospace; font-size: 10px; margin-top: 5px;">
+                                            AXE ECG : 90° (Normal)</div>
+                                    </div>
+                                    <div class="viewport-legend"
+                                        style="position:absolute; bottom:15px; width: 100%; text-align: center; color: rgba(255,255,255,0.5); font-size: 0.8rem;">
+                                        Cœur (Gauche) & Poumon (Droit)
                                     </div>
                                 </div>
 
                                 <!-- RIGHT: DATA DASHBOARD -->
-                                <div class="physio-data">
-                                    <h3>Variables DETECT Live</h3>
+                                <div class="physio-data" style="flex: 1;">
+                                    <h3>Variables Physiologiques</h3>
 
                                     <div class="data-card">
-                                        <span class="data-label">Vélocité IT (Jet)</span>
-                                        <span class="data-value"><span id="phy-tr-vel">--</span> m/s</span>
-                                        <small>Reflet direct de (PAPs - POD)</small>
+                                        <div class="data-header">
+                                            <span class="data-label">Vélocité IT</span>
+                                            <span class="data-value"><span id="phy-tr-vel">--</span>
+                                                <small>m/s</small></span>
+                                        </div>
+                                        <div class="mini-bar">
+                                            <div id="bar-tr" class="mini-fill"></div>
+                                        </div>
                                     </div>
 
                                     <div class="data-card">
-                                        <span class="data-label">Surface OD</span>
-                                        <span class="data-value"><span id="phy-ra-area">--</span> cm²</span>
-                                        <small>Dilatation sous pression</small>
+                                        <div class="data-header">
+                                            <span class="data-label">Surface OD</span>
+                                            <span class="data-value"><span id="phy-ra-area">--</span>
+                                                <small>cm²</small></span>
+                                        </div>
+                                        <div class="mini-bar">
+                                            <div id="bar-ra" class="mini-fill"></div>
+                                        </div>
                                     </div>
 
                                     <div class="data-card">
-                                        <span class="data-label">NT-proBNP</span>
-                                        <span class="data-value"><span id="phy-bnp">--</span> pg/mL</span>
-                                        <small>Marqueur de stress pariétal</small>
+                                        <div class="data-header">
+                                            <span class="data-label">Diff. Capillaire (DLCO)</span>
+                                            <span class="data-value"><span id="phy-dlco">--</span>
+                                                <small>%</small></span>
+                                        </div>
+                                        <div class="mini-bar">
+                                            <div id="bar-dlco" class="mini-fill"></div>
+                                        </div>
+                                        <small class="hint">Obstruction vasculaire</small>
+                                    </div>
+
+                                    <div class="data-card">
+                                        <div class="data-header">
+                                            <span class="data-label">NT-proBNP</span>
+                                            <span class="data-value"><span id="phy-bnp">--</span>
+                                                <small>pg/mL</small></span>
+                                        </div>
                                     </div>
 
                                     <div class="detect-live-result">
-                                        <h4>Score DETECT SimulÃ©</h4>
+                                        <h4>Score DETECT Simulé</h4>
                                         <div class="live-score" id="phy-detect-score">--</div>
                                         <div class="live-decision" id="phy-detect-decision">--</div>
                                     </div>
                                 </div>
                             </div>
-                        </section>
+
                     </div>
-
-                    <!-- TAB 3: NOMOGRAM SOURCE -->
-                    <div id="tab-nomogram" class="tab-content">
-                        <section class="card">
-                            <div class="card-header">
-                                <h2>Source du Calcul</h2>
-                            </div>
-
-                            <div class="nomogram-display">
-                                <p>L'algorithme DETECT est basé sur le nomogramme validé dans l'étude princeps.</p>
-
-                                <img src="nomogramme.png" alt="Nomogramme DETECT - Figure 3" class="nomogram-image">
-
-                                <div class="reference-box">
-                                    <strong>Référence :</strong><br>
-                                    Coghlan JG, Denton CP, Grünig E, et al. <br>
-                                    <em>Evidence-based detection of pulmonary arterial hypertension in systemic
-                                        sclerosis: the
-                                        DETECT study.</em><br>
-                                    Ann Rheum Dis 2014;73:1340–1349.
-                                </div>
-
-                                <p style="margin-top:20px; font-size:0.9rem;">
-                                    <strong>Note :</strong> Ce calculateur en ligne reproduit fidèlement les points
-                                    attribués
-                                    par ce nomogramme pour chaque variable, assurant une concordance parfaite avec la
-                                    méthode
-                                    papier.
-                                </p>
-                            </div>
-                        </section>
-                    </div>
-                </main>
-
-                <footer>
-                    <p style="font-size: 0.8rem; margin-bottom: 5px;">Outil DETECT Online - Version Beta</p>
-                    <p style="font-size: 0.75rem; opacity: 0.7;">Conception : Astouati Quentin</p>
-                    <p style="font-size: 0.7rem; opacity: 0.6; max-width: 600px; margin: 15px auto; line-height: 1.4;">
-                        Disclaimer : Cet outil est fourni à titre indicatif. L'exactitude des résultats n'est pas
-                        garantie.
-                        L'engagement et la responsabilité clinique incombent exclusivement au médecin référent.
-                    </p>
-                </footer>
         </div>
+        </section>
+    </div>
+    </div>
+    </section>
+    </div>
 
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-        <script src="logic.js"></script>
-        <script src="physio3d.js"></script>
-        <script src="app.js"></script>
+    <!-- TAB 3: NOMOGRAM SOURCE -->
+    <div id="tab-nomogram" class="tab-content">
+        <section class="card">
+            <div class="card-header">
+                <h2>Source du Calcul</h2>
+            </div>
+
+            <div class="nomogram-display">
+                <p>L'algorithme DETECT est basé sur le nomogramme validé dans l'étude princeps.</p>
+
+                <img src="nomogramme.png" alt="Nomogramme DETECT - Figure 3" class="nomogram-image">
+
+                <div class="reference-box">
+                    <strong>Référence :</strong><br>
+                    Coghlan JG, Denton CP, Grünig E, et al. <br>
+                    <em>Evidence-based detection of pulmonary arterial hypertension in systemic
+                        sclerosis: the
+                        DETECT study.</em><br>
+                    Ann Rheum Dis 2014;73:1340–1349.
+                </div>
+
+                <p style="margin-top:20px; font-size:0.9rem;">
+                    <strong>Note :</strong> Ce calculateur en ligne reproduit fidèlement les points
+                    attribués
+                    par ce nomogramme pour chaque variable, assurant une concordance parfaite avec la
+                    méthode
+                    papier.
+                </p>
+            </div>
+        </section>
+    </div>
+    </main>
+
+    <footer>
+        <p style="font-size: 0.8rem; margin-bottom: 5px;">Outil DETECT Online - Version Beta</p>
+        <p style="font-size: 0.75rem; opacity: 0.7;">Conception : Astouati Quentin</p>
+        <p style="font-size: 0.7rem; opacity: 0.6; max-width: 600px; margin: 15px auto; line-height: 1.4;">
+            Disclaimer : Cet outil est fourni à titre indicatif. L'exactitude des résultats n'est pas
+            garantie.
+            L'engagement et la responsabilité clinique incombent exclusivement au médecin référent.
+        </p>
+    </footer>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="logic.js"></script>
+    <script src="physio3d.js"></script>
+    <script src="app.js"></script>
 </body>
 
 </html>

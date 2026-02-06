@@ -1,6 +1,6 @@
 /**
- * DETECT Physio-Engine 3D (Three.js)
- * Real-time Physiological Simulation of PAH
+ * DETECT Physio-Engine 3D (Three.js) - Advanced Edition
+ * Includes Heart, Lungs, Capillary Diffusion and ECG Simulation
  */
 
 const Physio = {
@@ -11,15 +11,25 @@ const Physio = {
         data: {
             trVel: null,
             raArea: null,
+            dlco: null,
             bnp: null
         },
+        bars: {
+            tr: null,
+            ra: null,
+            dlco: null
+        },
         detectScore: null,
-        detectDecision: null
+        detectDecision: null,
+        ecgCanvas: null,
+        ecgLabel: null
     },
 
     state: {
-        paps: 25, // mmHg
-        isInit: false
+        paps: 25,
+        isInit: false,
+        ecgPhase: 0,
+        time: 0
     },
 
     scene: null,
@@ -28,46 +38,55 @@ const Physio = {
     clock: null,
 
     // Meshes
+    heartGroup: null,
+    lungGroup: null,
     rvMesh: null,
     raMesh: null,
-    septumMesh: null,
+    lungLeft: null,
+    lungRight: null,
 
-    // Uniforms for Shaders
+    // Systems
+    jetSystem: null,
+    diffusionSystem: null,
+
     uniforms: {
         uTime: { value: 0 },
-        uPaps: { value: 0.0 } // Normalized 0-1 (20-100 mmHg)
+        uPapsNorm: { value: 0.0 }
     },
 
     init: function () {
         if (this.state.isInit) return;
+        console.log("Initializing Advanced 3D Physio Engine...");
 
-        console.log("Initializing 3D Physio Engine...");
-
-        // DOM Elements
         this.els.slider = document.getElementById('master-paps');
         this.els.valDisplay = document.getElementById('paps-val');
         this.els.container = document.getElementById('heart-3d-container');
 
         this.els.data.trVel = document.getElementById('phy-tr-vel');
         this.els.data.raArea = document.getElementById('phy-ra-area');
+        this.els.data.dlco = document.getElementById('phy-dlco');
         this.els.data.bnp = document.getElementById('phy-bnp');
+
+        this.els.bars.tr = document.getElementById('bar-tr');
+        this.els.bars.ra = document.getElementById('bar-ra');
+        this.els.bars.dlco = document.getElementById('bar-dlco');
+
         this.els.detectScore = document.getElementById('phy-detect-score');
         this.els.detectDecision = document.getElementById('phy-detect-decision');
 
-        // Setup Three.js Scene
+        this.els.ecgCanvas = document.getElementById('ecg-canvas');
+        this.els.ecgLabel = document.getElementById('ecg-label');
+
         this.setupScene();
 
-        // Add Listeners
         if (this.els.slider) {
             this.els.slider.addEventListener('input', (e) => {
                 this.state.paps = parseInt(e.target.value);
                 this.updatePaps();
             });
-            // Initial trigger
             this.updatePaps();
         }
 
-        // Start Loop
         this.state.isInit = true;
         this.animate();
     },
@@ -76,13 +95,11 @@ const Physio = {
         const width = this.els.container.clientWidth;
         const height = this.els.container.clientHeight;
 
-        // 1. Scene & Camera
         this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0x0b1121); // Dark blue/black medical bg without fog artifacts
-        this.scene.fog = new THREE.FogExp2(0x0b1121, 0.02);
+        this.scene.background = new THREE.Color(0x0b1121);
 
         this.camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-        this.camera.position.set(0, 0, 12);
+        this.camera.position.set(0, 1, 14);
         this.camera.lookAt(0, 0, 0);
 
         this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -92,240 +109,279 @@ const Physio = {
 
         this.clock = new THREE.Clock();
 
-        // 2. Lights
-        const ambLight = new THREE.AmbientLight(0xffffff, 0.4);
+        const ambLight = new THREE.AmbientLight(0xffffff, 0.5);
         this.scene.add(ambLight);
 
-        const dirLight = new THREE.DirectionalLight(0xaaccff, 0.8);
-        dirLight.position.set(5, 5, 5);
-        this.scene.add(dirLight);
+        const pointLight = new THREE.PointLight(0x3b82f6, 2);
+        pointLight.position.set(5, 5, 5);
+        this.scene.add(pointLight);
 
-        const rimLight = new THREE.SpotLight(0xff4444, 2);
-        rimLight.position.set(-5, 2, 0);
-        this.scene.add(rimLight);
-
-        // 3. Create Heart Components
+        // 1. HEART GROUP (Left Side)
+        this.heartGroup = new THREE.Group();
+        this.heartGroup.position.set(-3.5, 0, 0);
+        this.scene.add(this.heartGroup);
         this.createHeartMaterials();
-        this.createRightVentricle();
-        this.createRightAtrium();
-        this.createSeptum();
+        this.createHeartMeshes();
 
-        // Resize Handler
+        // 2. LUNG GROUP (Right Side)
+        this.lungGroup = new THREE.Group();
+        this.lungGroup.position.set(3.5, 0, 0);
+        this.scene.add(this.lungGroup);
+        this.createLungMeshes();
+
+        // 3. JET & DIFFUSION Systems
+        this.createJet();
+        this.createDiffusion();
+
         window.addEventListener('resize', () => {
-            if (this.els.container && this.camera && this.renderer) {
-                const w = this.els.container.clientWidth;
-                const h = this.els.container.clientHeight;
-                this.renderer.setSize(w, h);
-                this.camera.aspect = w / h;
-                this.camera.updateProjectionMatrix();
-            }
+            if (!this.els.container) return;
+            const w = this.els.container.clientWidth;
+            const h = this.els.container.clientHeight;
+            this.renderer.setSize(w, h);
+            this.camera.aspect = w / h;
+            this.camera.updateProjectionMatrix();
         });
     },
 
     createHeartMaterials: function () {
-        // Shared Uniforms
         this.uniforms = {
             uTime: { value: 0 },
-            uPapsNorm: { value: 0.0 }, // 0 (20mmHg) to 1 (100mmHg)
-            uBaseColor: { value: new THREE.Color(0x3b82f6) }, // Blue
-            uStressColor: { value: new THREE.Color(0xef4444) } // Red
+            uPapsNorm: { value: 0.0 },
+            uBaseColor: { value: new THREE.Color(0x34495e) },
+            uStressColor: { value: new THREE.Color(0xe74c3c) }
         };
 
-        // Custom Vertex Shader for Pulsation & Deformation
         const vShader = `
             uniform float uTime;
             uniform float uPapsNorm;
             varying vec3 vNormal;
-            varying vec3 vPosition;
             varying float vGlow;
-
             void main() {
                 vNormal = normalize(normalMatrix * normal);
-                vPosition = position;
-                
-                // Beat Logic
-                float beat = sin(uTime * 4.0) * 0.02; // Normal beat
-                
-                // Deformation Logic
-                vec3 newPos = position;
-                
-                // Hypertrophy/Dilation (Simple radial expansion)
-                // At high pressure, expand outward
-                float dilation = uPapsNorm * 0.3; 
-                
-                newPos += normal * (beat + dilation);
-
-                // Pass for Rim lighting
+                float beatMod = (sin(uTime * 6.0) + 1.0) * 0.5;
+                float beat = beatMod * 0.04 * (1.0 + uPapsNorm);
+                vec3 newPos = position + normal * beat;
                 vec3 viewVector = normalize(cameraPosition - (modelMatrix * vec4(newPos, 1.0)).xyz);
-                vGlow = 1.0 - dot(vNormal, viewVector);
-                vGlow = pow(vGlow, 3.0);
-
+                vGlow = pow(1.0 - dot(vNormal, viewVector), 2.5);
                 gl_Position = projectionMatrix * modelViewMatrix * vec4(newPos, 1.0);
             }
         `;
-
         const fShader = `
             uniform vec3 uBaseColor;
             uniform vec3 uStressColor;
             uniform float uPapsNorm;
             varying float vGlow;
-
             void main() {
-                // Color Morph: Blue -> Red based on pressure
-                vec3 finalColor = mix(uBaseColor, uStressColor, uPapsNorm);
-                
-                // Alpha/Glow logic for "Glass" look
-                float alpha = 0.3 + (vGlow * 0.7);
-                
-                gl_FragColor = vec4(finalColor + (vGlow * 0.5), alpha);
+                vec3 color = mix(uBaseColor, uStressColor, uPapsNorm * 0.8);
+                gl_FragColor = vec4(color + vGlow * 0.8, 0.5 + vGlow * 0.5);
             }
         `;
-
-        this.heartMaterial = new THREE.ShaderMaterial({
+        this.organMat = new THREE.ShaderMaterial({
             uniforms: this.uniforms,
             vertexShader: vShader,
             fragmentShader: fShader,
             transparent: true,
             side: THREE.DoubleSide,
-            depthWrite: false, // For transparency sorting
             blending: THREE.AdditiveBlending
         });
     },
 
-    createRightVentricle: function () {
-        // RV is roughly a triangular/crescent shape. We'll use a deformed Sphere.
-        // Geometry
-        const geo = new THREE.SphereGeometry(1.5, 64, 64);
+    createHeartMeshes: function () {
+        // RV - Deformed sphere
+        const rvGeo = new THREE.SphereGeometry(2, 48, 48);
+        this.rvMesh = new THREE.Mesh(rvGeo, this.organMat);
+        this.rvMesh.scale.set(0.8, 1.3, 0.6);
+        this.rvMesh.position.set(0, -1, 0);
+        this.heartGroup.add(this.rvMesh);
 
-        // Deform geometry initially to look less like a beach ball
-        const pos = geo.attributes.position;
-        for (let i = 0; i < pos.count; i++) {
-            const x = pos.getX(i);
-            const y = pos.getY(i);
-            const z = pos.getZ(i);
-
-            // Elongate slightly in Y
-            pos.setY(i, y * 1.4);
-            // Flatten slightly in Z (anterior-posterior)
-            pos.setZ(i, z * 0.8);
-        }
-        geo.computeVertexNormals();
-
-        this.rvMesh = new THREE.Mesh(geo, this.heartMaterial);
-        this.rvMesh.position.set(-0.5, -1, 0);
-        this.scene.add(this.rvMesh);
+        // RA - Small bulb on top
+        const raGeo = new THREE.SphereGeometry(1.4, 32, 32);
+        this.raMesh = new THREE.Mesh(raGeo, this.organMat);
+        this.raMesh.position.set(-0.8, 1.8, 0);
+        this.heartGroup.add(this.raMesh);
     },
 
-    createRightAtrium: function () {
-        const geo = new THREE.SphereGeometry(1.0, 32, 32);
-        this.raMesh = new THREE.Mesh(geo, this.heartMaterial);
-        this.raMesh.position.set(-1.5, 1.5, -0.5);
-        this.scene.add(this.raMesh);
+    createLungMeshes: function () {
+        const lungMat = this.organMat.clone();
+        lungMat.uniforms.uBaseColor.value = new THREE.Color(0x27ae60);
+
+        const lungGeo = new THREE.SphereGeometry(2.5, 48, 48);
+
+        this.lungLeft = new THREE.Mesh(lungGeo, lungMat);
+        this.lungLeft.scale.set(0.6, 1.6, 0.4);
+        this.lungLeft.position.set(-1.4, 0, 0);
+        this.lungGroup.add(this.lungLeft);
+
+        this.lungRight = new THREE.Mesh(lungGeo, lungMat);
+        this.lungRight.scale.set(0.6, 1.6, 0.4);
+        this.lungRight.position.set(1.4, 0, 0);
+        this.lungGroup.add(this.lungRight);
     },
 
-    createSeptum: function () {
-        // The Septum is the wall. We represent it as a plane/curved surface between RV and LV (implied)
-        // For visual simplicity in this schematic, we might just use the RV inner wall or a separate plane.
+    createJet: function () {
+        const count = 150;
+        const geo = new THREE.BufferGeometry();
+        const pos = new Float32Array(count * 3);
+        for (let i = 0; i < count * 3; i++) pos[i] = (Math.random() - 0.5) * 1.5;
+        geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+        const mat = new THREE.PointsMaterial({ color: 0x5dade2, size: 0.1, transparent: true, opacity: 0.7 });
+        this.jetSystem = new THREE.Points(geo, mat);
+        this.jetSystem.position.set(-0.3, 0.8, 0.2);
+        this.heartGroup.add(this.jetSystem);
+    },
 
-        // Let's add a "Jet" effect instead which is more visually striking for TR.
-        // Particle System for Blood Flow
-        const particleCount = 200;
-        const partGeo = new THREE.BufferGeometry();
-        const positions = new Float32Array(particleCount * 3);
-        const speeds = new Float32Array(particleCount);
-
-        for (let i = 0; i < particleCount; i++) {
-            positions[i * 3] = (Math.random() - 0.5) * 0.5; // X center
-            positions[i * 3 + 1] = (Math.random() - 0.5) * 2; // Y spread
-            positions[i * 3 + 2] = (Math.random() - 0.5) * 0.5; // Z center
-            speeds[i] = 0.05 + Math.random() * 0.05;
+    createDiffusion: function () {
+        const count = 500;
+        const geo = new THREE.BufferGeometry();
+        const pos = new Float32Array(count * 3);
+        const speeds = new Float32Array(count);
+        for (let i = 0; i < count; i++) {
+            pos[i * 3] = (Math.random() - 0.5) * 4;
+            pos[i * 3 + 1] = (Math.random() - 0.5) * 6;
+            pos[i * 3 + 2] = (Math.random() - 0.5) * 1.5;
+            speeds[i] = 0.01 + Math.random() * 0.03;
         }
-
-        partGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        partGeo.setAttribute('speed', new THREE.BufferAttribute(speeds, 1));
-
-        const pMaterial = new THREE.PointsMaterial({
-            color: 0x88ccff,
-            size: 0.15,
-            transparent: true,
-            opacity: 0.6
-        });
-
-        this.jetSystem = new THREE.Points(partGeo, pMaterial);
-        this.jetSystem.position.set(-0.5, 0.5, 0); // Tricuspid valve area
-        this.jetSystem.rotation.z = Math.PI / 4; // Jet angle back to RA
-        this.scene.add(this.jetSystem);
+        geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+        geo.setAttribute('speed', new THREE.BufferAttribute(speeds, 1));
+        const mat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.06, transparent: true, opacity: 0.8 });
+        this.diffusionSystem = new THREE.Points(geo, mat);
+        this.lungGroup.add(this.diffusionSystem);
     },
 
     updatePaps: function () {
-        // Logic Layer (Maths)
         const paps = this.state.paps;
-        this.els.valDisplay.textContent = paps;
-
-        // Normalize for Uniforms (20mmHg = 0, 100mmHg = 1)
+        if (this.els.valDisplay) this.els.valDisplay.textContent = paps;
         const norm = Math.min(1, Math.max(0, (paps - 20) / 80));
         this.uniforms.uPapsNorm.value = norm;
 
-        // --- Hemodynamic Calcs (Same as before) ---
+        // Hemodynamics
         const rap = 5 + (Math.max(0, paps - 25) * 0.15);
         const dP = Math.max(0, paps - rap);
         const trVel = Math.sqrt(dP / 4);
-        let raArea = 16 + (Math.max(0, paps - 25) * 0.4);
-        let bnp = 100 + Math.exp(paps * 0.08);
-        if (bnp > 3000) bnp = 3000 + (paps * 10);
+        const raArea = 16 + (Math.max(0, paps - 25) * 0.4);
+        const bnp = 100 + Math.exp(paps * 0.08);
+
+        // DLCO (Simulation of vascular obstruction)
+        const dlco = Math.max(15, 85 - (norm * 65));
 
         // Update Text
-        this.els.data.trVel.textContent = trVel.toFixed(1);
-        this.els.data.raArea.textContent = raArea.toFixed(1);
-        this.els.data.bnp.textContent = Math.round(bnp);
+        if (this.els.data.trVel) this.els.data.trVel.textContent = trVel.toFixed(1);
+        if (this.els.data.raArea) this.els.data.raArea.textContent = raArea.toFixed(1);
+        if (this.els.data.dlco) this.els.data.dlco.textContent = Math.round(dlco);
+        if (this.els.data.bnp) this.els.data.bnp.textContent = Math.round(bnp);
 
-        // Update RA Dilation Mesh Scale specifically
-        const raScale = 1 + (norm * 0.8); // Scale up to 1.8x
-        if (this.raMesh) this.raMesh.scale.set(raScale, raScale, raScale);
+        // Update Bars
+        if (this.els.bars.tr) this.els.bars.tr.style.width = Math.min(100, (trVel / 5) * 100) + '%';
+        if (this.els.bars.ra) this.els.bars.ra.style.width = Math.min(100, (raArea / 45) * 100) + '%';
+        if (this.els.bars.dlco) this.els.bars.dlco.style.width = dlco + '%';
 
-        // Update DETECT Score
+        // 3D Visual Scaling
+        if (this.raMesh) {
+            const s = 1.0 + (norm * 0.9);
+            this.raMesh.scale.set(s, s, s);
+        }
+        if (this.rvMesh) {
+            const s = 1.0 + (norm * 0.5);
+            this.rvMesh.scale.set(0.8 * s, 1.3 * s, 0.6 * s);
+        }
+
+        // Lung Visualization (Stiffness/Density)
+        if (this.lungLeft) {
+            const s = 1.0 - (norm * 0.15);
+            this.lungLeft.scale.set(0.6 * s, 1.6 * s, 0.4 * s);
+            this.lungRight.scale.set(0.6 * s, 1.6 * s, 0.4 * s);
+            // Change color shift as well
+            this.lungLeft.material.uniforms.uPapsNorm.value = norm;
+            this.lungRight.material.uniforms.uPapsNorm.value = norm;
+        }
+
         this.updateDetectScore(trVel, raArea, bnp);
+        this.updateECGInfo(norm);
+    },
+
+    updateECGInfo: function (norm) {
+        if (!this.els.ecgLabel) return;
+        const axis = Math.round(90 + (norm * 120)); // From Normal to Right deviation
+        let state = "NORMAL";
+        if (axis > 110) state = "DÉVIATION DROITE";
+        if (axis > 160) state = "RAD SÉVÈRE";
+        this.els.ecgLabel.textContent = `AXE ECG : ${axis}° (${state})`;
+        this.els.ecgLabel.style.color = axis > 110 ? "#f87171" : "#4ade80";
     },
 
     animate: function () {
         requestAnimationFrame(() => this.animate());
-
         const dt = this.clock.getDelta();
-        this.uniforms.uTime.value += dt;
+        this.state.time += dt;
+        this.uniforms.uTime.value = this.state.time;
 
-        // Animate Jet Particles
+        const norm = this.uniforms.uPapsNorm.value;
+
+        // Animate Tricuspid Jet (Backflow to RA)
         if (this.jetSystem) {
-            const positions = this.jetSystem.geometry.attributes.position.array;
-            const speeds = this.jetSystem.geometry.attributes.speed.array;
-
-            // Speed increases with pressure (regurgitant jet velocity)
-            // Base speed + pressure modifier
-            const speedMod = 1 + (this.uniforms.uPapsNorm.value * 2.0);
-
-            for (let i = 0; i < speeds.length; i++) {
-                // Move UP (Y)
-                positions[i * 3 + 1] += speeds[i] * speedMod * 10 * dt;
-
-                // Reset if out of bounds
-                if (positions[i * 3 + 1] > 2) {
-                    positions[i * 3 + 1] = -1;
-                    positions[i * 3] = (Math.random() - 0.5) * 0.5;
-                    positions[i * 3 + 2] = (Math.random() - 0.5) * 0.5;
+            const pos = this.jetSystem.geometry.attributes.position.array;
+            for (let i = 0; i < pos.length / 3; i++) {
+                pos[i * 3 + 1] += (0.05 + norm * 0.6); // Jet goes up
+                if (pos[i * 3 + 1] > 3) {
+                    pos[i * 3 + 1] = -1;
+                    pos[i * 3] = (Math.random() - 0.5) * 1.0;
                 }
             }
             this.jetSystem.geometry.attributes.position.needsUpdate = true;
-
-            // Color shift for Jet
-            const colorNorm = this.uniforms.uPapsNorm.value;
-            // 0 = Blue, 1 = Red/Yellow
-            this.jetSystem.material.color.setHSL(0.6 - (colorNorm * 0.6), 1.0, 0.5);
+            this.jetSystem.material.opacity = 0.2 + (norm * 0.6);
         }
 
-        this.renderer.render(this.scene, this.camera);
+        // Animate Lung Diffusion (Particle exchange)
+        if (this.diffusionSystem) {
+            const pos = this.diffusionSystem.geometry.attributes.position.array;
+            const speeds = this.diffusionSystem.geometry.attributes.speed.array;
+            for (let i = 0; i < pos.length / 3; i++) {
+                // Diffusion slows down drastically as norm increases (Obstruction)
+                const flow = speeds[i] * (1.2 - norm * 1.0);
+                pos[i * 3] += flow;
+                if (pos[i * 3] > 2.5) pos[i * 3] = -2.5;
+            }
+            this.diffusionSystem.geometry.attributes.position.needsUpdate = true;
+            // Diffusion color shift (White to Dull Grey)
+            this.diffusionSystem.material.color.setHSL(0, 0, 1.0 - norm * 0.5);
+        }
+
+        this.drawECG(dt, norm);
+
+        if (this.renderer && this.scene && this.camera) {
+            this.renderer.render(this.scene, this.camera);
+        }
+    },
+
+    drawECG: function (dt, norm) {
+        if (!this.els.ecgCanvas) return;
+        const ctx = this.els.ecgCanvas.getContext('2d');
+        const w = this.els.ecgCanvas.width;
+        const h = this.els.ecgCanvas.height;
+
+        // Trace logic
+        ctx.fillStyle = 'rgba(11, 17, 33, 0.15)'; // Trail effect
+        ctx.fillRect(0, 0, w, h);
+
+        const x = (this.state.time * 60) % w;
+        const hr = 1.0 + norm * 2.5; // Heart rate increases with pressure
+
+        // Simulating a QRS spike
+        let spike = 0;
+        const cycle = (this.state.time * hr) % 1.0;
+        if (cycle > 0.95) spike = (cycle - 0.95) * 600;
+
+        const y = (h / 2) - spike + Math.sin(this.state.time * 20) * 2;
+
+        ctx.beginPath();
+        ctx.strokeStyle = norm > 0.5 ? '#f87171' : '#4ade80';
+        ctx.lineWidth = 2;
+        ctx.moveTo(x - 2, h / 2);
+        ctx.lineTo(x, y);
+        ctx.stroke();
     },
 
     updateDetectScore: function (trVel, raArea, bnp) {
-        // Mock DETECT Calc
         const simInputs = {
             fvc_dlco: 1.6,
             telang: true,
@@ -340,22 +396,21 @@ const Physio = {
         if (window.DETECT) {
             const s1 = window.DETECT.calculateStep1Points(simInputs);
             const s2 = window.DETECT.calculateStep2Points(s1.total, raArea, trVel);
-
-            this.els.detectScore.textContent = s2.total;
-
-            if (s2.total > 35) {
-                this.els.detectDecision.textContent = "ALERTE HAUT RISQUE";
-                this.els.detectDecision.style.background = "var(--danger-color)";
-                this.els.detectDecision.style.color = "white";
-            } else {
-                this.els.detectDecision.textContent = "Risque Faible";
-                this.els.detectDecision.style.background = "#e2e8f0";
-                this.els.detectDecision.style.color = "var(--text-primary)";
+            if (this.els.detectScore) this.els.detectScore.textContent = s2.total;
+            if (this.els.detectDecision) {
+                if (s2.total > 35) {
+                    this.els.detectDecision.textContent = "ALERTE HAUT RISQUE";
+                    this.els.detectDecision.className = "live-decision decision-danger";
+                    this.els.detectDecision.style.background = "#e11d48";
+                } else {
+                    this.els.detectDecision.textContent = "Risque Faible";
+                    this.els.detectDecision.className = "live-decision decision-safe";
+                    this.els.detectDecision.style.background = "#475569";
+                }
             }
         }
     }
 };
 
-// Expose
 window.Physio = Physio;
-console.log("Physio3D Module Loaded");
+console.log("Physio Advanced Engine Loaded");
