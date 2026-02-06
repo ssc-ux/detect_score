@@ -52,46 +52,61 @@
 
                     <div class="form-grid">
                         <!-- FVC -->
+                        <!-- FVC -->
                         <div class="input-group">
-                            <label for="fvc">CVF (% prédit)</label>
+                            <label for="fvc">
+                                CVF (% prédit)
+                                <!-- Points for FVC/DLCO Combo will show here -->
+                            </label>
                             <input type="number" id="fvc" step="0.1" placeholder="Ex: 85" autocomplete="off">
                             <small class="hint">Capacité Vitale Forcée</small>
                         </div>
 
                         <!-- DLCO -->
                         <div class="input-group">
-                            <label for="dlco">DLCO (% prédit)</label>
+                            <label for="dlco">
+                                DLCO (% prédit)
+                                <span id="pts-fvc_dlco" class="points-badge"></span>
+                            </label>
                             <input type="number" id="dlco" step="0.1" placeholder="Ex: 45" autocomplete="off">
                             <small class="hint">Capacité de Diffusion</small>
-                            <div id="pts-fvc_dlco" class="points-badge"></div>
                         </div>
 
                         <!-- Telangiectasias -->
                         <div class="input-group checkbox-group">
-                            <label for="telang">Télangiectasies (Actuelles/Passées)</label>
+                            <label for="telang">
+                                Télangiectasies (Actuelles/Passées)
+                                <span id="pts-telang" class="points-badge"></span>
+                            </label>
                             <input type="checkbox" id="telang">
                             <span class="checkmark"></span>
-                            <div id="pts-telang" class="points-badge"></div>
                         </div>
 
                         <!-- ACA -->
                         <div class="input-group checkbox-group">
-                            <label for="aca">Anticorps Anti-Centromère (ACA)</label>
+                            <label for="aca">
+                                Anticorps Anti-Centromère (ACA)
+                                <span id="pts-aca" class="points-badge"></span>
+                            </label>
                             <input type="checkbox" id="aca">
                             <span class="checkmark"></span>
-                            <div id="pts-aca" class="points-badge"></div>
                         </div>
 
                         <!-- NT-proBNP -->
                         <div class="input-group">
-                            <label for="ntprobnp">NT-proBNP (pg/mL)</label>
+                            <label for="ntprobnp">
+                                NT-proBNP (pg/mL)
+                                <span id="pts-ntprobnp" class="points-badge"></span>
+                            </label>
                             <input type="number" id="ntprobnp" step="1" placeholder="Ex: 150" autocomplete="off">
-                            <div id="pts-ntprobnp" class="points-badge"></div>
                         </div>
 
                         <!-- Urate -->
                         <div class="input-group">
-                            <label for="urate">Acide Urique (Urate)</label>
+                            <label for="urate">
+                                Acide Urique (Urate)
+                                <span id="pts-urate" class="points-badge"></span>
+                            </label>
                             <div class="multi-input">
                                 <input type="number" id="urate" step="0.1" placeholder="Ex: 5.0" autocomplete="off">
                                 <select id="urate_unit">
@@ -99,15 +114,16 @@
                                     <option value="umol">µmol/L</option>
                                 </select>
                             </div>
-                            <div id="pts-urate" class="points-badge"></div>
                         </div>
 
                         <!-- RAD -->
                         <div class="input-group checkbox-group">
-                            <label for="rad">Déviation Axiale Droite (ECG)</label>
+                            <label for="rad">
+                                Déviation Axiale Droite (ECG)
+                                <span id="pts-rad" class="points-badge"></span>
+                            </label>
                             <input type="checkbox" id="rad">
-                            <small class="hint">Axe QRS ≥ 90°</small>
-                            <div id="pts-rad" class="points-badge"></div>
+                            <span class="checkmark"></span>
                         </div>
                     </div>
 
@@ -116,30 +132,7 @@
                     </div>
 
                     <!-- Result Area Step 1 -->
-                    <div id="result-step1" class="result-box hidden">
-                        <div class="score-bars">
-                            <!-- Nomogram Bar -->
-                            <div class="bar-container">
-                                <div class="bar-label">
-                                    <span>Nomogramme (Points)</span>
-                                    <span class="bar-value"><span id="s1-points-val">--</span> pts</span>
-                                </div>
-                                <div class="bar-track">
-                                    <div id="s1-points-bar" class="bar-fill"></div>
-                                    <div class="cutoff-marker" style="left: 50%" title="Seuil: 300 pts"></div>
-                                </div>
-                                <div class="bar-legend">Seuil : 300 pts</div>
-                            </div>
-                        </div>
-
-                        <div class="decision-area">
-                            <div class="score-decision" id="s1-decision">--</div>
-                            <div id="bypass-s2-area" class="hidden" style="margin-top: 15px;">
-                                <button id="btn-force-s2" class="btn-secondary btn-small">ETT réalisé (Forcer Étape
-                                    2)</button>
-                            </div>
-                        </div>
-                    </div>
+                    <!-- ... -->
                 </section>
 
                 <!-- STEP 2 SECTION -->
@@ -153,16 +146,20 @@
                     <div class="form-grid">
                         <!-- Right Atrium Area -->
                         <div class="input-group">
-                            <label for="ra_area">Surface de l'Oreillette Droite (cm²)</label>
+                            <label for="ra_area">
+                                Surface de l'Oreillette Droite (cm²)
+                                <span id="pts-ra_area" class="points-badge"></span>
+                            </label>
                             <input type="number" id="ra_area" step="0.1" placeholder="Ex: 16" autocomplete="off">
-                            <div id="pts-ra_area" class="points-badge"></div>
                         </div>
 
                         <!-- TR Velocity -->
                         <div class="input-group">
-                            <label for="tr_vel">Vélocité IT (Tricuspid Regurgitation) (m/s)</label>
+                            <label for="tr_vel">
+                                Vélocité IT (Tricuspid Regurgitation) (m/s)
+                                <span id="pts-tr_vel" class="points-badge"></span>
+                            </label>
                             <input type="number" id="tr_vel" step="0.1" placeholder="Ex: 2.8" autocomplete="off">
-                            <div id="pts-tr_vel" class="points-badge"></div>
                         </div>
                     </div>
 

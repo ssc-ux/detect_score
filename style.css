@@ -115,6 +115,10 @@ header h1 {
     margin-bottom: 0.75rem;
     color: var(--text-primary);
     font-size: 0.95rem;
+    display: flex;
+    /* Flex to align badge */
+    justify-content: space-between;
+    align-items: center;
 }
 
 input[type="number"],
@@ -173,6 +177,8 @@ select:focus {
     margin-bottom: 0;
     padding-right: 15px;
     cursor: pointer;
+    flex: 1;
+    /* Allow label to take available space */
 }
 
 .checkbox-group input[type="checkbox"] {
