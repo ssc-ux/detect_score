@@ -20,11 +20,18 @@ const els = {
             urate_unit: document.getElementById('urate_unit'),
             rad: document.getElementById('rad')
         },
+        badges: {
+            fvc_dlco: document.getElementById('pts-fvc_dlco'),
+            telang: document.getElementById('pts-telang'),
+            aca: document.getElementById('pts-aca'),
+            ntprobnp: document.getElementById('pts-ntprobnp'),
+            urate: document.getElementById('pts-urate'),
+            rad: document.getElementById('pts-rad')
+        },
         btn: document.getElementById('calc-step1'),
         resultBox: document.getElementById('result-step1'),
         pointsVal: document.getElementById('s1-points-val'),
-        decision: document.getElementById('s1-decision'),
-        details: document.getElementById('s1-details')
+        decision: document.getElementById('s1-decision')
     },
     step2: {
         section: document.getElementById('step2'),
@@ -32,13 +39,16 @@ const els = {
             ra: document.getElementById('ra_area'),
             tr: document.getElementById('tr_vel')
         },
+        badges: {
+            ra_area: document.getElementById('pts-ra_area'),
+            tr_vel: document.getElementById('pts-tr_vel')
+        },
         btn: document.getElementById('calc-step2'),
         resultBox: document.getElementById('result-step2'),
         pointsVal: document.getElementById('s2-points-val'),
         decision: document.getElementById('s2-decision'),
         rec: document.getElementById('final-recommendation'),
-        recBox: document.getElementById('s2-rec-box'),
-        details: document.getElementById('s2-details')
+        recBox: document.getElementById('s2-rec-box')
     },
     bypassS2: {
         container: document.getElementById('bypass-s2-area'),
@@ -62,6 +72,10 @@ function init() {
     // 0. Force Reset on load (clean state)
     document.querySelectorAll('input[type="number"]').forEach(i => i.value = '');
     document.querySelectorAll('input[type="checkbox"]').forEach(i => i.checked = false);
+
+    // Clear badges
+    document.querySelectorAll('.points-badge').forEach(b => b.textContent = '');
+
     els.step1.resultBox.classList.add('hidden');
     els.step2.section.classList.add('hidden');
     els.step2.resultBox.classList.add('hidden');
@@ -70,6 +84,18 @@ function init() {
 
     els.step1.btn.addEventListener('click', runStep1);
     els.step2.btn.addEventListener('click', runStep2);
+
+    // Live Listeners
+    Object.values(els.step1.inputs).forEach(input => {
+        if (!input) return;
+        input.addEventListener('input', updateLiveStep1);
+        input.addEventListener('change', updateLiveStep1);
+    });
+    Object.values(els.step2.inputs).forEach(input => {
+        if (!input) return;
+        input.addEventListener('input', updateLiveStep2);
+        input.addEventListener('change', updateLiveStep2);
+    });
 
     els.bypassS2.btn.addEventListener('click', () => {
         els.step2.section.classList.remove('hidden');
@@ -93,64 +119,79 @@ function getUrateInMgDl() {
     return val;
 }
 
-function renderDetails(container, details, step) {
-    container.innerHTML = '';
-    const labels = {
-        fvc_dlco: "Ratio CVF/DLCO",
-        telang: "Télangiectasies",
-        aca: "Ac. Anti-Centromère",
-        ntprobnp: "NT-proBNP",
-        urate: "Acide Urique",
-        rad: "Déviation Axiale Droite",
-        step1_points: "Points Étape 1 (Report)",
-        ra_area: "Surface OD",
-        tr_vel: "Vélocité IT"
-    };
-
-    let html = '';
-    for (const [key, val] of Object.entries(details)) {
-        if (key === 'total') continue;
-        if (val === 0 && key !== 'fvc_dlco') continue;
-
-        const label = labels[key] || key;
-        html += `
-            <div class="details-row">
-                <span>${label}</span>
-                <span class="details-points">+${val} pts</span>
-            </div>
-        `;
+function getStep1Inputs() {
+    const fvc = parseFloat(els.step1.inputs.fvc.value);
+    const dlco = parseFloat(els.step1.inputs.dlco.value);
+    // Only calculate ratio if both are present
+    let ratio = 1.0;
+    if (!isNaN(fvc) && !isNaN(dlco) && dlco !== 0) {
+        ratio = fvc / dlco;
     }
-    container.innerHTML = html;
-}
-
-function runStep1() {
-    // 1. Gather Inputs
-    const fvc = parseFloat(els.step1.inputs.fvc.value) || 100;
-    const dlco = parseFloat(els.step1.inputs.dlco.value) || 100;
-    const ratio = dlco !== 0 ? fvc / dlco : 1.0;
 
     const inputs = {
         fvc_dlco: ratio,
         telang: els.step1.inputs.telang.checked,
         aca: els.step1.inputs.aca.checked,
-        ntprobnp: parseFloat(els.step1.inputs.ntprobnp.value) || 10,
+        ntprobnp: parseFloat(els.step1.inputs.ntprobnp.value) || 0, // Default 0 for live calc
         urate: getUrateInMgDl(),
         rad: els.step1.inputs.rad.checked
     };
-
     if (inputs.ntprobnp < 1) inputs.ntprobnp = 1;
+    return inputs;
+}
 
-    // 2. Calculate
+function updateLiveStep1() {
+    const inputs = getStep1Inputs();
+    const points = window.DETECT.calculateStep1Points(inputs);
+
+    // Update Step 1 Badges
+    const fvc = parseFloat(els.step1.inputs.fvc.value);
+    const dlco = parseFloat(els.step1.inputs.dlco.value);
+    if (!isNaN(fvc) && !isNaN(dlco)) {
+        els.step1.badges.fvc_dlco.textContent = `+${points.fvc_dlco} pts`;
+    } else {
+        els.step1.badges.fvc_dlco.textContent = '';
+    }
+
+    els.step1.badges.telang.textContent = `+${points.telang} pts`;
+    els.step1.badges.aca.textContent = `+${points.aca} pts`;
+
+    if (els.step1.inputs.ntprobnp.value) els.step1.badges.ntprobnp.textContent = `+${points.ntprobnp} pts`;
+    else els.step1.badges.ntprobnp.textContent = '';
+
+    if (els.step1.inputs.urate.value) els.step1.badges.urate.textContent = `+${points.urate} pts`;
+    else els.step1.badges.urate.textContent = '';
+
+    els.step1.badges.rad.textContent = `+${points.rad} pts`;
+}
+
+function updateLiveStep2() {
+    const ra = parseFloat(els.step2.inputs.ra.value) || 0;
+    const tr = parseFloat(els.step2.inputs.tr.value) || 0;
+
+    // Use 0 as base points since we just want to see the contribution of Step 2 variables
+    const points = window.DETECT.calculateStep2Points(0, ra, tr);
+
+    if (els.step2.inputs.ra.value) els.step2.badges.ra_area.textContent = `+${points.ra_area} pts`;
+    else els.step2.badges.ra_area.textContent = '';
+
+    if (els.step2.inputs.tr.value) els.step2.badges.tr_vel.textContent = `+${points.tr_vel} pts`;
+    else els.step2.badges.tr_vel.textContent = '';
+}
+
+function runStep1() {
+    const inputs = getStep1Inputs();
+
+    // Calculate
     step1Result = window.DETECT.calculateStep1Exact(inputs);
     const step1Points = window.DETECT.calculateStep1Points(inputs);
     step1Result.points = step1Points.total;
 
-    // 3. Display
+    // Display
     els.step1.resultBox.classList.remove('hidden');
     els.step1.pointsVal.textContent = step1Points.total;
 
     updateBar(els.s1Bars.points, step1Points.total, 300, 600);
-    renderDetails(els.step1.details, step1Points, 1);
 
     const isHighRisk = step1Points.total > 300;
 
@@ -176,14 +217,12 @@ function runStep2() {
         tr_vel: parseFloat(els.step2.inputs.tr.value) || 0
     };
 
-    const res = window.DETECT.calculateStep2Exact(step1Result.step1_score_linear, inputs.ra_area, inputs.tr_vel);
     const resPoints = window.DETECT.calculateStep2Points(step1Result.points, inputs.ra_area, inputs.tr_vel);
 
     els.step2.resultBox.classList.remove('hidden');
     els.step2.pointsVal.textContent = resPoints.total;
 
     updateBar(els.s2Bars.points, resPoints.total, 35, 100);
-    renderDetails(els.step2.details, resPoints, 2);
 
     const isReferral = resPoints.total > 35;
 
