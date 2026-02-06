@@ -116,9 +116,37 @@ function init() {
 
     initTabs();
 
-    // START PHYSIO ENGINE
+    initTabs();
+
+    // START PHYSIO ENGINE (Safe Init)
     if (window.Physio) {
-        window.Physio.init();
+        try {
+            window.Physio.init();
+        } catch (e) {
+            console.error("Physio Engine Failed:", e);
+        }
+    }
+
+    // Explicitly init modal last to ensure it works
+    initModal();
+}
+
+function initModal() {
+    const overlay = document.getElementById('beta-modal');
+    const closeBtn = document.getElementById('close-modal');
+
+    if (closeBtn && overlay) {
+        // Remove existing listeners by cloning (optional but ensures clean slate) or just add new one
+        closeBtn.onclick = (e) => {
+            e.preventDefault();
+            overlay.classList.add('closing');
+            setTimeout(() => {
+                overlay.style.display = 'none';
+            }, 400);
+        };
+        console.log("Modal listener attached.");
+    } else {
+        console.warn("Modal elements not found for init.");
     }
 }
 
