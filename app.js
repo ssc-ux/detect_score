@@ -233,23 +233,21 @@ try {
 
     function runStep1() {
         const inputs = getStep1Inputs();
-        step1Result = window.DETECT.calculateStep1Exact(inputs);
-        const step1Points = window.DETECT.calculateStep1Points(inputs);
-        step1Result.points = step1Points.total;
+        const result = window.DETECT.calculateStep1Result(inputs);
+        step1Result = result; // Store for Step 2
 
         els.step1.resultBox.classList.remove('hidden');
-        els.step1.pointsVal.textContent = step1Points.total;
-        updateBar(els.s1Bars.points, step1Points.total, 300, 600);
+        els.step1.pointsVal.textContent = result.points;
+        updateBar(els.s1Bars.points, result.points, 300, 600);
 
-        if (step1Points.total > 300) {
-            els.step1.decision.textContent = "REFERRER À L'ÉCHO (Risque Élevé)";
-            els.step1.decision.className = "score-decision decision-danger";
+        els.step1.decision.textContent = result.decision_text + (result.refer_to_echo ? " (Risque Élevé)" : " (Risque Faible)");
+        els.step1.decision.className = "score-decision " + (result.refer_to_echo ? "decision-danger" : "decision-safe");
+
+        if (result.refer_to_echo) {
             els.step2.section.classList.remove('hidden');
             els.step2.section.scrollIntoView({ behavior: "smooth", block: "start" });
             els.bypassS2.container.classList.add('hidden');
         } else {
-            els.step1.decision.textContent = "SURVEILLANCE (Risque Faible)";
-            els.step1.decision.className = "score-decision decision-safe";
             els.step2.section.classList.add('hidden');
             els.bypassS2.container.classList.remove('hidden');
         }
@@ -261,19 +259,18 @@ try {
             ra_area: parseFloat(els.step2.inputs.ra.value) || 0,
             tr_vel: parseFloat(els.step2.inputs.tr.value) || 0
         };
-        const resPoints = window.DETECT.calculateStep2Points(step1Result.points, inputs.ra_area, inputs.tr_vel);
+        const result = window.DETECT.calculateStep2Result(step1Result.points, inputs.ra_area, inputs.tr_vel);
 
         els.step2.resultBox.classList.remove('hidden');
-        els.step2.pointsVal.textContent = resPoints.total;
-        updateBar(els.s2Bars.points, resPoints.total, 35, 100);
+        els.step2.pointsVal.textContent = result.points;
+        updateBar(els.s2Bars.points, result.points, 35, 100);
 
-        if (resPoints.total > 35) {
-            els.step2.decision.textContent = "CATHÉTÉRISME DROIT INDIQUÉ";
-            els.step2.decision.className = "score-decision decision-danger";
+        els.step2.decision.textContent = result.decision_text;
+        els.step2.decision.className = "score-decision " + (result.is_rhc_indicated ? "decision-danger" : "decision-safe");
+
+        if (result.is_rhc_indicated) {
             els.step2.rec.textContent = "Le patient présente un risque élevé d'HTAP confirmée. Un cathétérisme cardiaque droit (RHC) est recommandé selon l'algorithme DETECT.";
         } else {
-            els.step2.decision.textContent = "PAS D'INDICATION RHC IMMÉDIATE";
-            els.step2.decision.className = "score-decision decision-safe";
             els.step2.rec.textContent = "Le risque calculé est faible. Continuer la surveillance annuelle.";
         }
         els.step2.recBox.style.display = 'block';

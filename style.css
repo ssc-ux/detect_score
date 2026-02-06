@@ -160,33 +160,62 @@ select:focus {
     margin-top: 6px;
 }
 
-.checkbox-group {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 18px;
+.disclaimer-header {
+    background: hsla(207, 90%, 54%, 0.1);
+    border: 1px solid var(--primary-color);
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    color: var(--primary-dark);
+    margin: 20px 0;
+    line-height: 1.4;
+}
+
+.row-input {
+    display: flex;
+    gap: 20px;
+    grid-column: 1 / -1;
+}
+
+.checkbox-card {
     background: hsl(210, 14%, 98%);
     border-radius: 12px;
     border: 2px solid hsl(210, 10%, 95%);
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     cursor: pointer;
-    min-height: 60px;
-    box-sizing: border-box;
+    transition: all 0.2s;
+    user-select: none;
 }
 
-.checkbox-group label {
-    margin-bottom: 0;
-    padding-right: 15px;
-    cursor: pointer;
-    flex: 1;
-    /* Allow label to take available space */
+.checkbox-card:hover {
+    border-color: var(--primary-color);
+    background: white;
 }
 
-.checkbox-group input[type="checkbox"] {
-    width: 22px;
-    height: 22px;
+.checkbox-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.checkbox-info label {
+    margin: 0 !important;
     cursor: pointer;
-    accent-color: var(--primary-color);
-    margin: 0;
+    font-weight: 700 !important;
+}
+
+.checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.checkbox-wrapper input[type="checkbox"] {
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
 }
 
 .action-area {
