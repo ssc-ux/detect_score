@@ -68,19 +68,86 @@ const els = {
 
 let step1Result = null;
 
-function init() {
-    // 0. Force Reset on load (clean state)
+// --- INITIALIZATION ---
+document.addEventListener("DOMContentLoaded", () => {
+    console.log("App Initializing...");
+
+    // 1. Init Modal (First priority)
+    initModal();
+
+    // 2. Init Tabs
+    initTabs();
+
+    // 3. Init App Logic
+    initApp();
+
+    // 4. Init Physio Engine (Safe)
+    if (window.Physio) {
+        try {
+            window.Physio.init();
+        } catch (e) {
+            console.error("Physio Engine Failed:", e);
+        }
+    }
+});
+
+function initModal() {
+    const overlay = document.getElementById('beta-modal');
+    const closeBtn = document.getElementById('close-modal');
+
+    if (closeBtn && overlay) {
+        closeBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            overlay.classList.add('closing');
+            setTimeout(() => {
+                overlay.style.display = 'none';
+            }, 400);
+        });
+    }
+}
+
+function initTabs() {
+    const tabs = document.querySelectorAll('.tab-btn');
+    const contents = document.querySelectorAll('.tab-content');
+
+    console.log(`Found ${tabs.length} tabs.`);
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            console.log("Tab clicked:", tab.dataset.tab);
+
+            // Remove active class from all
+            tabs.forEach(t => t.classList.remove('active'));
+            contents.forEach(c => c.classList.remove('active'));
+
+            // Add active to current
+            tab.classList.add('active');
+
+            // Show content
+            const targetId = tab.dataset.tab;
+            const targetEl = document.getElementById(targetId);
+            if (targetEl) {
+                targetEl.classList.add('active');
+            } else {
+                console.error("Tab target not found:", targetId);
+            }
+        });
+    });
+}
+
+function initApp() {
+    // Force Reset on load
     document.querySelectorAll('input[type="number"]').forEach(i => i.value = '');
     document.querySelectorAll('input[type="checkbox"]').forEach(i => i.checked = false);
 
     // Clear badges
     document.querySelectorAll('.points-badge').forEach(b => b.textContent = '');
 
-    els.step1.resultBox.classList.add('hidden');
-    els.step2.section.classList.add('hidden');
-    els.step2.resultBox.classList.add('hidden');
-    els.bypassS2.container.classList.add('hidden');
-    els.step2.recBox.style.display = 'none';
+    if (els.step1.resultBox) els.step1.resultBox.classList.add('hidden');
+    if (els.step2.section) els.step2.section.classList.add('hidden');
+    if (els.step2.resultBox) els.step2.resultBox.classList.add('hidden');
+    if (els.bypassS2.container) els.bypassS2.container.classList.add('hidden');
+    if (els.step2.recBox) els.step2.recBox.style.display = 'none';
 
     if (els.step1.btn) els.step1.btn.addEventListener('click', runStep1);
     if (els.step2.btn) els.step2.btn.addEventListener('click', runStep2);
@@ -104,72 +171,9 @@ function init() {
             els.bypassS2.container.classList.add('hidden');
         });
     }
-
-    if (els.modal.closeBtn) {
-        els.modal.closeBtn.addEventListener('click', () => {
-            els.modal.overlay.classList.add('closing');
-            setTimeout(() => {
-                els.modal.overlay.style.display = 'none';
-            }, 400);
-        });
-    }
-
-    initTabs();
-
-    initTabs();
-
-    // START PHYSIO ENGINE (Safe Init)
-    if (window.Physio) {
-        try {
-            window.Physio.init();
-        } catch (e) {
-            console.error("Physio Engine Failed:", e);
-        }
-    }
 }
 
-// Separate Init for Modal to be safe
-function initModal() {
-    const overlay = document.getElementById('beta-modal');
-    const closeBtn = document.getElementById('close-modal');
-
-    if (closeBtn && overlay) {
-        closeBtn.onclick = (e) => {
-            e.preventDefault(); // Prevent default if it was a submit (it's not but safe)
-            overlay.classList.add('closing');
-            setTimeout(() => {
-                overlay.style.display = 'none';
-            }, 400);
-        };
-    }
-}
-
-// Run on Load
-document.addEventListener("DOMContentLoaded", () => {
-    initModal();
-    init();
-});
-
-// --- TABS LOGIC ---
-function initTabs() {
-    const tabs = document.querySelectorAll('.tab-btn');
-    const contents = document.querySelectorAll('.tab-content');
-
-    tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            // Remove active
-            tabs.forEach(t => t.classList.remove('active'));
-            contents.forEach(c => c.classList.remove('active'));
-
-            // Add active
-            tab.classList.add('active');
-            const target = tab.dataset.tab;
-            const targetEl = document.getElementById(target);
-            if (targetEl) targetEl.classList.add('active');
-        });
-    });
-}
-
+// --- UTILS ---
 function getUrateInMgDl() {
     let val = parseFloat(els.step1.inputs.urate.value);
     const unit = els.step1.inputs.urate_unit.value;
@@ -201,6 +205,8 @@ function getStep1Inputs() {
 
 function updateLiveStep1() {
     const inputs = getStep1Inputs();
+    if (!window.DETECT) return;
+
     const points = window.DETECT.calculateStep1Points(inputs);
 
     // Update Step 1 Badges
@@ -227,6 +233,8 @@ function updateLiveStep1() {
 function updateLiveStep2() {
     const ra = parseFloat(els.step2.inputs.ra.value) || 0;
     const tr = parseFloat(els.step2.inputs.tr.value) || 0;
+
+    if (!window.DETECT) return;
 
     // Use 0 as base points since we just want to see the contribution of Step 2 variables
     const points = window.DETECT.calculateStep2Points(0, ra, tr);
@@ -309,5 +317,3 @@ function updateBar(barEl, value, threshold, max) {
         barEl.style.backgroundColor = 'var(--success-color)';
     }
 }
-
-init();
