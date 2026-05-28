@@ -1,12 +1,5 @@
-/**
- * DETECT App Controller
- * Handles UI interactions, input collection, and result display.
- */
 
-// Global Error Handler for this script
 try {
-
-    // DOM Elements Cache
     function getEls() {
         return {
             step1: {
@@ -76,28 +69,16 @@ try {
             }
         };
     }
-
     let step1Result = null;
-    let els = {}; // Populated in init
-
-    // --- MAIN INIT ---
+    let els = {}; 
     function init() {
         console.log("App Init Started...");
-        els = getEls(); // Populate elements
-
-        // 1. Modal Logic (Priority)
+        els = getEls(); 
         initModal();
-
-        // 2. Tab Navigation
         initTabs();
-
-        // 3. UI Reset
         resetUI();
-
-        // 4. Input Listeners
         attachListeners();
     }
-
     function initModal() {
         const overlay = document.getElementById('beta-modal');
         const closeBtn = document.getElementById('close-modal');
@@ -108,42 +89,31 @@ try {
             };
         }
     }
-
     function initTabs() {
         const tabs = document.querySelectorAll('.tab-btn');
         const contents = document.querySelectorAll('.tab-content');
-
         if (tabs.length === 0) console.warn("No tabs found!");
-
         tabs.forEach(tab => {
             tab.onclick = function () {
-                // UI Toggle
                 tabs.forEach(t => t.classList.remove('active'));
                 contents.forEach(c => c.classList.remove('active'));
-
                 this.classList.add('active');
-
                 const targetId = this.getAttribute('data-tab');
                 const targetEl = document.getElementById(targetId);
                 if (targetEl) targetEl.classList.add('active');
             };
         });
     }
-
     function resetUI() {
         document.querySelectorAll('input[type="number"]').forEach(i => i.value = '');
         document.querySelectorAll('input[type="checkbox"]').forEach(i => i.checked = false);
         document.querySelectorAll('.points-value').forEach(b => b.textContent = '--');
         document.querySelectorAll('.result-box').forEach(b => b.classList.add('hidden'));
-
         if (els.step2.card) els.step2.card.classList.add('hidden');
         if (els.bypassS2.container) els.bypassS2.container.classList.add('hidden');
-
-        // Reset gauges
         if (els.step1.gaugeBar) els.step1.gaugeBar.style.left = '0%';
         if (els.step2.gaugeBar) els.step2.gaugeBar.style.left = '0%';
     }
-
     function attachListeners() {
         if (els.step1.btn) els.step1.btn.onclick = runStep1;
         if (els.step2.btn) els.step2.btn.onclick = runStep2;
@@ -153,8 +123,6 @@ try {
             els.bypassS2.container.classList.add('hidden');
         };
         if (els.resetBtn) els.resetBtn.onclick = resetForm;
-
-        // Live updates
         if (els.step1.inputs.fvc) {
             Object.values(els.step1.inputs).forEach(inp => {
                 if (inp) inp.addEventListener('input', updateLiveStep1);
@@ -165,16 +133,12 @@ try {
                 if (inp) inp.addEventListener('input', updateLiveStep2);
             });
         }
-
-        // 5. Physio Slider Listener
         if (els.physio.slider) {
             els.physio.slider.addEventListener('input', updatePhysioViz);
-            updatePhysioViz(); // Initial state
+            updatePhysioViz(); 
         }
     }
-
     function resetForm() {
-        // Reset all inputs
         document.querySelectorAll('input[type="number"]').forEach(i => i.value = '');
         document.querySelectorAll('input[type="checkbox"]').forEach(i => i.checked = false);
         document.querySelectorAll('.points-value').forEach(b => {
@@ -182,29 +146,18 @@ try {
             b.classList.remove('active');
             b.style.color = '';
         });
-
-        // Hide result boxes
         document.querySelectorAll('.result-box').forEach(b => b.classList.add('hidden'));
         if (els.step2.card) els.step2.card.classList.add('hidden');
         if (els.bypassS2.container) els.bypassS2.container.classList.add('hidden');
-
-        // Reset gauges
         if (els.step1.gaugeBar) els.step1.gaugeBar.style.left = '0%';
         if (els.step2.gaugeBar) els.step2.gaugeBar.style.left = '0%';
-
-        // Reset Step 1 result
         step1Result = null;
         if (els.step1CarriedScore) els.step1CarriedScore.textContent = '--';
-
-        // Scroll to top
         els.step1.card.scrollIntoView({ behavior: "smooth" });
     }
-
     function updatePhysioViz() {
         const paps = parseInt(els.physio.slider.value);
         els.physio.valText.textContent = paps;
-
-        // Medical descriptions
         let stage = { title: "", desc: "", color: "" };
         if (paps < 40) {
             stage = {
@@ -231,60 +184,29 @@ try {
                 color: "#c0392b"
             };
         }
-
         els.physio.stageTitle.textContent = stage.title;
         els.physio.stageDesc.textContent = stage.desc;
         els.physio.stageTitle.style.color = stage.color;
-
-        // Normalized 0 to 1
-        const t = (paps - 30) / (70); // 30 to 100 range
-
-        // --- PATH MORPHING MATH FOR MEDICAL SVG ---
-
-        // 1. RV Wall Morphing (Thickening + Dilation)
-        // Outer Curve Control Point X: Starts at 120, moves out to 80 (dilation)
-        // Inner Curve (Cavity) Control Point X: Starts at 135, moves out to 90 (dilation)
-        // BUT thickness (gap) increases then decreases (thinning in failure)
-
-        const dilationFactor = t * 60; // Max 60px expansion
-        const hypertrophyFactor = t < 0.5 ? t * 15 : (0.5 * 15) - ((t - 0.5) * 5); // Thicken then thin
-
+        const t = (paps - 30) / (70); 
+        const dilationFactor = t * 60; 
+        const hypertrophyFactor = t < 0.5 ? t * 15 : (0.5 * 15) - ((t - 0.5) * 5); 
         const rvOuterControlX = 120 - dilationFactor;
-        const rvInnerControlX = 135 - dilationFactor + hypertrophyFactor; // Less shift = thicker wall
-
-        // RV Wall Path
+        const rvInnerControlX = 135 - dilationFactor + hypertrophyFactor; 
         els.physio.rvWall.setAttribute('d',
             `M 160,200 Q ${rvOuterControlX},200 ${rvOuterControlX},300 Q ${rvOuterControlX},380 230,350 L 230,200 Z`
         );
-        // RV Cavity Path
         els.physio.rvCavity.setAttribute('d',
             `M 160,200 Q ${rvInnerControlX},200 ${rvInnerControlX},300 Q ${rvInnerControlX},360 230,350 L 230,200 Z`
         );
-
-        // 2. Septum Shift (The hallmark of PH)
-        // Normal: Curves towards RV (Control X ~ 210)
-        // Flat: Control X ~ 230
-        // D-Shape/Inverted: Control X ~ 280 (Invading LV)
-
-        const septumShift = t * 70; // 0 -> 70
+        const septumShift = t * 70; 
         const septControlX = 210 + septumShift;
-
-        // Septum Wall Path
         els.physio.septumWall.setAttribute('d',
             `M 230,180 Q ${septControlX},280 230,350 L 245,350 Q ${septControlX + 15},280 260,180 Z`
         );
-
-        // 3. LV Compression (Cavity reduced by Septum)
-        // LV Outer wall stays relatively stable or shrinks slightly due to low filling
         const lvOuterControl = 350 - (t * 10);
-
-        // LV Cavity Path
-        // Inner edge follows septum+thickness
         els.physio.lvCavity.setAttribute('d',
             `M 260,180 Q ${lvOuterControl},180 ${lvOuterControl},320 Q ${lvOuterControl},390 290,380 Q 250,390 245,350 L 245,180 Z`
         );
-
-        // 4. TR Jet Animation
         if (paps > 45) {
             els.physio.trJet.style.opacity = (paps - 45) / 55;
             els.physio.trJet.setAttribute('stroke-width', (paps - 45) / 10);
@@ -293,9 +215,6 @@ try {
             els.physio.trJet.setAttribute('stroke-width', 0);
         }
     }
-
-    // --- CALCULATION LOGIC ---
-
     function getUrateInMgDl() {
         let val = parseFloat(els.step1.inputs.urate.value);
         const unit = els.step1.inputs.urate_unit.value;
@@ -303,7 +222,6 @@ try {
         if (unit === 'umol') val = val / 59.48;
         return val;
     }
-
     function getStep1Inputs() {
         const fvc = parseFloat(els.step1.inputs.fvc.value);
         const dlco = parseFloat(els.step1.inputs.dlco.value);
@@ -311,7 +229,6 @@ try {
         if (!isNaN(fvc) && !isNaN(dlco) && dlco !== 0) {
             ratio = fvc / dlco;
         }
-
         const inputs = {
             fvc_dlco: ratio,
             telang: els.step1.inputs.telang.checked,
@@ -320,17 +237,13 @@ try {
             urate: getUrateInMgDl(),
             rad: els.step1.inputs.rad.checked
         };
-        // Safety for log stats
         if (inputs.ntprobnp < 1) inputs.ntprobnp = 1;
-
         return inputs;
     }
-
     function updateLiveStep1() {
         if (!window.DETECT) return;
         const inputs = getStep1Inputs();
         const points = window.DETECT.calculateStep1Points(inputs);
-
         const fvc = parseFloat(els.step1.inputs.fvc.value);
         const dlco = parseFloat(els.step1.inputs.dlco.value);
         if (!isNaN(fvc) && !isNaN(dlco)) {
@@ -344,24 +257,18 @@ try {
             els.step1.badges.fvc_dlco.classList.remove('active');
             hideFormula('formula-fvc_dlco');
         }
-
-        // Telangiectasias
         updateBadge(els.step1.badges.telang, points.details.telang, els.step1.inputs.telang.checked);
         if (els.step1.inputs.telang.checked) {
             showFormula('formula-telang', `Présent → <span class="formula-result">65</span> pts`);
         } else {
             showFormula('formula-telang', `Absent → <span class="formula-result">50</span> pts`);
         }
-
-        // ACA
         updateBadge(els.step1.badges.aca, points.details.aca, els.step1.inputs.aca.checked);
         if (els.step1.inputs.aca.checked) {
             showFormula('formula-aca', `Positif → <span class="formula-result">59</span> pts`);
         } else {
             showFormula('formula-aca', `Négatif → <span class="formula-result">50</span> pts`);
         }
-
-        // NT-proBNP
         if (els.step1.inputs.ntprobnp.value) {
             updateBadge(els.step1.badges.ntprobnp, points.details.ntprobnp, true);
             const val = parseFloat(els.step1.inputs.ntprobnp.value);
@@ -372,8 +279,6 @@ try {
             updateBadge(els.step1.badges.ntprobnp, 0, false);
             hideFormula('formula-ntprobnp');
         }
-
-        // Urate
         if (els.step1.inputs.urate.value) {
             updateBadge(els.step1.badges.urate, points.details.urate, true);
             const urateMgDl = getUrateInMgDl().toFixed(1);
@@ -388,8 +293,6 @@ try {
             updateBadge(els.step1.badges.urate, 0, false);
             hideFormula('formula-urate');
         }
-
-        // RAD
         updateBadge(els.step1.badges.rad, points.details.rad, els.step1.inputs.rad.checked);
         if (els.step1.inputs.rad.checked) {
             showFormula('formula-rad', `Présent → <span class="formula-result">73</span> pts`);
@@ -397,7 +300,6 @@ try {
             showFormula('formula-rad', `Absent → <span class="formula-result">50</span> pts`);
         }
     }
-
     function showFormula(id, html) {
         const el = document.getElementById(id);
         if (el) {
@@ -405,14 +307,12 @@ try {
             el.classList.add('visible');
         }
     }
-
     function hideFormula(id) {
         const el = document.getElementById(id);
         if (el) {
             el.classList.remove('visible');
         }
     }
-
     function updateBadge(el, points, isActive) {
         if (isActive) {
             el.textContent = `${points} pts`;
@@ -424,15 +324,11 @@ try {
             el.style.color = '';
         }
     }
-
     function updateLiveStep2() {
         if (!window.DETECT) return;
         const ra = parseFloat(els.step2.inputs.ra.value) || 0;
         const tr = parseFloat(els.step2.inputs.tr.value) || 0;
-
-        // We pass 0 for Step 1 Score just to get component points
         const points = window.DETECT.calculateStep2Points(0, ra, tr);
-
         if (els.step2.inputs.ra.value) {
             updateBadge(els.step2.badges.ra_area, points.details.ra_area, true);
             showFormula('formula-ra_area',
@@ -441,7 +337,6 @@ try {
             updateBadge(els.step2.badges.ra_area, 0, false);
             hideFormula('formula-ra_area');
         }
-
         if (els.step2.inputs.tr.value) {
             updateBadge(els.step2.badges.tr_vel, points.details.tr_vel, true);
             showFormula('formula-tr_vel',
@@ -451,58 +346,41 @@ try {
             hideFormula('formula-tr_vel');
         }
     }
-
     function runStep1() {
         const inputs = getStep1Inputs();
-
         if ((!els.step1.inputs.fvc.value || !els.step1.inputs.dlco.value) && !confirm("Certaines valeurs (CVF/DLCO) semblent manquantes. Continuer ?")) {
             return;
         }
-
         const result = window.DETECT.calculateStep1Points(inputs);
         step1Result = result;
-
         els.step1.resultBox.classList.remove('hidden');
         els.step1.pointsVal.textContent = result.total;
-
-        // Gauge Animation
-        const maxPoints = 500; // Step 1 theoretical max is around 500-600
+        const maxPoints = 500; 
         let pct = (result.total / maxPoints) * 100;
         if (pct > 100) pct = 100;
         if (els.step1.gaugeBar) {
             els.step1.gaugeBar.style.left = pct + '%';
         }
-
-        // Decision Display
         const statusClass = result.isHighRisk ? 'danger' : 'safe';
         const label = result.isHighRisk ? 'RISQUE ÉLEVÉ' : 'RISQUE FAIBLE';
-        // Add color dot
         const icon = `<span class="status-indicator ${statusClass}"></span>`;
-
         els.step1.decision.innerHTML = `${icon} ${label} (Seuil > 300)`;
-
-        // Populate precise values (exact = non-rounded total from author's formulas)
         if (els.step1.exactScore) els.step1.exactScore.textContent = result.totalExact.toFixed(1);
         if (els.step1.exactProb) {
-            // Show distance from threshold as a percentage indication
             const pctOfThreshold = (result.totalExact / 300 * 100).toFixed(1);
             els.step1.exactProb.textContent = pctOfThreshold;
         }
-
         if (result.isHighRisk) {
             els.step2.card.classList.remove('hidden');
-            // Display Step 1 score in Step 2 card
             if (els.step1CarriedScore) els.step1CarriedScore.textContent = result.total;
             setTimeout(() => els.step2.card.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
             els.bypassS2.container.classList.add('hidden');
         } else {
             els.step2.card.classList.add('hidden');
             els.bypassS2.container.classList.remove('hidden');
-            // Also update for bypass case
             if (els.step1CarriedScore) els.step1CarriedScore.textContent = result.total;
         }
     }
-
     function runStep2() {
         if (!step1Result) {
             alert("Veuillez d'abord calculer l'étape 1.");
@@ -512,40 +390,28 @@ try {
             ra_area: parseFloat(els.step2.inputs.ra.value) || 0,
             tr_vel: parseFloat(els.step2.inputs.tr.value) || 0
         };
-
         const result = window.DETECT.calculateStep2Points(step1Result, inputs.ra_area, inputs.tr_vel);
-
         els.step2.resultBox.classList.remove('hidden');
         els.step2.pointsVal.textContent = result.total;
-
-        // Gauge Animation
         const maxPoints = 80;
         let pct = (result.total / maxPoints) * 100;
         if (pct > 100) pct = 100;
         if (els.step2.gaugeBar) {
             els.step2.gaugeBar.style.left = pct + '%';
         }
-
         const statusClass = result.isReferral ? 'danger' : 'safe';
         const label = result.isReferral ? 'CATHÉTÉRISME INDIQUÉ' : 'CATHÉTÉRISME NON INDIQUÉ';
         const icon = `<span class="status-indicator ${statusClass}"></span>`;
-
         if (els.step2.exactScore) els.step2.exactScore.textContent = result.totalExact.toFixed(1);
         if (els.step2.exactProb) els.step2.exactProb.textContent = (result.totalExact / 35 * 100).toFixed(1);
-
-        // Display decision with icon
         els.step2.decision.innerHTML = `${icon} ${label} (Seuil > 35)`;
-
         if (result.isReferral) {
             els.step2.rec.textContent = "Indication de Cathétérisme Cardiaque Droit : Le patient présente un risque significatif d'HTAP.";
         } else {
             els.step2.rec.textContent = "Surveillance annuelle : Le risque d'HTAP est actuellement faible sous le seuil de décision.";
         }
     }
-
-    // FIRE INIT DIRECTLY
     init();
-
 } catch (err) {
     console.error("FATAL APP ERROR:", err);
 }

@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,9 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
-
 <body>
-    <!-- Beta Modal -->
     <div id="beta-modal" class="modal">
         <div class="modal-content">
             <h2>🧪 Version Beta Test</h2>
@@ -31,29 +28,20 @@
             </div>
         </div>
     </div>
-
     <div class="app-container">
         <h1>DETECT <span class="highlight">Online</span></h1>
         <p class="subtitle">Algorithme de dépistage de l'HTAP dans la SSc</p>
-
         <nav class="tab-nav">
             <button class="tab-btn active" data-tab="tab-calculator">🧮 Calculateur</button>
             <button class="tab-btn" data-tab="tab-nomogram">📊 Source</button>
         </nav>
-
         <main>
-            <!-- TAB 1: CALCULATOR -->
             <div id="tab-calculator" class="tab-content active">
-
-                <!-- STEP 1: CLINICAL EVALUATION -->
                 <section id="step1-card" class="card">
                     <div class="card-header">
                         <h2>Étape 1 : Évaluation Clinique</h2>
                     </div>
-
                     <div class="calculator-grid">
-
-                        <!-- FVC / DLCO -->
                         <div class="calc-row">
                             <div class="input-col">
                                 <label for="fvc">CVF (% prédit) <span class="tooltip"
@@ -71,8 +59,6 @@
                             </div>
                             <div class="formula-hint" id="formula-fvc_dlco"></div>
                         </div>
-
-                        <!-- TELANGIECTASIAS -->
                         <div class="calc-row">
                             <div class="input-col full-width">
                                 <label class="checkbox-container">
@@ -86,8 +72,6 @@
                             </div>
                             <div class="formula-hint" id="formula-telang"></div>
                         </div>
-
-                        <!-- ACA -->
                         <div class="calc-row">
                             <div class="input-col full-width">
                                 <label class="checkbox-container">
@@ -101,8 +85,6 @@
                             </div>
                             <div class="formula-hint" id="formula-aca"></div>
                         </div>
-
-                        <!-- NT-proBNP -->
                         <div class="calc-row">
                             <div class="input-col">
                                 <label for="ntprobnp">NT-proBNP (pg/mL) <span class="tooltip"
@@ -114,8 +96,6 @@
                             </div>
                             <div class="formula-hint" id="formula-ntprobnp"></div>
                         </div>
-
-                        <!-- URATE -->
                         <div class="calc-row">
                             <div class="input-col">
                                 <label for="urate">Acide Urique <span class="tooltip"
@@ -133,8 +113,6 @@
                             </div>
                             <div class="formula-hint" id="formula-urate"></div>
                         </div>
-
-                        <!-- AXIS DEVIATION -->
                         <div class="calc-row">
                             <div class="input-col full-width">
                                 <label class="checkbox-container">
@@ -148,18 +126,12 @@
                             </div>
                             <div class="formula-hint" id="formula-rad"></div>
                         </div>
-
                     </div>
-
-                    <!-- STEP 1 ACTIONS -->
                     <div class="action-bar">
                         <button id="calc-step1" class="btn-primary">Calculer Risque Étape 1</button>
                         <button id="reset-form" class="btn-secondary" style="margin-left: 10px;">🔄
                             Réinitialiser</button>
                     </div>
-
-                    <!-- STEP 1 RESULT -->
-                    <!-- STEP 1 RESULT -->
                     <div id="result-step1" class="result-box hidden">
                         <div class="gauge-wrapper">
                             <div class="gauge-row">
@@ -182,15 +154,11 @@
                         </div>
                     </div>
                 </section>
-
-                <!-- CONDITIONAL: FORCE STEP 2 (When Step 1 is Low Risk) -->
                 <div id="bypass-s2-area" class="bypass-area hidden">
                     <p class="bypass-msg">Le risque calculé est faible. Cependant, si une échocardiographie a été
                         réalisée pour une autre raison :</p>
                     <button id="btn-force-s2" class="btn-secondary">Saisir les données Écho</button>
                 </div>
-
-                <!-- STEP 2: ECHOCARDIOGRAPHY -->
                 <section id="step2-card" class="card hidden">
                     <div class="card-header">
                         <h2>Étape 2 : Échocardiographie</h2>
@@ -198,10 +166,7 @@
                             Score Étape 1 : <strong id="step1-carried-score">--</strong> pts
                         </div>
                     </div>
-
                     <div class="calculator-grid">
-
-                        <!-- RIGHT ATRIUM AREA -->
                         <div class="calc-row">
                             <div class="input-col">
                                 <label for="ra_area">Surface OD (cm²) <span class="tooltip"
@@ -214,8 +179,6 @@
                             </div>
                             <div class="formula-hint" id="formula-ra_area"></div>
                         </div>
-
-                        <!-- TR VELOCITY -->
                         <div class="calc-row">
                             <div class="input-col">
                                 <label for="tr_vel">Vélocité IT (m/s) <span class="tooltip"
@@ -227,15 +190,10 @@
                             </div>
                             <div class="formula-hint" id="formula-tr_vel"></div>
                         </div>
-
                     </div>
-
-                    <!-- STEP 2 ACTIONS -->
                     <div class="action-bar">
                         <button id="calc-step2" class="btn-primary">Calculer Résultat Final</button>
                     </div>
-
-                    <!-- STEP 2 RESULT (FINAL) -->
                     <div id="result-step2" class="result-box hidden">
                         <div class="gauge-wrapper">
                             <div class="gauge-row">
@@ -258,20 +216,15 @@
                             <div class="gauge-recommendation" id="final-recommendation">--</div>
                         </div>
                     </div>
-
                 </section>
             </div>
-
-            <!-- TAB 2: NOMOGRAM SOURCE -->
             <div id="tab-nomogram" class="tab-content">
                 <section class="card">
                     <div class="card-header">
                         <h2>Source du Calcul</h2>
                     </div>
-
                     <div class="nomogram-display">
                         <p>L'algorithme DETECT est basé sur le nomogramme validé dans l'étude princeps.</p>
-
                         <div style="text-align: center; margin: 20px 0;">
                             <img src="nomogramme.png" alt="Nomogramme DETECT - Figure 3" class="nomogram-image"
                                 style="max-width: 100%; border-radius: 12px; box-shadow: var(--shadow);">
@@ -282,7 +235,6 @@
                                 </a>
                             </div>
                         </div>
-
                         <div class="reference-box">
                             <strong>Référence :</strong><br>
                             Coghlan JG, Denton CP, Grünig E, et al. <br>
@@ -290,7 +242,6 @@
                                 DETECT study.</em><br>
                             Ann Rheum Dis 2014;73:1340–1349.
                         </div>
-
                         <p style="margin-top:20px; font-size:0.9rem;">
                             <strong>Note :</strong> Ce calculateur en ligne reproduit fidèlement les points attribués
                             par ce nomogramme pour chaque variable, assurant une concordance parfaite avec la méthode
@@ -300,7 +251,6 @@
                 </section>
             </div>
         </main>
-
         <footer>
             <p style="font-size: 0.8rem; margin-bottom: 5px;">Outil DETECT Online - Version Beta</p>
             <p style="font-size: 0.75rem; opacity: 0.7;">Conception : Astouati Quentin</p>
@@ -310,10 +260,7 @@
             </p>
         </footer>
     </div>
-
     <script src="logic.js"></script>
     <script src="app.js"></script>
-    <!-- Deployment trigger: 2026-02-10T07:55:00 -->
 </body>
-
 </html>
