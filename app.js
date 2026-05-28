@@ -336,27 +336,81 @@ try {
         if (!isNaN(fvc) && !isNaN(dlco)) {
             els.step1.badges.fvc_dlco.textContent = `${points.details.fvc_dlco} pts`;
             els.step1.badges.fvc_dlco.classList.add('active');
+            const ratio = (fvc / dlco).toFixed(2);
+            showFormula('formula-fvc_dlco',
+                `Ratio = ${fvc}/${dlco} = <span class="formula-eq">${ratio}</span> → 28 + ${ratio} × 14.4 = <span class="formula-result">${points.detailsExact.fvc_dlco.toFixed(1)}</span>`);
         } else {
             els.step1.badges.fvc_dlco.textContent = '--';
             els.step1.badges.fvc_dlco.classList.remove('active');
+            hideFormula('formula-fvc_dlco');
         }
 
+        // Telangiectasias
         updateBadge(els.step1.badges.telang, points.details.telang, els.step1.inputs.telang.checked);
-        updateBadge(els.step1.badges.aca, points.details.aca, els.step1.inputs.aca.checked);
+        if (els.step1.inputs.telang.checked) {
+            showFormula('formula-telang', `Présent → <span class="formula-result">65</span> pts`);
+        } else {
+            showFormula('formula-telang', `Absent → <span class="formula-result">50</span> pts`);
+        }
 
+        // ACA
+        updateBadge(els.step1.badges.aca, points.details.aca, els.step1.inputs.aca.checked);
+        if (els.step1.inputs.aca.checked) {
+            showFormula('formula-aca', `Positif → <span class="formula-result">59</span> pts`);
+        } else {
+            showFormula('formula-aca', `Négatif → <span class="formula-result">50</span> pts`);
+        }
+
+        // NT-proBNP
         if (els.step1.inputs.ntprobnp.value) {
             updateBadge(els.step1.badges.ntprobnp, points.details.ntprobnp, true);
+            const val = parseFloat(els.step1.inputs.ntprobnp.value);
+            const logVal = Math.log10(val > 0 ? val : 1).toFixed(2);
+            showFormula('formula-ntprobnp',
+                `27.5 + log₁₀(<span class="formula-eq">${val}</span>) × 11.3 = 27.5 + ${logVal} × 11.3 = <span class="formula-result">${points.detailsExact.ntprobnp.toFixed(1)}</span>`);
         } else {
             updateBadge(els.step1.badges.ntprobnp, 0, false);
+            hideFormula('formula-ntprobnp');
         }
 
+        // Urate
         if (els.step1.inputs.urate.value) {
             updateBadge(els.step1.badges.urate, points.details.urate, true);
+            const urateMgDl = getUrateInMgDl().toFixed(1);
+            const unit = els.step1.inputs.urate_unit.value;
+            let prefix = '';
+            if (unit === 'umol') {
+                prefix = `${els.step1.inputs.urate.value} µmol/L ÷ 59.48 = ${urateMgDl} mg/dL → `;
+            }
+            showFormula('formula-urate',
+                `${prefix}Interpolation(<span class="formula-eq">${urateMgDl}</span> mg/dL) = <span class="formula-result">${points.detailsExact.urate.toFixed(1)}</span>`);
         } else {
             updateBadge(els.step1.badges.urate, 0, false);
+            hideFormula('formula-urate');
         }
 
+        // RAD
         updateBadge(els.step1.badges.rad, points.details.rad, els.step1.inputs.rad.checked);
+        if (els.step1.inputs.rad.checked) {
+            showFormula('formula-rad', `Présent → <span class="formula-result">73</span> pts`);
+        } else {
+            showFormula('formula-rad', `Absent → <span class="formula-result">50</span> pts`);
+        }
+    }
+
+    function showFormula(id, html) {
+        const el = document.getElementById(id);
+        if (el) {
+            el.innerHTML = '📐 ' + html;
+            el.classList.add('visible');
+        }
+    }
+
+    function hideFormula(id) {
+        const el = document.getElementById(id);
+        if (el) {
+            el.classList.remove('visible');
+        }
     }
 
     function updateBadge(el, points, isActive) {
@@ -379,11 +433,23 @@ try {
         // We pass 0 for Step 1 Score just to get component points
         const points = window.DETECT.calculateStep2Points(0, ra, tr);
 
-        if (els.step2.inputs.ra.value) updateBadge(els.step2.badges.ra_area, points.details.ra_area, true);
-        else updateBadge(els.step2.badges.ra_area, 0, false);
+        if (els.step2.inputs.ra.value) {
+            updateBadge(els.step2.badges.ra_area, points.details.ra_area, true);
+            showFormula('formula-ra_area',
+                `4 + <span class="formula-eq">${ra}</span> × 0.375 = <span class="formula-result">${points.detailsExact.ra_area.toFixed(1)}</span>`);
+        } else {
+            updateBadge(els.step2.badges.ra_area, 0, false);
+            hideFormula('formula-ra_area');
+        }
 
-        if (els.step2.inputs.tr.value) updateBadge(els.step2.badges.tr_vel, points.details.tr_vel, true);
-        else updateBadge(els.step2.badges.tr_vel, 0, false);
+        if (els.step2.inputs.tr.value) {
+            updateBadge(els.step2.badges.tr_vel, points.details.tr_vel, true);
+            showFormula('formula-tr_vel',
+                `Interpolation(<span class="formula-eq">${tr}</span> m/s) = <span class="formula-result">${points.detailsExact.tr_vel.toFixed(1)}</span>`);
+        } else {
+            updateBadge(els.step2.badges.tr_vel, 0, false);
+            hideFormula('formula-tr_vel');
+        }
     }
 
     function runStep1() {
@@ -415,11 +481,12 @@ try {
 
         els.step1.decision.innerHTML = `${icon} ${label} (Seuil > 300)`;
 
-        // Populate precise values
-        if (els.step1.exactScore) els.step1.exactScore.textContent = result.linearScore.toFixed(2);
+        // Populate precise values (exact = non-rounded total from author's formulas)
+        if (els.step1.exactScore) els.step1.exactScore.textContent = result.totalExact.toFixed(1);
         if (els.step1.exactProb) {
-            const prob = 1 / (1 + Math.exp(-result.linearScore));
-            els.step1.exactProb.textContent = (prob * 100).toFixed(1);
+            // Show distance from threshold as a percentage indication
+            const pctOfThreshold = (result.totalExact / 300 * 100).toFixed(1);
+            els.step1.exactProb.textContent = pctOfThreshold;
         }
 
         if (result.isHighRisk) {
@@ -446,7 +513,7 @@ try {
             tr_vel: parseFloat(els.step2.inputs.tr.value) || 0
         };
 
-        const result = window.DETECT.calculateStep2Points(step1Result.total, inputs.ra_area, inputs.tr_vel);
+        const result = window.DETECT.calculateStep2Points(step1Result, inputs.ra_area, inputs.tr_vel);
 
         els.step2.resultBox.classList.remove('hidden');
         els.step2.pointsVal.textContent = result.total;
@@ -463,8 +530,8 @@ try {
         const label = result.isReferral ? 'CATHÉTÉRISME INDIQUÉ' : 'CATHÉTÉRISME NON INDIQUÉ';
         const icon = `<span class="status-indicator ${statusClass}"></span>`;
 
-        if (els.step2.exactScore) els.step2.exactScore.textContent = result.linearScore.toFixed(2);
-        if (els.step2.exactProb) els.step2.exactProb.textContent = (result.probability * 100).toFixed(1);
+        if (els.step2.exactScore) els.step2.exactScore.textContent = result.totalExact.toFixed(1);
+        if (els.step2.exactProb) els.step2.exactProb.textContent = (result.totalExact / 35 * 100).toFixed(1);
 
         // Display decision with icon
         els.step2.decision.innerHTML = `${icon} ${label} (Seuil > 35)`;
