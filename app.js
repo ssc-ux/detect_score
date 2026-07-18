@@ -220,6 +220,7 @@ try {
         const unit = els.step1.inputs.urate_unit.value;
         if (isNaN(val)) return 0;
         if (unit === 'umol') val = val / 59.48;
+        if (unit === 'mgl') val = val / 10;
         return val;
     }
     function getStep1Inputs() {
@@ -286,6 +287,8 @@ try {
             let prefix = '';
             if (unit === 'umol') {
                 prefix = `${els.step1.inputs.urate.value} µmol/L ÷ 59.48 = ${urateMgDl} mg/dL → `;
+            } else if (unit === 'mgl') {
+                prefix = `${els.step1.inputs.urate.value} mg/L ÷ 10 = ${urateMgDl} mg/dL → `;
             }
             showFormula('formula-urate',
                 `${prefix}Interpolation(<span class="formula-eq">${urateMgDl}</span> mg/dL) = <span class="formula-result">${points.detailsExact.urate.toFixed(1)}</span>`);
