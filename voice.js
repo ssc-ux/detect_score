@@ -33,6 +33,10 @@ try {
 
     let recognition = null;
     let listening = false;
+    let micStream = null;
+    let hasWorkedOnce = false;
+    const IS_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+        (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
 
     function normalize(text) {
         let t = text.toLowerCase();
@@ -221,7 +225,8 @@ try {
                     'Choisissez <strong>« Réglages du site web »</strong> puis <strong>Micro → Autoriser</strong>.',
                     'Si l\'option n\'apparaît pas : <strong>Réglages iOS → Apps → Safari → Micro</strong> → « Autoriser ».',
                     'Activez la dictée : <strong>Réglages → Général → Claviers → Activer la dictée</strong>.',
-                    '<strong>Rechargez la page</strong> et réappuyez sur « 🎤 Saisie vocale ».'
+                    '<strong>Rechargez la page</strong> et réappuyez sur « 🎤 Saisie vocale » — acceptez la demande d\'accès au micro qui s\'affiche.',
+                    'Si tout est déjà sur « Autoriser » et que le blocage persiste : <strong>fermez l\'onglet</strong>, rouvrez le site et réessayez.'
                 ],
                 note: 'La reconnaissance vocale de Safari s\'appuie sur la dictée d\'Apple : si elle est désactivée, le micro reste bloqué.'
             };
@@ -309,10 +314,33 @@ try {
         voiceBtn.title = listening ? 'Arrêter la dictée' : 'Saisie vocale';
     }
 
+    function ensureMicPermission() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            return Promise.resolve(true);
+        }
+        if (micStream) return Promise.resolve(true);
+        return navigator.mediaDevices.getUserMedia({ audio: true }).then(
+            function (stream) {
+                micStream = stream;
+                return true;
+            },
+            function () {
+                return false;
+            }
+        );
+    }
+
+    function releaseMicStream() {
+        if (micStream) {
+            micStream.getTracks().forEach(function (t) { t.stop(); });
+            micStream = null;
+        }
+    }
+
     function buildRecognition() {
         const rec = new SR();
         rec.lang = 'fr-FR';
-        rec.continuous = true;
+        rec.continuous = !IS_IOS;
         rec.interimResults = true;
         rec.maxAlternatives = 1;
 
@@ -322,6 +350,7 @@ try {
             for (let i = event.resultIndex; i < event.results.length; i++) {
                 const res = event.results[i];
                 if (res.isFinal) {
+                    hasWorkedOnce = true;
                     lastFinal = res[0].transcript.trim();
                     if (lastFinal) {
                         const applied = parseAndApply(lastFinal);
@@ -342,13 +371,21 @@ try {
         rec.onerror = function (event) {
             if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
                 listening = false;
+                releaseMicStream();
                 updateButtonState();
-                if (voiceStatus) {
-                    voiceStatus.textContent = '🚫 Le navigateur bloque le micro. Suivez les étapes ci-dessous 👇';
+                if (hasWorkedOnce) {
+                    if (voiceStatus) {
+                        voiceStatus.textContent = '⏸️ Dictée interrompue par le navigateur. Réappuyez sur « 🎤 Saisie vocale » pour continuer.';
+                    }
+                } else {
+                    if (voiceStatus) {
+                        voiceStatus.textContent = '🚫 Le navigateur bloque le micro. Suivez les étapes ci-dessous 👇';
+                    }
+                    showMicTutorial();
                 }
-                showMicTutorial();
             } else if (event.error === 'audio-capture') {
                 listening = false;
+                releaseMicStream();
                 updateButtonState();
                 if (voiceStatus) {
                     voiceStatus.textContent = '🚫 Aucun micro détecté sur cet appareil.';
@@ -358,8 +395,12 @@ try {
 
         rec.onend = function () {
             if (listening) {
-                try { rec.start(); } catch (e) { /* redémarrage déjà en cours */ }
+                setTimeout(function () {
+                    if (!listening) return;
+                    try { rec.start(); } catch (e) { /* redémarrage déjà en cours */ }
+                }, IS_IOS ? 150 : 0);
             } else {
+                releaseMicStream();
                 updateButtonState();
             }
         };
@@ -368,15 +409,27 @@ try {
     }
 
     function startListening() {
-        if (!recognition) recognition = buildRecognition();
-        listening = true;
         hideMicTutorial();
         if (voicePanel) voicePanel.classList.remove('hidden');
-        if (voiceStatus) voiceStatus.textContent = '🎙️ En écoute — dictez vos valeurs…';
-        try {
-            recognition.start();
-        } catch (e) { /* déjà démarré */ }
-        updateButtonState();
+        if (voiceStatus) voiceStatus.textContent = '🎤 Demande d\'accès au micro…';
+        ensureMicPermission().then(function (granted) {
+            if (!granted) {
+                listening = false;
+                updateButtonState();
+                if (voiceStatus) {
+                    voiceStatus.textContent = '🚫 Le navigateur bloque le micro. Suivez les étapes ci-dessous 👇';
+                }
+                showMicTutorial();
+                return;
+            }
+            if (!recognition) recognition = buildRecognition();
+            listening = true;
+            if (voiceStatus) voiceStatus.textContent = '🎙️ En écoute — dictez vos valeurs…';
+            try {
+                recognition.start();
+            } catch (e) { /* déjà démarré */ }
+            updateButtonState();
+        });
     }
 
     function stopListening() {
@@ -384,6 +437,7 @@ try {
         if (recognition) {
             try { recognition.stop(); } catch (e) { /* déjà arrêté */ }
         }
+        releaseMicStream();
         if (voiceStatus) voiceStatus.textContent = 'Dictée en pause. Appuyez sur le micro pour reprendre.';
         updateButtonState();
     }
