@@ -18,25 +18,6 @@
 <body>
     <canvas id="fx-canvas" aria-hidden="true"></canvas>
 
-    <div id="beta-modal" class="modal">
-        <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="beta-title">
-            <span class="modal-badge">Version bêta</span>
-            <h2 id="beta-title">Avant de commencer</h2>
-            <p class="modal-note">
-                Outil conçu par Astouati Quentin. L'utilisation et l'interprétation des résultats
-                relèvent de la responsabilité exclusive du médecin référent.
-            </p>
-            <p class="modal-ref">
-                Algorithme basé sur l'article princeps :<br>
-                <a href="https://ard.bmj.com/content/73/7/1340" target="_blank" rel="noopener" class="link-article">
-                    Coghlan JG, et&nbsp;al. Ann Rheum Dis 2014;73:1340–1349</a>
-            </p>
-            <div class="modal-actions">
-                <button id="close-modal" class="btn-primary">J'ai compris</button>
-            </div>
-        </div>
-    </div>
-
     <div class="app-container">
         <header class="masthead">
             <p class="overline">Dépistage de l'HTAP · Sclérodermie systémique</p>
@@ -71,6 +52,41 @@
 
         <main>
             <div id="tab-calculator" class="tab-content active">
+                <div id="voice-widget">
+                    <button id="voice-btn" class="voice-btn" title="Saisie vocale" aria-label="Saisie vocale">🎤
+                        Saisie vocale</button>
+                    <div id="voice-panel" class="voice-panel hidden">
+                        <div class="voice-panel-header">
+                            <span class="voice-panel-title">🎤 Saisie vocale</span>
+                            <div class="voice-panel-actions">
+                                <button id="voice-help-btn" class="voice-icon-btn" title="Aide">?</button>
+                                <button id="voice-close-btn" class="voice-icon-btn" title="Fermer">✕</button>
+                            </div>
+                        </div>
+                        <div id="voice-status" class="voice-status">Appuyez sur le micro, puis dictez vos valeurs.
+                        </div>
+                        <div id="voice-tutorial" class="voice-tutorial hidden"></div>
+                        <div id="voice-transcript" class="voice-transcript hidden"></div>
+                        <div id="voice-log" class="voice-log"></div>
+                        <div id="voice-help" class="voice-help hidden">
+                            <strong>Exemples de dictée :</strong>
+                            <ul>
+                                <li>« CVF 90, DLCO 50 »</li>
+                                <li>« NT pro BNP 250 »</li>
+                                <li>« Acide urique 52 » — ou « acide urique 5 virgule 2 milligrammes par décilitre »,
+                                    « acide urique 320 micromoles »</li>
+                                <li>« Télangiectasies oui, anti-centromère négatif »</li>
+                                <li>« Déviation axiale droite »</li>
+                                <li>« Surface OD 16, vélocité tricuspide 2 virgule 8 »</li>
+                                <li>« Calculer » / « Réinitialiser »</li>
+                            </ul>
+                            <p class="voice-help-note">
+                                Compatible Chrome, Edge et Safari (ordinateur et mobile). La dictée reste active
+                                jusqu'à un nouvel appui sur le bouton.
+                            </p>
+                        </div>
+                    </div>
+                </div>
                 <section id="step1-card" class="card">
                     <div class="card-header">
                         <div class="step-heading">
@@ -180,7 +196,7 @@
                             <div class="input-col">
                                 <label for="urate">Acide urique
                                     <span class="tooltip" tabindex="0"
-                                        data-tip="Uricémie sérique (2–12 mg/dL ou 120–720 µmol/L)">
+                                        data-tip="Uricémie sérique (2–12 mg/dL, 20–120 mg/L ou 120–720 µmol/L)">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
                                             stroke-linecap="round" aria-hidden="true">
                                             <circle cx="12" cy="12" r="9"></circle>
@@ -190,9 +206,10 @@
                                     </span>
                                 </label>
                                 <div class="input-wrapper">
-                                    <input type="number" id="urate" placeholder="5.0" min="2" max="12" step="0.1"
+                                    <input type="number" id="urate" placeholder="50" min="2" max="720" step="0.1"
                                         inputmode="decimal" autocomplete="off">
                                     <select id="urate_unit" class="unit-select" aria-label="Unité de l'acide urique">
+                                        <option value="mgl" selected>mg/L</option>
                                         <option value="mgdl">mg/dL</option>
                                         <option value="umol">µmol/L</option>
                                     </select>
@@ -403,6 +420,7 @@
 
     <script src="logic.js"></script>
     <script src="app.js"></script>
+    <script src="voice.js"></script>
     <script src="fx.js" defer></script>
 </body>
 </html>
