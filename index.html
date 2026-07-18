@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calculateur DETECT - Sclérodermie</title>
-    <link rel="stylesheet" href="style.css?v=7">
+    <link rel="stylesheet" href="style.css?v=8">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -30,13 +30,22 @@
                                 <button id="voice-close-btn" class="voice-icon-btn" title="Fermer">✕</button>
                             </div>
                         </div>
-                        <div id="voice-status" class="voice-status">Appuyez sur le micro, puis dictez vos valeurs.
+                        <div class="voice-mode-toggle">
+                            <button id="voice-mode-guided" class="voice-mode-btn active">🎯 Mode guidé</button>
+                            <button id="voice-mode-free" class="voice-mode-btn">📝 Dictée libre</button>
                         </div>
+                        <div id="voice-status" class="voice-status">Appuyez sur le micro : l'application vous posera
+                            chaque question, répondez « oui », « non » ou une valeur.</div>
+                        <div id="voice-question" class="voice-question hidden"></div>
                         <div id="voice-tutorial" class="voice-tutorial hidden"></div>
                         <div id="voice-transcript" class="voice-transcript hidden"></div>
                         <div id="voice-log" class="voice-log"></div>
                         <div id="voice-help" class="voice-help hidden">
-                            <strong>Exemples de dictée :</strong>
+                            <strong>🎯 Mode guidé (recommandé) :</strong> l'application pose chaque question à voix
+                            haute, répondez simplement « oui », « non » ou un nombre. Commandes : « passer », «
+                            retour », « répète », « stop ».
+                            <br><br>
+                            <strong>📝 Dictée libre :</strong> dictez tout d'une phrase, par exemple :
                             <ul>
                                 <li>« CVF 90, DLCO 50 »</li>
                                 <li>« NT pro BNP 250 »</li>
@@ -277,8 +286,8 @@
             </p>
         </footer>
     </div>
-    <script src="logic.js?v=7"></script>
-    <script src="app.js?v=7"></script>
-    <script src="voice.js?v=7"></script>
+    <script src="logic.js?v=8"></script>
+    <script src="app.js?v=8"></script>
+    <script src="voice.js?v=8"></script>
 </body>
 </html>

@@ -6,35 +6,63 @@ try {
     const voicePanel = document.getElementById('voice-panel');
     const voiceStatus = document.getElementById('voice-status');
     const voiceTutorial = document.getElementById('voice-tutorial');
+    const voiceQuestion = document.getElementById('voice-question');
     const voiceTranscript = document.getElementById('voice-transcript');
     const voiceLog = document.getElementById('voice-log');
     const voiceHelp = document.getElementById('voice-help');
     const voiceHelpBtn = document.getElementById('voice-help-btn');
     const voiceCloseBtn = document.getElementById('voice-close-btn');
+    const modeGuidedBtn = document.getElementById('voice-mode-guided');
+    const modeFreeBtn = document.getElementById('voice-mode-free');
 
     const NUMERIC_FIELDS = [
         { id: 'ntprobnp', label: 'NT-proBNP', re: /(?:nt[\s-]*)?pro[\s-]*bnp|\bbnp\b|peptide/ },
         { id: 'fvc', label: 'CVF', re: /capacite vitale(?: forcee)?|\bc[\s.]*v[\s.]*f\b/ },
-        { id: 'dlco', label: 'DLCO', re: /\bd[\s.]*l[\s.]*c[\s.]*o\b|\bdel?co\b|diffusion(?: du co)?/ },
+        { id: 'dlco', label: 'DLCO', re: /\bd[\s.]*l[\s.]*c[\s.]*o\b|\bdlc\b|\bdel?co\b|diffusion(?: du co)?/ },
         { id: 'urate', label: 'Acide urique', re: /acide[\s-]*urique|uricemie|\burate\b/ },
         { id: 'ra_area', label: 'Surface OD', re: /surface(?:\s+de)?(?:\s+l['\s])?\s*(?:od\b|auriculaire|oreillette(?:\s+droite)?)|oreillette droite/, step2: true },
         { id: 'tr_vel', label: 'Vélocité IT', re: /velocite(?: tricuspide| it)?|(?:vitesse|flux|fuite|insuffisance|regurgitation)[\s-]*tricuspide|tricuspide|\bit\b/, step2: true }
     ];
 
     const CHECKBOX_FIELDS = [
-        { id: 'telang', label: 'Télangiectasies', re: /telangiectasies?/ },
-        { id: 'aca', label: 'Anti-centromère', re: /(?:anticorps[\s-]*)?(?:anti[\s-]*)?centromere|\ba[\s.]*c[\s.]*a\b/ },
-        { id: 'rad', label: 'Déviation axiale droite', re: /deviation axiale(?: droite)?|axe (?:droit|devie)/ }
+        { id: 'telang', label: 'Télangiectasies', re: /telangi\w*|angiectasi\w*/ },
+        { id: 'aca', label: 'Anti-centromère', re: /(?:anticorps[\s-]*)?anti[\s-]*(?:\w{1,4}[\s-]+)?centromere|centromere|\ba[\s.]*c[\s.]*a\b/ },
+        { id: 'rad', label: 'Déviation axiale droite', re: /deviation[\s-]+(?:axiale?|de l'axe|axe)(?:[\s-]+droite?)?|deviation[\s-]+droite|axe[\s-]+(?:droite?|devie)/ }
     ];
 
     const NEGATIVE_AFTER_RE = /^[\s,:]*\b(non|pas|absentes?|absents?|absent|absence|negatifs?|negatives?|aucune?|zero)\b/;
-    const NEGATIVE_BEFORE_RE = /\b(pas de|pas d|sans|aucune?|absence de|absence d)\s*['"]?\s*$/;
+    const NEGATIVE_BEFORE_RE = /\b(pas|sans|aucune?|absence|absentes?)\b[\s\S]{0,20}$/;
     const NUMBER_RE = /\d+(?:\.\d+)?/;
+
+    const GUIDED_STEPS = [
+        { id: 'fvc', type: 'number', label: 'CVF', question: 'CVF, en pourcentage de la valeur prédite ?' },
+        { id: 'dlco', type: 'number', label: 'DLCO', question: 'DLCO, en pourcentage ?' },
+        { id: 'telang', type: 'bool', label: 'Télangiectasies', question: 'Télangiectasies, oui ou non ?' },
+        { id: 'aca', type: 'bool', label: 'Anti-centromère', question: 'Anticorps anti-centromère, oui ou non ?' },
+        { id: 'ntprobnp', type: 'number', label: 'NT-proBNP', question: 'NT pro BNP, en picogrammes par millilitre ?' },
+        { id: 'urate', type: 'number', label: 'Acide urique', question: 'Acide urique, en milligrammes par litre ?' },
+        { id: 'rad', type: 'bool', label: 'Déviation axiale droite', question: 'Déviation axiale droite à l\'ECG, oui ou non ?' },
+        { id: 'ra_area', type: 'number', label: 'Surface OD', question: 'Surface de l\'oreillette droite, en centimètres carrés ?', step2: true },
+        { id: 'tr_vel', type: 'number', label: 'Vélocité IT', question: 'Vélocité de l\'insuffisance tricuspide, en mètres par seconde ?', step2: true }
+    ];
+
+    const YES_RE = /\b(oui|ouais|yes|presentes?|presents?|present|positifs?|positives?|affirmatif|exact)\b/;
+    const NO_RE = /\b(non|absentes?|absents?|absent|negatifs?|negatives?|aucune?|nan)\b|\bpas\b/;
+
+    const WORD_NUMS = {
+        zero: 0, un: 1, une: 1, deux: 2, trois: 3, quatre: 4, cinq: 5, six: 6,
+        sept: 7, huit: 8, neuf: 9, dix: 10, onze: 11, douze: 12, treize: 13,
+        quatorze: 14, quinze: 15, seize: 16, vingt: 20, vingts: 20, trente: 30,
+        quarante: 40, cinquante: 50, soixante: 60, cent: 100, cents: 100
+    };
 
     let recognition = null;
     let listening = false;
     let micStream = null;
     let hasWorkedOnce = false;
+    let ttsSpeaking = false;
+    let mode = 'guided';
+    let guidedIndex = -1;
     const IS_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
         (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
 
@@ -44,6 +72,36 @@ try {
         t = t.replace(/(\d)\s*(?:virgule|,)\s*(\d)/g, '$1.$2');
         t = t.replace(/\bvirgule\b/g, '.');
         return t;
+    }
+
+    function wordsToNumber(text) {
+        const tokens = text.replace(/-/g, ' ').split(/\s+/);
+        let started = false;
+        let current = 0;
+        for (let i = 0; i < tokens.length; i++) {
+            const tok = tokens[i];
+            if (tok === 'et') continue;
+            const v = WORD_NUMS[tok];
+            if (v == null) {
+                if (started) break;
+                continue;
+            }
+            started = true;
+            if (v === 100) {
+                current = (current || 1) * 100;
+            } else if (v === 20 && current >= 2 && current <= 9) {
+                current = current * 20;
+            } else {
+                current += v;
+            }
+        }
+        return started ? current : null;
+    }
+
+    function extractNumber(text) {
+        const m = text.match(NUMBER_RE);
+        if (m) return parseFloat(m[0]);
+        return wordsToNumber(text);
     }
 
     function detectUrateUnit(segment) {
@@ -66,7 +124,7 @@ try {
         const input = document.getElementById(spec.id);
         if (!input) return false;
         if (spec.step2) revealStep2IfHidden();
-        input.value = value;
+        input.value = String(value);
         input.dispatchEvent(new Event('input', { bubbles: true }));
         return true;
     }
@@ -120,7 +178,7 @@ try {
         deduped.forEach((m, i) => {
             const segmentEnd = (i + 1 < deduped.length) ? deduped[i + 1].start : text.length;
             const segment = text.slice(m.end, segmentEnd);
-            const before = text.slice(Math.max(0, m.start - 16), m.start);
+            const before = text.slice(Math.max(0, m.start - 24), m.start);
 
             if (m.kind === 'number') {
                 const num = segment.match(NUMBER_RE);
@@ -162,6 +220,182 @@ try {
         }
 
         return applied;
+    }
+
+    function speak(text, done) {
+        if (!window.speechSynthesis || typeof SpeechSynthesisUtterance === 'undefined') {
+            if (done) done();
+            return;
+        }
+        try {
+            ttsSpeaking = true;
+            if (recognition) {
+                try { recognition.stop(); } catch (e) { /* déjà arrêté */ }
+            }
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'fr-FR';
+            utterance.rate = 1.05;
+            const finish = function () {
+                if (!ttsSpeaking) return;
+                ttsSpeaking = false;
+                setTimeout(function () {
+                    if (listening && recognition) {
+                        try { recognition.start(); } catch (e) { /* déjà démarré */ }
+                    }
+                }, 250);
+                if (done) done();
+            };
+            utterance.onend = finish;
+            utterance.onerror = finish;
+            window.speechSynthesis.speak(utterance);
+            setTimeout(finish, 8000);
+        } catch (e) {
+            ttsSpeaking = false;
+            if (done) done();
+        }
+    }
+
+    function stepAvailable(step) {
+        if (!step.step2) return true;
+        const card = document.getElementById('step2-card');
+        return card && !card.classList.contains('hidden');
+    }
+
+    function availableSteps() {
+        return GUIDED_STEPS.filter(stepAvailable);
+    }
+
+    function showQuestion(header, main, hint) {
+        if (!voiceQuestion) return;
+        voiceQuestion.innerHTML = '';
+        const h = document.createElement('div');
+        h.className = 'voice-q-header';
+        h.textContent = header;
+        const q = document.createElement('div');
+        q.className = 'voice-q-text';
+        q.textContent = main;
+        voiceQuestion.appendChild(h);
+        voiceQuestion.appendChild(q);
+        if (hint) {
+            const hi = document.createElement('div');
+            hi.className = 'voice-q-hint';
+            hi.textContent = hint;
+            voiceQuestion.appendChild(hi);
+        }
+        voiceQuestion.classList.remove('hidden');
+    }
+
+    function hideQuestion() {
+        if (voiceQuestion) voiceQuestion.classList.add('hidden');
+    }
+
+    function startGuided() {
+        guidedIndex = 0;
+        askCurrent();
+    }
+
+    function askCurrent() {
+        while (guidedIndex < GUIDED_STEPS.length && !stepAvailable(GUIDED_STEPS[guidedIndex])) {
+            guidedIndex++;
+        }
+        if (guidedIndex >= GUIDED_STEPS.length) {
+            finishGuided();
+            return;
+        }
+        const step = GUIDED_STEPS[guidedIndex];
+        const avail = availableSteps();
+        const pos = avail.indexOf(step) + 1;
+        const hint = step.type === 'bool'
+            ? 'Répondez « oui » ou « non » — ou « passer », « retour », « stop »'
+            : 'Dites un nombre — ou « passer », « retour », « stop »';
+        showQuestion('Question ' + pos + '/' + avail.length + ' — ' + step.label, step.question, hint);
+        if (voiceStatus) voiceStatus.textContent = '🎙️ J\'écoute votre réponse…';
+        speak(step.question);
+    }
+
+    function guidedNext() {
+        guidedIndex++;
+        askCurrent();
+    }
+
+    function finishGuided() {
+        guidedIndex = -1;
+        listening = false;
+        if (recognition) {
+            try { recognition.stop(); } catch (e) { /* déjà arrêté */ }
+        }
+        releaseMicStream();
+        updateButtonState();
+        let msg = 'Questionnaire terminé.';
+        const s2box = document.getElementById('result-step2');
+        const s1val = document.getElementById('s1-points-val');
+        const s2val = document.getElementById('s2-points-val');
+        if (s2box && !s2box.classList.contains('hidden') && s2val && s2val.textContent !== '--') {
+            msg = 'Terminé. Score final : ' + s2val.textContent + ' points.';
+        } else if (s1val && s1val.textContent !== '--') {
+            msg = 'Terminé. Score de l\'étape 1 : ' + s1val.textContent + ' points.';
+        }
+        showQuestion('✅ Terminé', msg, 'Réappuyez sur le bouton pour recommencer.');
+        if (voiceStatus) voiceStatus.textContent = '✅ Questionnaire terminé.';
+        speak(msg);
+    }
+
+    function handleGuidedAnswer(rawTranscript) {
+        if (guidedIndex < 0 || guidedIndex >= GUIDED_STEPS.length) return;
+        const text = normalize(rawTranscript);
+
+        if (/\b(stop|arrete\w*|termine\w*|fini)\b/.test(text)) {
+            stopListening();
+            hideQuestion();
+            return;
+        }
+        if (/\b(passe|passer|passez|suivante?|sais pas|inconnue?)\b/.test(text)) {
+            logApplied(['⏭ ' + GUIDED_STEPS[guidedIndex].label + ' : passé']);
+            guidedNext();
+            return;
+        }
+        if (/\b(retour|precedente?|reviens|revenir|corrige\w*)\b/.test(text)) {
+            guidedIndex = Math.max(0, guidedIndex - 1);
+            while (guidedIndex > 0 && !stepAvailable(GUIDED_STEPS[guidedIndex])) guidedIndex--;
+            askCurrent();
+            return;
+        }
+        if (/\b(repete\w*|redis|redites)\b/.test(text)) {
+            askCurrent();
+            return;
+        }
+
+        const step = GUIDED_STEPS[guidedIndex];
+        if (step.type === 'bool') {
+            const no = NO_RE.test(text);
+            const yes = YES_RE.test(text);
+            if (no) {
+                setCheckboxField(step, false);
+                logApplied([step.label + ' : non ✗']);
+                guidedNext();
+            } else if (yes) {
+                setCheckboxField(step, true);
+                logApplied([step.label + ' : oui ✓']);
+                guidedNext();
+            } else {
+                if (voiceStatus) voiceStatus.textContent = '🤔 « ' + rawTranscript + ' » — répondez « oui » ou « non » (ou « passer »).';
+            }
+        } else {
+            const num = extractNumber(text);
+            if (num != null && !isNaN(num)) {
+                let unit = null;
+                if (step.id === 'urate') {
+                    unit = detectUrateUnit(text);
+                    if (unit) setUrateUnit(unit);
+                }
+                setNumberField(step, num);
+                logApplied([step.label + ' = ' + num + (unit ? unitLabel(unit) : '')]);
+                guidedNext();
+            } else {
+                if (voiceStatus) voiceStatus.textContent = '🤔 « ' + rawTranscript + ' » — dites un nombre (ou « passer »).';
+            }
+        }
     }
 
     function logApplied(items) {
@@ -314,6 +548,11 @@ try {
         voiceBtn.title = listening ? 'Arrêter la dictée' : 'Saisie vocale';
     }
 
+    function updateModeButtons() {
+        if (modeGuidedBtn) modeGuidedBtn.classList.toggle('active', mode === 'guided');
+        if (modeFreeBtn) modeFreeBtn.classList.toggle('active', mode === 'free');
+    }
+
     function ensureMicPermission() {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
             return Promise.resolve(true);
@@ -353,12 +592,16 @@ try {
                     hasWorkedOnce = true;
                     lastFinal = res[0].transcript.trim();
                     if (lastFinal) {
-                        const applied = parseAndApply(lastFinal);
-                        logApplied(applied);
-                        if (applied.length === 0 && voiceStatus) {
-                            voiceStatus.textContent = '🤔 Aucune valeur reconnue dans « ' + lastFinal + ' ». Dites par exemple « CVF 90 ».';
-                        } else if (voiceStatus) {
-                            voiceStatus.textContent = '🎙️ En écoute — dictez vos valeurs…';
+                        if (mode === 'guided' && guidedIndex >= 0) {
+                            handleGuidedAnswer(lastFinal);
+                        } else {
+                            const applied = parseAndApply(lastFinal);
+                            logApplied(applied);
+                            if (applied.length === 0 && voiceStatus) {
+                                voiceStatus.textContent = '🤔 Aucune valeur reconnue dans « ' + lastFinal + ' ». Dites par exemple « CVF 90 ».';
+                            } else if (voiceStatus) {
+                                voiceStatus.textContent = '🎙️ En écoute — dictez vos valeurs…';
+                            }
                         }
                     }
                 } else {
@@ -394,12 +637,12 @@ try {
         };
 
         rec.onend = function () {
-            if (listening) {
+            if (listening && !ttsSpeaking) {
                 setTimeout(function () {
-                    if (!listening) return;
+                    if (!listening || ttsSpeaking) return;
                     try { rec.start(); } catch (e) { /* redémarrage déjà en cours */ }
                 }, IS_IOS ? 150 : 0);
-            } else {
+            } else if (!listening) {
                 releaseMicStream();
                 updateButtonState();
             }
@@ -424,20 +667,31 @@ try {
             }
             if (!recognition) recognition = buildRecognition();
             listening = true;
-            if (voiceStatus) voiceStatus.textContent = '🎙️ En écoute — dictez vos valeurs…';
             try {
                 recognition.start();
             } catch (e) { /* déjà démarré */ }
             updateButtonState();
+            if (mode === 'guided') {
+                startGuided();
+            } else {
+                hideQuestion();
+                if (voiceStatus) voiceStatus.textContent = '🎙️ En écoute — dictez vos valeurs…';
+            }
         });
     }
 
     function stopListening() {
         listening = false;
+        guidedIndex = -1;
+        ttsSpeaking = false;
+        if (window.speechSynthesis) {
+            try { window.speechSynthesis.cancel(); } catch (e) { /* rien à annuler */ }
+        }
         if (recognition) {
             try { recognition.stop(); } catch (e) { /* déjà arrêté */ }
         }
         releaseMicStream();
+        hideQuestion();
         if (voiceStatus) voiceStatus.textContent = 'Dictée en pause. Appuyez sur le micro pour reprendre.';
         updateButtonState();
     }
@@ -458,6 +712,24 @@ try {
         }
     }
 
+    if (modeGuidedBtn) {
+        modeGuidedBtn.onclick = function () {
+            mode = 'guided';
+            updateModeButtons();
+            if (listening) startGuided();
+        };
+    }
+    if (modeFreeBtn) {
+        modeFreeBtn.onclick = function () {
+            mode = 'free';
+            guidedIndex = -1;
+            updateModeButtons();
+            hideQuestion();
+            if (listening && voiceStatus) voiceStatus.textContent = '🎙️ En écoute — dictez vos valeurs…';
+        };
+    }
+    updateModeButtons();
+
     if (voiceHelpBtn && voiceHelp) {
         voiceHelpBtn.onclick = function () {
             voiceHelp.classList.toggle('hidden');
@@ -474,6 +746,12 @@ try {
     window.DETECT_VOICE = {
         parseAndApply: parseAndApply,
         normalize: normalize,
+        extractNumber: extractNumber,
+        wordsToNumber: wordsToNumber,
+        handleGuidedAnswer: handleGuidedAnswer,
+        startGuided: startGuided,
+        getGuidedIndex: function () { return guidedIndex; },
+        setMode: function (m) { mode = m; updateModeButtons(); },
         showMicTutorial: showMicTutorial,
         getMicTutorial: getMicTutorial
     };
