@@ -303,7 +303,7 @@ try {
     function showFormula(id, html) {
         const el = document.getElementById(id);
         if (el) {
-            el.innerHTML = '📐 ' + html;
+            el.innerHTML = html;
             el.classList.add('visible');
         }
     }
