@@ -196,7 +196,7 @@ try {
     function updateButtonState() {
         if (!voiceBtn) return;
         voiceBtn.classList.toggle('listening', listening);
-        voiceBtn.textContent = listening ? '⏹' : '🎤';
+        voiceBtn.textContent = listening ? '⏹ Arrêter la dictée' : '🎤 Saisie vocale';
         voiceBtn.title = listening ? 'Arrêter la dictée' : 'Saisie vocale';
     }
 

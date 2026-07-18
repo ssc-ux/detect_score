@@ -107,7 +107,9 @@ header {
     margin-bottom: 4rem;
     animation: fadeInDown 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-header h1 {
+header h1,
+.app-container > h1 {
+    text-align: center;
     font-size: 3.5rem;
     font-weight: 800;
     margin: 0;
@@ -129,7 +131,9 @@ header h1 {
     color: var(--text-secondary);
     font-size: 1.25rem;
     font-weight: 400;
-    margin-top: 1rem;
+    text-align: center;
+    margin-top: 0.5rem;
+    margin-bottom: 2.5rem;
     max-width: 600px;
     margin-left: auto;
     margin-right: auto;
@@ -632,28 +636,122 @@ footer {
     font-size: 0.9rem;
 }
 @media (max-width: 768px) {
-    header h1 {
-        font-size: 2.5rem;
+    .app-container {
+        padding: 1.5rem 1rem 2rem;
+    }
+    header h1,
+    .app-container > h1 {
+        font-size: 2.2rem;
+    }
+    .subtitle {
+        font-size: 0.95rem;
+        margin-bottom: 1.5rem;
+    }
+    .tab-nav {
+        margin-bottom: 1.5rem;
     }
     .card {
-        padding: 1.5rem;
+        padding: 1.25rem;
+        border-radius: 16px;
+        margin-bottom: 1.5rem;
     }
-    .calc-row {
-        grid-template-columns: 1fr auto;
+    .card-header {
+        padding-bottom: 1rem;
+        margin-bottom: 1.25rem;
+    }
+    .card-header h2 {
+        font-size: 1.15rem;
+    }
+    .calculator-grid {
         gap: 1rem;
     }
+    .calc-row {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem 1rem;
+        padding: 1rem;
+    }
+    .calc-row > .input-col:first-child:nth-last-child(3) {
+        grid-column: 1 / -1;
+    }
     .input-col.full-width {
-        grid-column: span 2;
+        grid-column: 1 / -1;
+    }
+    .input-col label {
+        font-size: 0.75rem;
+    }
+    .points-col {
+        grid-column: 1 / -1;
+        flex-direction: row;
+        justify-content: flex-end;
+        align-items: baseline;
+        gap: 8px;
+    }
+    .points-label {
+        margin-bottom: 0;
+    }
+    .points-value {
+        font-size: 1.05rem;
+    }
+    .formula-hint {
+        font-size: 0.65rem;
+    }
+    .action-bar {
+        margin-top: 1.5rem;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    .action-bar .btn-primary,
+    .action-bar .btn-secondary {
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .btn-primary {
+        padding: 14px 20px;
+        font-size: 1rem;
+    }
+    .gauge-wrapper {
+        padding: 1.25rem;
+        margin-top: 1.5rem;
     }
     .gauge-row {
         flex-direction: column;
         align-items: center;
+        gap: 1rem;
     }
     .gauge-track-container {
         width: 100%;
+        box-sizing: border-box;
     }
     .gauge-score {
-        font-size: 3rem;
+        font-size: 2.4rem;
+        min-width: auto;
+        text-align: center;
+    }
+    .gauge-decision-line {
+        font-size: 0.95rem;
+        text-align: center;
+        margin-top: 1rem;
+        padding-top: 1rem;
+    }
+    .gauge-recommendation {
+        padding: 1rem;
+        font-size: 0.85rem;
+    }
+    .precise-result {
+        flex-direction: column;
+        gap: 4px;
+        text-align: center;
+    }
+    .step1-reminder {
+        margin-left: 0;
+    }
+    .bypass-area {
+        padding: 1.25rem;
+        margin: 1.5rem 0;
+    }
+    footer {
+        padding: 2rem 0 1rem;
     }
 }
 .physio-container {
@@ -1288,32 +1386,33 @@ footer {
 }
 
 #voice-widget {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    z-index: 900;
+    position: sticky;
+    top: 10px;
+    z-index: 300;
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
-    gap: 12px;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 1.5rem;
 }
 .voice-btn {
-    width: 64px;
-    height: 64px;
-    border-radius: 50%;
     border: none;
-    font-size: 1.8rem;
+    border-radius: 99px;
+    padding: 14px 32px;
+    width: 100%;
+    max-width: 420px;
+    font-size: 1rem;
+    font-weight: 700;
+    font-family: inherit;
+    letter-spacing: 0.02em;
     cursor: pointer;
     background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
     color: white;
     box-shadow: 0 6px 20px rgba(14, 165, 233, 0.45);
     transition: var(--transition);
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 .voice-btn:hover {
-    transform: scale(1.08);
+    transform: translateY(-2px);
     box-shadow: 0 8px 28px rgba(14, 165, 233, 0.55);
 }
 .voice-btn.listening {
@@ -1337,8 +1436,9 @@ footer {
     }
 }
 .voice-panel {
-    width: 320px;
-    max-width: calc(100vw - 48px);
+    width: 100%;
+    max-width: 560px;
+    box-sizing: border-box;
     max-height: 60vh;
     overflow-y: auto;
     background: var(--card-bg);
@@ -1436,12 +1536,12 @@ footer {
 }
 @media (max-width: 768px) {
     #voice-widget {
-        bottom: 16px;
-        right: 16px;
+        top: 8px;
+        margin-bottom: 1rem;
     }
     .voice-btn {
-        width: 56px;
-        height: 56px;
-        font-size: 1.5rem;
+        max-width: none;
+        padding: 13px 20px;
+        font-size: 0.95rem;
     }
 }
