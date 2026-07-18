@@ -99,11 +99,12 @@
                         <div class="calc-row">
                             <div class="input-col">
                                 <label for="urate">Acide Urique <span class="tooltip"
-                                        title="Uricémie sérique (2-12 mg/dL ou 120-720 µmol/L)">ⓘ</span></label>
+                                        title="Uricémie sérique (2-12 mg/dL, 20-120 mg/L ou 120-720 µmol/L)">ⓘ</span></label>
                                 <div class="input-wrapper">
-                                    <input type="number" id="urate" placeholder="Ex: 5.0" min="2" max="12" step="0.1">
+                                    <input type="number" id="urate" placeholder="Ex: 5.0" min="2" max="720" step="0.1">
                                     <select id="urate_unit" class="unit-select">
                                         <option value="mgdl">mg/dL</option>
+                                        <option value="mgl">mg/L</option>
                                         <option value="umol">µmol/L</option>
                                     </select>
                                 </div>
@@ -260,7 +261,41 @@
             </p>
         </footer>
     </div>
+    <div id="voice-widget">
+        <div id="voice-panel" class="voice-panel hidden">
+            <div class="voice-panel-header">
+                <span class="voice-panel-title">🎤 Saisie vocale</span>
+                <div class="voice-panel-actions">
+                    <button id="voice-help-btn" class="voice-icon-btn" title="Aide">?</button>
+                    <button id="voice-close-btn" class="voice-icon-btn" title="Fermer">✕</button>
+                </div>
+            </div>
+            <div id="voice-status" class="voice-status">Appuyez sur le micro, puis dictez vos valeurs.</div>
+            <div id="voice-transcript" class="voice-transcript hidden"></div>
+            <div id="voice-log" class="voice-log"></div>
+            <div id="voice-help" class="voice-help hidden">
+                <strong>Exemples de dictée :</strong>
+                <ul>
+                    <li>« CVF 90, DLCO 50 »</li>
+                    <li>« NT pro BNP 250 »</li>
+                    <li>« Acide urique 5 virgule 2 » — ou « acide urique 52 milligrammes par litre », «
+                        acide urique 320 micromoles »</li>
+                    <li>« Télangiectasies oui, anti-centromère négatif »</li>
+                    <li>« Déviation axiale droite »</li>
+                    <li>« Surface OD 16, vélocité tricuspide 2 virgule 8 »</li>
+                    <li>« Calculer » / « Réinitialiser »</li>
+                </ul>
+                <p class="voice-help-note">
+                    Compatible Chrome, Edge et Safari (ordinateur et mobile). La dictée reste active jusqu'à un
+                    nouvel appui sur le micro. L'audio est traité par le service de reconnaissance vocale du
+                    navigateur : ne dictez aucune donnée identifiante du patient.
+                </p>
+            </div>
+        </div>
+        <button id="voice-btn" class="voice-btn" title="Saisie vocale" aria-label="Saisie vocale">🎤</button>
+    </div>
     <script src="logic.js"></script>
     <script src="app.js"></script>
+    <script src="voice.js"></script>
 </body>
 </html>
