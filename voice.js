@@ -193,6 +193,17 @@ try {
         }
     }
 
+    function micDeniedMessage() {
+        const ua = navigator.userAgent || '';
+        if (/iPhone|iPad|iPod/.test(ua)) {
+            return '🚫 Accès au micro refusé. Sur iPhone/iPad : touchez « aA » (ou l\'icône de réglages) dans la barre d\'adresse → « Réglages du site web » → Micro → Autoriser, puis rechargez la page. Vérifiez aussi que la dictée est activée : Réglages → Général → Claviers → Dictée.';
+        }
+        if (/Android/.test(ua)) {
+            return '🚫 Accès au micro refusé. Touchez l\'icône 🔒 (ou ⓘ) à gauche de l\'adresse → Autorisations → Micro → Autoriser, puis rechargez la page.';
+        }
+        return '🚫 Accès au micro refusé. Cliquez sur l\'icône 🔒 dans la barre d\'adresse, autorisez le micro pour ce site, puis rechargez la page.';
+    }
+
     function updateButtonState() {
         if (!voiceBtn) return;
         voiceBtn.classList.toggle('listening', listening);
@@ -235,7 +246,7 @@ try {
                 listening = false;
                 updateButtonState();
                 if (voiceStatus) {
-                    voiceStatus.textContent = '🚫 Accès au micro refusé. Autorisez le micro dans les réglages du navigateur, puis réessayez.';
+                    voiceStatus.textContent = micDeniedMessage();
                 }
             } else if (event.error === 'audio-capture') {
                 listening = false;
