@@ -5,6 +5,7 @@ try {
     const voiceBtn = document.getElementById('voice-btn');
     const voicePanel = document.getElementById('voice-panel');
     const voiceStatus = document.getElementById('voice-status');
+    const voiceTutorial = document.getElementById('voice-tutorial');
     const voiceTranscript = document.getElementById('voice-transcript');
     const voiceLog = document.getElementById('voice-log');
     const voiceHelp = document.getElementById('voice-help');
@@ -193,15 +194,112 @@ try {
         }
     }
 
-    function micDeniedMessage() {
+    function getMicTutorial() {
         const ua = navigator.userAgent || '';
-        if (/iPhone|iPad|iPod/.test(ua)) {
-            return '🚫 Accès au micro refusé. Sur iPhone/iPad : touchez « aA » (ou l\'icône de réglages) dans la barre d\'adresse → « Réglages du site web » → Micro → Autoriser, puis rechargez la page. Vérifiez aussi que la dictée est activée : Réglages → Général → Claviers → Dictée.';
+        const isIOS = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+        const isAndroid = /Android/.test(ua);
+        const isChromeIOS = /CriOS/.test(ua);
+        const isEdge = /Edg(e|iOS|A)?\//.test(ua);
+        const isSamsung = /SamsungBrowser/.test(ua);
+        const isSafariDesktop = !isIOS && !isAndroid && /Safari\//.test(ua) && !/Chrome|Chromium|Edg/.test(ua);
+
+        if (isIOS && isChromeIOS) {
+            return {
+                title: 'Chrome sur iPhone / iPad',
+                steps: [
+                    'Ouvrez <strong>Réglages iOS → Apps → Chrome</strong> et activez le <strong>Micro</strong>.',
+                    'Vérifiez que la dictée est activée : <strong>Réglages → Général → Claviers → Activer la dictée</strong>.',
+                    'Revenez ici, <strong>rechargez la page</strong>, réappuyez sur « 🎤 Saisie vocale » et touchez « Autoriser » quand Chrome le demande.'
+                ]
+            };
         }
-        if (/Android/.test(ua)) {
-            return '🚫 Accès au micro refusé. Touchez l\'icône 🔒 (ou ⓘ) à gauche de l\'adresse → Autorisations → Micro → Autoriser, puis rechargez la page.';
+        if (isIOS) {
+            return {
+                title: 'Safari sur iPhone / iPad',
+                steps: [
+                    'Touchez le bouton <strong>« aA »</strong> (ou l\'icône de réglages) à gauche de la barre d\'adresse.',
+                    'Choisissez <strong>« Réglages du site web »</strong> puis <strong>Micro → Autoriser</strong>.',
+                    'Si l\'option n\'apparaît pas : <strong>Réglages iOS → Apps → Safari → Micro</strong> → « Autoriser ».',
+                    'Activez la dictée : <strong>Réglages → Général → Claviers → Activer la dictée</strong>.',
+                    '<strong>Rechargez la page</strong> et réappuyez sur « 🎤 Saisie vocale ».'
+                ],
+                note: 'La reconnaissance vocale de Safari s\'appuie sur la dictée d\'Apple : si elle est désactivée, le micro reste bloqué.'
+            };
         }
-        return '🚫 Accès au micro refusé. Cliquez sur l\'icône 🔒 dans la barre d\'adresse, autorisez le micro pour ce site, puis rechargez la page.';
+        if (isAndroid && isSamsung) {
+            return {
+                title: 'Samsung Internet sur Android',
+                steps: [
+                    'Touchez l\'icône <strong>🔒</strong> à gauche de l\'adresse, puis <strong>Autorisations → Micro → Autoriser</strong>.',
+                    'Sinon : menu <strong>☰ → Paramètres → Sites et téléchargements → Autorisations de site → Micro</strong>.',
+                    'Vérifiez aussi : <strong>Paramètres Android → Applications → Samsung Internet → Autorisations → Micro</strong>.',
+                    '<strong>Rechargez la page</strong> et réappuyez sur le bouton.'
+                ]
+            };
+        }
+        if (isAndroid) {
+            return {
+                title: 'Chrome sur Android',
+                steps: [
+                    'Touchez l\'icône <strong>🔒</strong> (ou ⓘ) à gauche de l\'adresse.',
+                    'Choisissez <strong>Autorisations → Micro → Autoriser</strong>.',
+                    'Si l\'option n\'apparaît pas : menu <strong>⋮ → Paramètres → Paramètres des sites → Micro</strong> et retirez ce site de la liste « Bloqué ».',
+                    'Vérifiez aussi : <strong>Paramètres Android → Applications → Chrome → Autorisations → Micro</strong>.',
+                    '<strong>Rechargez la page</strong> et réappuyez sur le bouton.'
+                ]
+            };
+        }
+        if (isSafariDesktop) {
+            return {
+                title: 'Safari sur Mac',
+                steps: [
+                    'Menu <strong>Safari → Réglages pour ce site web…</strong> puis <strong>Micro → Autoriser</strong>.',
+                    'Vérifiez côté macOS : <strong>Réglages Système → Confidentialité et sécurité → Micro</strong> → activez Safari.',
+                    '<strong>Rechargez la page</strong> et cliquez à nouveau sur « 🎤 Saisie vocale ».'
+                ]
+            };
+        }
+        if (isEdge) {
+            return {
+                title: 'Microsoft Edge',
+                steps: [
+                    'Cliquez sur l\'icône <strong>🔒</strong> à gauche de l\'adresse.',
+                    'Choisissez <strong>Autorisations pour ce site → Micro → Autoriser</strong>.',
+                    'Si besoin, ouvrez <strong>edge://settings/content/microphone</strong> et retirez ce site de la liste « Bloqué ».',
+                    '<strong>Rechargez la page</strong> et cliquez à nouveau sur le bouton.'
+                ]
+            };
+        }
+        return {
+            title: 'Chrome sur ordinateur',
+            steps: [
+                'Cliquez sur l\'icône <strong>🔒</strong> (ou l\'icône de réglages) à gauche de l\'adresse.',
+                'Activez <strong>Micro</strong> (ou « Paramètres du site » → Micro → Autoriser).',
+                'Si besoin, ouvrez <strong>chrome://settings/content/microphone</strong> et retirez ce site de la liste « Bloqué ».',
+                'Vérifiez le micro du système : Windows → Paramètres → Confidentialité → Micro ; macOS → Réglages Système → Confidentialité → Micro.',
+                '<strong>Rechargez la page</strong> et cliquez à nouveau sur le bouton.'
+            ]
+        };
+    }
+
+    function showMicTutorial() {
+        if (!voiceTutorial) return;
+        const tuto = getMicTutorial();
+        let html = '<div class="voice-tuto-title">📋 Réactiver le micro — ' + tuto.title + '</div><ol>';
+        tuto.steps.forEach(function (step) {
+            html += '<li>' + step + '</li>';
+        });
+        html += '</ol>';
+        if (tuto.note) html += '<p class="voice-tuto-note">💡 ' + tuto.note + '</p>';
+        html += '<button id="voice-reload-btn" class="voice-reload-btn">🔄 Recharger la page</button>';
+        voiceTutorial.innerHTML = html;
+        voiceTutorial.classList.remove('hidden');
+        const reloadBtn = document.getElementById('voice-reload-btn');
+        if (reloadBtn) reloadBtn.onclick = function () { location.reload(); };
+    }
+
+    function hideMicTutorial() {
+        if (voiceTutorial) voiceTutorial.classList.add('hidden');
     }
 
     function updateButtonState() {
@@ -246,8 +344,9 @@ try {
                 listening = false;
                 updateButtonState();
                 if (voiceStatus) {
-                    voiceStatus.textContent = micDeniedMessage();
+                    voiceStatus.textContent = '🚫 Le navigateur bloque le micro. Suivez les étapes ci-dessous 👇';
                 }
+                showMicTutorial();
             } else if (event.error === 'audio-capture') {
                 listening = false;
                 updateButtonState();
@@ -271,6 +370,7 @@ try {
     function startListening() {
         if (!recognition) recognition = buildRecognition();
         listening = true;
+        hideMicTutorial();
         if (voicePanel) voicePanel.classList.remove('hidden');
         if (voiceStatus) voiceStatus.textContent = '🎙️ En écoute — dictez vos valeurs…';
         try {
@@ -317,7 +417,12 @@ try {
         };
     }
 
-    window.DETECT_VOICE = { parseAndApply: parseAndApply, normalize: normalize };
+    window.DETECT_VOICE = {
+        parseAndApply: parseAndApply,
+        normalize: normalize,
+        showMicTutorial: showMicTutorial,
+        getMicTutorial: getMicTutorial
+    };
 } catch (err) {
     console.error('VOICE MODULE ERROR:', err);
 }
