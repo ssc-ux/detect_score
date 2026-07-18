@@ -73,21 +73,10 @@ try {
     let els = {}; 
     function init() {
         console.log("App Init Started...");
-        els = getEls(); 
-        initModal();
+        els = getEls();
         initTabs();
         resetUI();
         attachListeners();
-    }
-    function initModal() {
-        const overlay = document.getElementById('beta-modal');
-        const closeBtn = document.getElementById('close-modal');
-        if (closeBtn && overlay) {
-            closeBtn.onclick = function (e) {
-                e.preventDefault();
-                overlay.style.display = 'none';
-            };
-        }
     }
     function initTabs() {
         const tabs = document.querySelectorAll('.tab-btn');
@@ -115,8 +104,8 @@ try {
         if (els.step2.gaugeBar) els.step2.gaugeBar.style.left = '0%';
     }
     function attachListeners() {
-        if (els.step1.btn) els.step1.btn.onclick = runStep1;
-        if (els.step2.btn) els.step2.btn.onclick = runStep2;
+        if (els.step1.btn) els.step1.btn.onclick = function () { runStep1(false); };
+        if (els.step2.btn) els.step2.btn.onclick = function () { runStep2(false); };
         if (els.bypassS2.btn) els.bypassS2.btn.onclick = function () {
             els.step2.card.classList.remove('hidden');
             els.step2.card.scrollIntoView({ behavior: "smooth" });
@@ -135,8 +124,28 @@ try {
         }
         if (els.physio.slider) {
             els.physio.slider.addEventListener('input', updatePhysioViz);
-            updatePhysioViz(); 
+            updatePhysioViz();
         }
+        attachEnterNavigation();
+    }
+    function attachEnterNavigation() {
+        const chain = ['fvc', 'dlco', 'ntprobnp', 'urate', 'ra_area', 'tr_vel'];
+        chain.forEach(function (id, idx) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.addEventListener('keydown', function (e) {
+                if (e.key !== 'Enter') return;
+                e.preventDefault();
+                for (let j = idx + 1; j < chain.length; j++) {
+                    const next = document.getElementById(chain[j]);
+                    if (next && next.offsetParent !== null) {
+                        next.focus();
+                        return;
+                    }
+                }
+                el.blur();
+            });
+        });
     }
     function resetForm() {
         document.querySelectorAll('input[type="number"]').forEach(i => i.value = '');
@@ -302,6 +311,10 @@ try {
         } else {
             showFormula('formula-rad', `Absent → <span class="formula-result">50</span> pts`);
         }
+        if (els.step1.inputs.fvc.value && els.step1.inputs.dlco.value &&
+            els.step1.inputs.ntprobnp.value && els.step1.inputs.urate.value) {
+            runStep1(true);
+        }
     }
     function showFormula(id, html) {
         const el = document.getElementById(id);
@@ -348,10 +361,13 @@ try {
             updateBadge(els.step2.badges.tr_vel, 0, false);
             hideFormula('formula-tr_vel');
         }
+        if (step1Result && els.step2.inputs.ra.value && els.step2.inputs.tr.value) {
+            runStep2(true);
+        }
     }
-    function runStep1() {
+    function runStep1(auto) {
         const inputs = getStep1Inputs();
-        if ((!els.step1.inputs.fvc.value || !els.step1.inputs.dlco.value) && !confirm("Certaines valeurs (CVF/DLCO) semblent manquantes. Continuer ?")) {
+        if (!auto && (!els.step1.inputs.fvc.value || !els.step1.inputs.dlco.value) && !confirm("Certaines valeurs (CVF/DLCO) semblent manquantes. Continuer ?")) {
             return;
         }
         const result = window.DETECT.calculateStep1Points(inputs);
@@ -376,7 +392,7 @@ try {
         if (result.isHighRisk) {
             els.step2.card.classList.remove('hidden');
             if (els.step1CarriedScore) els.step1CarriedScore.textContent = result.total;
-            setTimeout(() => els.step2.card.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+            if (!auto) setTimeout(() => els.step2.card.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
             els.bypassS2.container.classList.add('hidden');
         } else {
             els.step2.card.classList.add('hidden');
@@ -384,9 +400,9 @@ try {
             if (els.step1CarriedScore) els.step1CarriedScore.textContent = result.total;
         }
     }
-    function runStep2() {
+    function runStep2(auto) {
         if (!step1Result) {
-            alert("Veuillez d'abord calculer l'étape 1.");
+            if (!auto) alert("Veuillez d'abord calculer l'étape 1.");
             return;
         }
         const inputs = {
