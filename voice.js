@@ -12,9 +12,6 @@ try {
     const voiceHelp = document.getElementById('voice-help');
     const voiceHelpBtn = document.getElementById('voice-help-btn');
     const voiceCloseBtn = document.getElementById('voice-close-btn');
-    const answerBox = document.getElementById('voice-answer-box');
-    const answerInput = document.getElementById('voice-answer-input');
-    const answerOkBtn = document.getElementById('voice-answer-ok');
 
     const GUIDED_STEPS = [
         { id: 'fvc', type: 'number', label: 'CVF', unit: '% prédit' },
@@ -41,25 +38,15 @@ try {
 
     let recognition = null;
     let listening = false;
-    let micGranted = false;
     let hasWorkedOnce = false;
+    let blockedOnce = false;
     let guidedIndex = -1;
     let interimTimer = null;
     let lastInterim = '';
     let consumedAnswer = '';
     let consumedAt = 0;
-    let keyboardMode = false;
-    let answerDebounce = null;
     const IS_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
         (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
-
-    if (navigator.permissions && navigator.permissions.query) {
-        try {
-            navigator.permissions.query({ name: 'microphone' }).then(function (status) {
-                if (status.state === 'granted') micGranted = true;
-            }, function () { /* API non supportée */ });
-        } catch (e) { /* API non supportée */ }
-    }
 
     function normalize(text) {
         let t = text.toLowerCase();
@@ -259,8 +246,6 @@ try {
     function finishGuided() {
         guidedIndex = -1;
         listening = false;
-        keyboardMode = false;
-        if (answerBox) answerBox.classList.add('hidden');
         if (recognition) {
             try { recognition.stop(); } catch (e) { /* déjà arrêté */ }
         }
@@ -503,25 +488,9 @@ try {
 
     function updateButtonState() {
         if (!voiceBtn) return;
-        const active = listening || keyboardMode;
-        voiceBtn.classList.toggle('listening', active);
-        voiceBtn.textContent = active ? '⏹ Arrêter la saisie' : '🎤 Saisie vocale';
-        voiceBtn.title = active ? 'Arrêter la saisie' : 'Saisie vocale';
-    }
-
-    function requestMicPermission() {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            return Promise.resolve(true);
-        }
-        return navigator.mediaDevices.getUserMedia({ audio: true }).then(
-            function (stream) {
-                stream.getTracks().forEach(function (t) { t.stop(); });
-                return true;
-            },
-            function () {
-                return false;
-            }
-        );
+        voiceBtn.classList.toggle('listening', listening);
+        voiceBtn.textContent = listening ? '⏹ Arrêter la dictée' : '🎤 Saisie vocale';
+        voiceBtn.title = listening ? 'Arrêter la dictée' : 'Saisie vocale';
     }
 
     function buildRecognition() {
@@ -580,14 +549,22 @@ try {
         rec.onerror = function (event) {
             if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
                 listening = false;
+                updateButtonState();
+                clearHighlight();
                 if (hasWorkedOnce) {
-                    updateButtonState();
-                    clearHighlight();
                     if (voiceStatus) {
-                        voiceStatus.textContent = '⏸️ Dictée interrompue par le navigateur. Réappuyez sur « 🎤 Saisie vocale » pour continuer.';
+                        voiceStatus.textContent = '⏸️ Dictée en pause. Réappuyez sur « 🎤 Saisie vocale » pour continuer.';
+                    }
+                } else if (!blockedOnce) {
+                    blockedOnce = true;
+                    if (voiceStatus) {
+                        voiceStatus.textContent = '🎤 Autorisez l\'accès au micro dans la fenêtre qui vient de s\'afficher, puis réappuyez sur « Saisie vocale ».';
                     }
                 } else {
-                    startKeyboardMode(true);
+                    if (voiceStatus) {
+                        voiceStatus.textContent = '🚫 Le micro reste bloqué par le navigateur. Voir les étapes 👇';
+                    }
+                    showMicTutorial(true);
                 }
             } else if (event.error === 'audio-capture') {
                 listening = false;
@@ -613,131 +590,48 @@ try {
         return rec;
     }
 
-    function beginSession() {
+    function startListening() {
+        // iOS Safari : recognition.start() DOIT être appelé de façon synchrone
+        // dans le geste (le clic), sans aucune opération asynchrone avant —
+        // sinon la permission est refusée. Le navigateur affiche lui-même sa
+        // fenêtre d'autorisation du micro au premier démarrage.
+        hideMicTutorial();
+        if (voicePanel) voicePanel.classList.remove('hidden');
         if (!recognition) recognition = buildRecognition();
         listening = true;
+        updateButtonState();
+        startGuided();
         try {
             recognition.start();
         } catch (e) { /* déjà démarré */ }
-        updateButtonState();
-        startGuided();
-    }
-
-    function startListening() {
-        hideMicTutorial();
-        if (voicePanel) voicePanel.classList.remove('hidden');
-        if (micGranted) {
-            beginSession();
-            return;
-        }
-        if (voiceStatus) voiceStatus.textContent = '🎤 Demande d\'accès au micro…';
-        requestMicPermission().then(function (granted) {
-            if (!granted) {
-                listening = false;
-                updateButtonState();
-                if (voiceStatus) {
-                    voiceStatus.textContent = '🚫 Le navigateur bloque le micro. Suivez les étapes ci-dessous 👇';
-                }
-                showMicTutorial(false);
-                return;
-            }
-            micGranted = true;
-            beginSession();
-        });
     }
 
     function stopListening() {
         listening = false;
-        keyboardMode = false;
         guidedIndex = -1;
         if (recognition) {
             try { recognition.stop(); } catch (e) { /* déjà arrêté */ }
         }
-        if (answerBox) answerBox.classList.add('hidden');
         hideQuestion();
         clearHighlight();
         if (voiceStatus) voiceStatus.textContent = 'Saisie en pause. Appuyez sur le bouton pour reprendre.';
         updateButtonState();
     }
 
-    function startKeyboardMode(blockedMessage) {
-        keyboardMode = true;
-        listening = false;
-        if (recognition) {
-            try { recognition.stop(); } catch (e) { /* déjà arrêté */ }
-        }
-        if (voicePanel) voicePanel.classList.remove('hidden');
-        hideMicTutorial();
-        if (answerBox) answerBox.classList.remove('hidden');
-        if (voiceStatus) {
-            voiceStatus.innerHTML = (blockedMessage
-                ? '⚠️ Le navigateur bloque sa reconnaissance vocale — pas grave : '
-                : '') +
-                'touchez le champ de réponse, appuyez sur la touche <strong>🎤 du clavier</strong> et dictez vos réponses.' +
-                (blockedMessage
-                    ? ' <button id="voice-show-tuto" class="voice-link-btn">Débloquer le micro navigateur ?</button>'
-                    : '');
-            const tutoBtn = document.getElementById('voice-show-tuto');
-            if (tutoBtn) {
-                tutoBtn.onclick = function () {
-                    showMicTutorial(true);
-                };
-            }
-        }
-        if (guidedIndex < 0) startGuided(); else askCurrent();
-        updateButtonState();
-        if (answerInput) {
-            try { answerInput.focus(); } catch (e) { /* focus refusé */ }
-        }
-    }
-
-    function submitKeyboardAnswer() {
-        if (!answerInput) return;
-        const val = answerInput.value.trim();
-        if (!val) return;
-        if (answerDebounce) clearTimeout(answerDebounce);
-        answerInput.value = '';
-        handleGuidedAnswer(val);
-        if (keyboardMode && guidedIndex >= 0) {
-            try { answerInput.focus(); } catch (e) { /* clavier fermé */ }
-        }
-    }
-
     if (voiceBtn) {
         voiceBtn.onclick = function () {
-            if (listening || keyboardMode) {
+            if (listening) {
                 stopListening();
             } else if (!SR) {
-                startKeyboardMode(false);
+                if (voicePanel) voicePanel.classList.remove('hidden');
+                if (voiceStatus) {
+                    voiceStatus.textContent = '❌ La reconnaissance vocale n\'est pas disponible sur ce navigateur. Utilisez Safari (iPhone/iPad), Chrome ou Edge.';
+                }
             } else {
                 startListening();
             }
         };
     }
-
-    if (answerInput) {
-        answerInput.addEventListener('input', function () {
-            if (answerDebounce) clearTimeout(answerDebounce);
-            const val = answerInput.value.trim();
-            if (!val) return;
-            if (isInstantAnswer(normalize(val))) {
-                submitKeyboardAnswer();
-                return;
-            }
-            answerDebounce = setTimeout(function () {
-                if (keyboardMode && isActionableAnswer(normalize(answerInput.value.trim()))) {
-                    submitKeyboardAnswer();
-                }
-            }, 500);
-        });
-        answerInput.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                submitKeyboardAnswer();
-            }
-        });
-    }
-    if (answerOkBtn) answerOkBtn.onclick = submitKeyboardAnswer;
 
     if (voiceHelpBtn && voiceHelp) {
         voiceHelpBtn.onclick = function () {
@@ -758,7 +652,6 @@ try {
         wordsToNumber: wordsToNumber,
         handleGuidedAnswer: handleGuidedAnswer,
         startGuided: startGuided,
-        startKeyboardMode: startKeyboardMode,
         getGuidedIndex: function () { return guidedIndex; },
         showMicTutorial: showMicTutorial,
         getMicTutorial: getMicTutorial
