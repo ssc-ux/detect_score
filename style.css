@@ -1502,3 +1502,74 @@ footer {
     background: var(--accent-soft);
     box-shadow: 0 0 0 3px var(--accent-ring);
 }
+
+.voice-q-var {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    color: var(--accent);
+    margin: 2px 0 2px;
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.voice-q-unit {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--ink-2);
+    letter-spacing: 0;
+}
+
+.voice-answer-box {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 0.6rem;
+}
+
+#voice-answer-input {
+    flex: 1;
+    padding: 12px 14px;
+    font-size: 1.05rem;
+    font-family: inherit;
+    color: var(--ink);
+    background: var(--surface);
+    border: 2px solid var(--accent);
+    border-radius: var(--radius-sm);
+    outline: none;
+}
+
+#voice-answer-input::placeholder {
+    color: var(--ink-3);
+    font-size: 0.9rem;
+}
+
+.voice-answer-ok {
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 0 20px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background var(--t-fast);
+}
+
+.voice-answer-ok:hover {
+    background: var(--accent-strong);
+}
+
+.voice-link-btn {
+    border: none;
+    background: none;
+    padding: 0;
+    font-family: inherit;
+    font-size: inherit;
+    color: var(--accent);
+    text-decoration: underline;
+    cursor: pointer;
+}

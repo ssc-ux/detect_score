@@ -12,17 +12,20 @@ try {
     const voiceHelp = document.getElementById('voice-help');
     const voiceHelpBtn = document.getElementById('voice-help-btn');
     const voiceCloseBtn = document.getElementById('voice-close-btn');
+    const answerBox = document.getElementById('voice-answer-box');
+    const answerInput = document.getElementById('voice-answer-input');
+    const answerOkBtn = document.getElementById('voice-answer-ok');
 
     const GUIDED_STEPS = [
-        { id: 'fvc', type: 'number', label: 'CVF', question: 'CVF, en pourcentage de la valeur prédite ?' },
-        { id: 'dlco', type: 'number', label: 'DLCO', question: 'DLCO, en pourcentage ?' },
-        { id: 'telang', type: 'bool', label: 'Télangiectasies', question: 'Télangiectasies, oui ou non ?' },
-        { id: 'aca', type: 'bool', label: 'Anti-centromère', question: 'Anticorps anti-centromère, oui ou non ?' },
-        { id: 'ntprobnp', type: 'number', label: 'NT-proBNP', question: 'NT pro BNP, en picogrammes par millilitre ?' },
-        { id: 'urate', type: 'number', label: 'Acide urique', question: 'Acide urique, en milligrammes par litre ?' },
-        { id: 'rad', type: 'bool', label: 'Déviation axiale droite', question: 'Déviation axiale droite à l\'ECG, oui ou non ?' },
-        { id: 'ra_area', type: 'number', label: 'Surface OD', question: 'Surface de l\'oreillette droite, en centimètres carrés ?', step2: true },
-        { id: 'tr_vel', type: 'number', label: 'Vélocité IT', question: 'Vélocité de l\'insuffisance tricuspide, en mètres par seconde ?', step2: true }
+        { id: 'fvc', type: 'number', label: 'CVF', unit: '% prédit' },
+        { id: 'dlco', type: 'number', label: 'DLCO', unit: '% prédit' },
+        { id: 'telang', type: 'bool', label: 'Télangiectasies', unit: 'oui / non' },
+        { id: 'aca', type: 'bool', label: 'Anti-centromère', unit: 'ACA · oui / non' },
+        { id: 'ntprobnp', type: 'number', label: 'NT-proBNP', unit: 'pg/mL' },
+        { id: 'urate', type: 'number', label: 'Acide urique', unit: 'mg/L' },
+        { id: 'rad', type: 'bool', label: 'Déviation axiale droite', unit: 'ECG · oui / non' },
+        { id: 'ra_area', type: 'number', label: 'Surface OD', unit: 'cm²', step2: true },
+        { id: 'tr_vel', type: 'number', label: 'Vélocité IT', unit: 'm/s', step2: true }
     ];
 
     const YES_RE = /\b(oui|ouais|yes|presentes?|presents?|present|positifs?|positives?|affirmatif|exact)\b/;
@@ -45,6 +48,8 @@ try {
     let lastInterim = '';
     let consumedAnswer = '';
     let consumedAt = 0;
+    let keyboardMode = false;
+    let answerDebounce = null;
     const IS_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
         (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
 
@@ -170,29 +175,43 @@ try {
         return GUIDED_STEPS.filter(stepAvailable);
     }
 
-    function showQuestion(header, main, hint, progress) {
+    function showQuestion(opts) {
         if (!voiceQuestion) return;
         voiceQuestion.innerHTML = '';
         const h = document.createElement('div');
         h.className = 'voice-q-header';
-        h.textContent = header;
-        const q = document.createElement('div');
-        q.className = 'voice-q-text';
-        q.textContent = main;
+        h.textContent = opts.header;
         voiceQuestion.appendChild(h);
-        voiceQuestion.appendChild(q);
-        if (hint) {
+        if (opts.varName) {
+            const v = document.createElement('div');
+            v.className = 'voice-q-var';
+            v.textContent = opts.varName;
+            if (opts.unit) {
+                const u = document.createElement('span');
+                u.className = 'voice-q-unit';
+                u.textContent = opts.unit;
+                v.appendChild(u);
+            }
+            voiceQuestion.appendChild(v);
+        }
+        if (opts.text) {
+            const q = document.createElement('div');
+            q.className = 'voice-q-text';
+            q.textContent = opts.text;
+            voiceQuestion.appendChild(q);
+        }
+        if (opts.hint) {
             const hi = document.createElement('div');
             hi.className = 'voice-q-hint';
-            hi.textContent = hint;
+            hi.textContent = opts.hint;
             voiceQuestion.appendChild(hi);
         }
-        if (typeof progress === 'number') {
+        if (typeof opts.progress === 'number') {
             const bar = document.createElement('div');
             bar.className = 'voice-progress';
             const fill = document.createElement('div');
             fill.className = 'voice-progress-fill';
-            fill.style.width = Math.round(progress * 100) + '%';
+            fill.style.width = Math.round(opts.progress * 100) + '%';
             bar.appendChild(fill);
             voiceQuestion.appendChild(bar);
         }
@@ -219,11 +238,16 @@ try {
         const step = GUIDED_STEPS[guidedIndex];
         const avail = availableSteps();
         const pos = avail.indexOf(step) + 1;
-        const hint = step.type === 'bool'
-            ? 'Dites « oui » ou « non » — ou « passer », « retour », « stop »'
-            : 'Dites un nombre — ou « passer », « retour », « stop »';
-        showQuestion(pos + '/' + avail.length + ' — ' + step.label, step.question, hint, (pos - 1) / avail.length);
-        if (voiceStatus) voiceStatus.textContent = '🎙️ J\'écoute votre réponse…';
+        const hint = (step.type === 'bool' ? '« oui » ou « non »' : 'dites la valeur') +
+            ' — ou « passer », « retour », « stop »';
+        showQuestion({
+            header: 'Question ' + pos + '/' + avail.length,
+            varName: step.label,
+            unit: step.unit,
+            hint: hint,
+            progress: (pos - 1) / avail.length
+        });
+        if (listening && voiceStatus) voiceStatus.textContent = '🎙️ J\'écoute votre réponse…';
         highlightField(step.id);
     }
 
@@ -235,6 +259,8 @@ try {
     function finishGuided() {
         guidedIndex = -1;
         listening = false;
+        keyboardMode = false;
+        if (answerBox) answerBox.classList.add('hidden');
         if (recognition) {
             try { recognition.stop(); } catch (e) { /* déjà arrêté */ }
         }
@@ -249,7 +275,7 @@ try {
         } else if (s1val && s1val.textContent !== '--') {
             msg = 'Score étape 1 : ' + s1val.textContent + ' points.';
         }
-        showQuestion('✅ Terminé', msg, 'Réappuyez sur le bouton pour recommencer.', 1);
+        showQuestion({ header: '✅ Terminé', text: msg, hint: 'Réappuyez sur le bouton pour recommencer.', progress: 1 });
         if (voiceStatus) voiceStatus.textContent = '✅ Questionnaire terminé.';
     }
 
@@ -470,9 +496,10 @@ try {
 
     function updateButtonState() {
         if (!voiceBtn) return;
-        voiceBtn.classList.toggle('listening', listening);
-        voiceBtn.textContent = listening ? '⏹ Arrêter la dictée' : '🎤 Saisie vocale';
-        voiceBtn.title = listening ? 'Arrêter la dictée' : 'Saisie vocale';
+        const active = listening || keyboardMode;
+        voiceBtn.classList.toggle('listening', active);
+        voiceBtn.textContent = active ? '⏹ Arrêter la saisie' : '🎤 Saisie vocale';
+        voiceBtn.title = active ? 'Arrêter la saisie' : 'Saisie vocale';
     }
 
     function requestMicPermission() {
@@ -538,17 +565,14 @@ try {
         rec.onerror = function (event) {
             if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
                 listening = false;
-                updateButtonState();
-                clearHighlight();
                 if (hasWorkedOnce) {
+                    updateButtonState();
+                    clearHighlight();
                     if (voiceStatus) {
                         voiceStatus.textContent = '⏸️ Dictée interrompue par le navigateur. Réappuyez sur « 🎤 Saisie vocale » pour continuer.';
                     }
                 } else {
-                    if (voiceStatus) {
-                        voiceStatus.textContent = '🚫 Le navigateur bloque la reconnaissance vocale. Suivez les étapes ci-dessous 👇';
-                    }
-                    showMicTutorial(micGranted || event.error === 'service-not-allowed');
+                    startKeyboardMode(true);
                 }
             } else if (event.error === 'audio-capture') {
                 listening = false;
@@ -609,31 +633,92 @@ try {
 
     function stopListening() {
         listening = false;
+        keyboardMode = false;
         guidedIndex = -1;
         if (recognition) {
             try { recognition.stop(); } catch (e) { /* déjà arrêté */ }
         }
+        if (answerBox) answerBox.classList.add('hidden');
         hideQuestion();
         clearHighlight();
-        if (voiceStatus) voiceStatus.textContent = 'Dictée en pause. Appuyez sur le micro pour reprendre.';
+        if (voiceStatus) voiceStatus.textContent = 'Saisie en pause. Appuyez sur le bouton pour reprendre.';
         updateButtonState();
     }
 
-    if (voiceBtn) {
-        if (!SR) {
-            voiceBtn.classList.add('voice-unsupported');
-            voiceBtn.onclick = function () {
-                if (voicePanel) voicePanel.classList.remove('hidden');
-                if (voiceStatus) {
-                    voiceStatus.textContent = '❌ La reconnaissance vocale n\'est pas disponible sur ce navigateur. Utilisez Chrome, Edge ou Safari (iOS 14.5+).';
-                }
-            };
-        } else {
-            voiceBtn.onclick = function () {
-                if (listening) stopListening(); else startListening();
-            };
+    function startKeyboardMode(blockedMessage) {
+        keyboardMode = true;
+        listening = false;
+        if (recognition) {
+            try { recognition.stop(); } catch (e) { /* déjà arrêté */ }
+        }
+        if (voicePanel) voicePanel.classList.remove('hidden');
+        hideMicTutorial();
+        if (answerBox) answerBox.classList.remove('hidden');
+        if (voiceStatus) {
+            voiceStatus.innerHTML = (blockedMessage
+                ? '⚠️ Le navigateur bloque sa reconnaissance vocale — pas grave : '
+                : '') +
+                'touchez le champ de réponse, appuyez sur la touche <strong>🎤 du clavier</strong> et dictez vos réponses.' +
+                (blockedMessage
+                    ? ' <button id="voice-show-tuto" class="voice-link-btn">Débloquer le micro navigateur ?</button>'
+                    : '');
+            const tutoBtn = document.getElementById('voice-show-tuto');
+            if (tutoBtn) {
+                tutoBtn.onclick = function () {
+                    showMicTutorial(true);
+                };
+            }
+        }
+        if (guidedIndex < 0) startGuided(); else askCurrent();
+        updateButtonState();
+        if (answerInput) {
+            try { answerInput.focus(); } catch (e) { /* focus refusé */ }
         }
     }
+
+    function submitKeyboardAnswer() {
+        if (!answerInput) return;
+        const val = answerInput.value.trim();
+        if (!val) return;
+        if (answerDebounce) clearTimeout(answerDebounce);
+        answerInput.value = '';
+        handleGuidedAnswer(val);
+        if (keyboardMode && guidedIndex >= 0) {
+            try { answerInput.focus(); } catch (e) { /* clavier fermé */ }
+        }
+    }
+
+    if (voiceBtn) {
+        voiceBtn.onclick = function () {
+            if (listening || keyboardMode) {
+                stopListening();
+            } else if (!SR) {
+                startKeyboardMode(false);
+            } else {
+                startListening();
+            }
+        };
+    }
+
+    if (answerInput) {
+        answerInput.addEventListener('input', function () {
+            if (answerDebounce) clearTimeout(answerDebounce);
+            const val = answerInput.value.trim();
+            if (!val) return;
+            answerDebounce = setTimeout(function () {
+                if (keyboardMode && isActionableAnswer(normalize(answerInput.value.trim()))) {
+                    submitKeyboardAnswer();
+                }
+            }, 900);
+        });
+        answerInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                submitKeyboardAnswer();
+            }
+        });
+    }
+    if (answerOkBtn) answerOkBtn.onclick = submitKeyboardAnswer;
 
     if (voiceHelpBtn && voiceHelp) {
         voiceHelpBtn.onclick = function () {
@@ -654,6 +739,7 @@ try {
         wordsToNumber: wordsToNumber,
         handleGuidedAnswer: handleGuidedAnswer,
         startGuided: startGuided,
+        startKeyboardMode: startKeyboardMode,
         getGuidedIndex: function () { return guidedIndex; },
         showMicTutorial: showMicTutorial,
         getMicTutorial: getMicTutorial
