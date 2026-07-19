@@ -8,7 +8,7 @@
     <meta name="theme-color" content="#0e1013" media="(prefers-color-scheme: dark)">
     <link rel="icon"
         href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%232451d6'/%3E%3Cpath d='M10 34h12l5-12 8 22 6-16 4 6h9' fill='none' stroke='white' stroke-width='4.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
-    <link rel="stylesheet" href="style.css?v=12">
+    <link rel="stylesheet" href="style.css?v=13">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -66,6 +66,11 @@
                         <div id="voice-status" class="voice-status">Appuyez sur le micro : chaque champ est surligné
                             tour à tour, répondez « oui », « non » ou une valeur.</div>
                         <div id="voice-question" class="voice-question hidden"></div>
+                        <div id="voice-answer-box" class="voice-answer-box hidden">
+                            <input type="text" id="voice-answer-input" placeholder="🎤 Dictez ici (micro du clavier)…"
+                                autocomplete="off" autocorrect="off" autocapitalize="off" enterkeyhint="go">
+                            <button id="voice-answer-ok" class="voice-answer-ok">OK</button>
+                        </div>
                         <div id="voice-tutorial" class="voice-tutorial hidden"></div>
                         <div id="voice-transcript" class="voice-transcript hidden"></div>
                         <div id="voice-log" class="voice-log"></div>
@@ -81,7 +86,9 @@
                             </ul>
                             <p class="voice-help-note">
                                 Compatible Chrome, Edge et Safari (ordinateur et mobile). Le micro reste actif
-                                jusqu'à la fin du questionnaire ou un nouvel appui sur le bouton.
+                                jusqu'à la fin du questionnaire ou un nouvel appui sur le bouton. Si le navigateur
+                                bloque sa reconnaissance vocale, un champ de réponse apparaît : utilisez la touche
+                                🎤 du clavier pour dicter.
                             </p>
                         </div>
                     </div>
@@ -409,9 +416,9 @@
         </footer>
     </div>
 
-    <script src="logic.js?v=12"></script>
-    <script src="app.js?v=12"></script>
-    <script src="voice.js?v=12"></script>
-    <script src="fx.js?v=12" defer></script>
+    <script src="logic.js?v=13"></script>
+    <script src="app.js?v=13"></script>
+    <script src="voice.js?v=13"></script>
+    <script src="fx.js?v=13" defer></script>
 </body>
 </html>
