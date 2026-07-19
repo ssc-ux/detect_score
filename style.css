@@ -1641,3 +1641,37 @@ footer {
     text-decoration: underline;
     cursor: pointer;
 }
+
+.privacy-badge {
+    text-align: center;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--ink-2);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 99px;
+    padding: 5px 16px;
+    width: fit-content;
+    margin: 0 auto 1rem;
+    box-shadow: var(--shadow-card);
+}
+
+.footer-privacy {
+    font-size: 0.78rem;
+    color: var(--ink-2);
+    max-width: 520px;
+    margin: 0.8rem auto;
+    line-height: 1.55;
+}
+
+.footer-privacy strong {
+    color: var(--ink);
+}
+
+@media (max-width: 640px) {
+    .privacy-badge {
+        font-size: 0.66rem;
+        padding: 4px 12px;
+        margin-bottom: 0.7rem;
+    }
+}
