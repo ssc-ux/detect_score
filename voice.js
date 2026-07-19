@@ -40,6 +40,7 @@ try {
     let listening = false;
     let hasWorkedOnce = false;
     let blockedOnce = false;
+    let micStream = null;
     let guidedIndex = -1;
     let interimTimer = null;
     let lastInterim = '';
@@ -249,6 +250,7 @@ try {
         if (recognition) {
             try { recognition.stop(); } catch (e) { /* déjà arrêté */ }
         }
+        releaseMic();
         updateButtonState();
         clearHighlight();
         let msg = 'Questionnaire terminé.';
@@ -590,20 +592,57 @@ try {
         return rec;
     }
 
-    function startListening() {
-        // iOS Safari : recognition.start() DOIT être appelé de façon synchrone
-        // dans le geste (le clic), sans aucune opération asynchrone avant —
-        // sinon la permission est refusée. Le navigateur affiche lui-même sa
-        // fenêtre d'autorisation du micro au premier démarrage.
-        hideMicTutorial();
-        if (voicePanel) voicePanel.classList.remove('hidden');
+    function releaseMic() {
+        if (micStream) {
+            try {
+                micStream.getTracks().forEach(function (t) { t.stop(); });
+            } catch (e) { /* déjà libéré */ }
+            micStream = null;
+        }
+    }
+
+    function beginSession() {
         if (!recognition) recognition = buildRecognition();
         listening = true;
+        blockedOnce = false;
         updateButtonState();
         startGuided();
         try {
             recognition.start();
         } catch (e) { /* déjà démarré */ }
+    }
+
+    function startListening() {
+        hideMicTutorial();
+        if (voicePanel) voicePanel.classList.remove('hidden');
+        // iOS Safari : webkitSpeechRecognition n'affiche PAS de fenêtre
+        // d'autorisation par lui-même. On demande donc explicitement le micro
+        // via getUserMedia — c'est CE qui déclenche le pop-up « Autoriser le
+        // micro » et accorde l'accès. On garde le flux audio ouvert pendant
+        // toute la session (le libérer ferait perdre l'accès à la
+        // reconnaissance vocale sur iOS).
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            beginSession();
+            return;
+        }
+        if (voiceStatus) voiceStatus.textContent = '🎤 Autorisation du micro…';
+        navigator.mediaDevices.getUserMedia({ audio: true }).then(
+            function (stream) {
+                micStream = stream;
+                beginSession();
+            },
+            function (err) {
+                listening = false;
+                updateButtonState();
+                const name = (err && err.name) ? err.name : '';
+                if (voiceStatus) {
+                    voiceStatus.textContent = (name === 'NotAllowedError' || name === 'SecurityError')
+                        ? '🚫 Accès au micro refusé. Voir les étapes ci-dessous 👇'
+                        : '🚫 Micro indisponible (' + (name || 'erreur') + '). Voir les étapes 👇';
+                }
+                showMicTutorial(true);
+            }
+        );
     }
 
     function stopListening() {
@@ -612,6 +651,7 @@ try {
         if (recognition) {
             try { recognition.stop(); } catch (e) { /* déjà arrêté */ }
         }
+        releaseMic();
         hideQuestion();
         clearHighlight();
         if (voiceStatus) voiceStatus.textContent = 'Saisie en pause. Appuyez sur le bouton pour reprendre.';
