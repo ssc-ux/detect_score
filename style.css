@@ -1447,3 +1447,24 @@ footer {
     margin-top: 6px;
     line-height: 1.4;
 }
+
+.voice-progress {
+    margin-top: 10px;
+    height: 4px;
+    background: var(--line);
+    border-radius: 99px;
+    overflow: hidden;
+}
+
+.voice-progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 99px;
+    transition: width 0.35s var(--ease-out);
+}
+
+.calc-row.voice-target {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    box-shadow: 0 0 0 3px var(--accent-ring);
+}

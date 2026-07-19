@@ -60,7 +60,6 @@ try {
     let listening = false;
     let micStream = null;
     let hasWorkedOnce = false;
-    let ttsSpeaking = false;
     let mode = 'guided';
     let guidedIndex = -1;
     const IS_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
@@ -222,38 +221,23 @@ try {
         return applied;
     }
 
-    function speak(text, done) {
-        if (!window.speechSynthesis || typeof SpeechSynthesisUtterance === 'undefined') {
-            if (done) done();
-            return;
+    function highlightField(id) {
+        clearHighlight();
+        const input = document.getElementById(id);
+        if (!input || !input.closest) return;
+        const row = input.closest('.calc-row');
+        if (!row) return;
+        row.classList.add('voice-target');
+        if (row.scrollIntoView) {
+            row.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-        try {
-            ttsSpeaking = true;
-            if (recognition) {
-                try { recognition.stop(); } catch (e) { /* déjà arrêté */ }
-            }
-            window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'fr-FR';
-            utterance.rate = 1.05;
-            const finish = function () {
-                if (!ttsSpeaking) return;
-                ttsSpeaking = false;
-                setTimeout(function () {
-                    if (listening && recognition) {
-                        try { recognition.start(); } catch (e) { /* déjà démarré */ }
-                    }
-                }, 250);
-                if (done) done();
-            };
-            utterance.onend = finish;
-            utterance.onerror = finish;
-            window.speechSynthesis.speak(utterance);
-            setTimeout(finish, 8000);
-        } catch (e) {
-            ttsSpeaking = false;
-            if (done) done();
-        }
+    }
+
+    function clearHighlight() {
+        if (!document.querySelectorAll) return;
+        document.querySelectorAll('.voice-target').forEach(function (el) {
+            el.classList.remove('voice-target');
+        });
     }
 
     function stepAvailable(step) {
@@ -266,7 +250,7 @@ try {
         return GUIDED_STEPS.filter(stepAvailable);
     }
 
-    function showQuestion(header, main, hint) {
+    function showQuestion(header, main, hint, progress) {
         if (!voiceQuestion) return;
         voiceQuestion.innerHTML = '';
         const h = document.createElement('div');
@@ -282,6 +266,15 @@ try {
             hi.className = 'voice-q-hint';
             hi.textContent = hint;
             voiceQuestion.appendChild(hi);
+        }
+        if (typeof progress === 'number') {
+            const bar = document.createElement('div');
+            bar.className = 'voice-progress';
+            const fill = document.createElement('div');
+            fill.className = 'voice-progress-fill';
+            fill.style.width = Math.round(progress * 100) + '%';
+            bar.appendChild(fill);
+            voiceQuestion.appendChild(bar);
         }
         voiceQuestion.classList.remove('hidden');
     }
@@ -307,11 +300,11 @@ try {
         const avail = availableSteps();
         const pos = avail.indexOf(step) + 1;
         const hint = step.type === 'bool'
-            ? 'Répondez « oui » ou « non » — ou « passer », « retour », « stop »'
+            ? 'Dites « oui » ou « non » — ou « passer », « retour », « stop »'
             : 'Dites un nombre — ou « passer », « retour », « stop »';
-        showQuestion('Question ' + pos + '/' + avail.length + ' — ' + step.label, step.question, hint);
+        showQuestion(pos + '/' + avail.length + ' — ' + step.label, step.question, hint, (pos - 1) / avail.length);
         if (voiceStatus) voiceStatus.textContent = '🎙️ J\'écoute votre réponse…';
-        speak(step.question);
+        highlightField(step.id);
     }
 
     function guidedNext() {
@@ -327,18 +320,18 @@ try {
         }
         releaseMicStream();
         updateButtonState();
+        clearHighlight();
         let msg = 'Questionnaire terminé.';
         const s2box = document.getElementById('result-step2');
         const s1val = document.getElementById('s1-points-val');
         const s2val = document.getElementById('s2-points-val');
         if (s2box && !s2box.classList.contains('hidden') && s2val && s2val.textContent !== '--') {
-            msg = 'Terminé. Score final : ' + s2val.textContent + ' points.';
+            msg = 'Score final : ' + s2val.textContent + ' points.';
         } else if (s1val && s1val.textContent !== '--') {
-            msg = 'Terminé. Score de l\'étape 1 : ' + s1val.textContent + ' points.';
+            msg = 'Score étape 1 : ' + s1val.textContent + ' points.';
         }
-        showQuestion('✅ Terminé', msg, 'Réappuyez sur le bouton pour recommencer.');
+        showQuestion('✅ Terminé', msg, 'Réappuyez sur le bouton pour recommencer.', 1);
         if (voiceStatus) voiceStatus.textContent = '✅ Questionnaire terminé.';
-        speak(msg);
     }
 
     function handleGuidedAnswer(rawTranscript) {
@@ -637,12 +630,12 @@ try {
         };
 
         rec.onend = function () {
-            if (listening && !ttsSpeaking) {
+            if (listening) {
                 setTimeout(function () {
-                    if (!listening || ttsSpeaking) return;
+                    if (!listening) return;
                     try { rec.start(); } catch (e) { /* redémarrage déjà en cours */ }
                 }, IS_IOS ? 150 : 0);
-            } else if (!listening) {
+            } else {
                 releaseMicStream();
                 updateButtonState();
             }
@@ -683,15 +676,12 @@ try {
     function stopListening() {
         listening = false;
         guidedIndex = -1;
-        ttsSpeaking = false;
-        if (window.speechSynthesis) {
-            try { window.speechSynthesis.cancel(); } catch (e) { /* rien à annuler */ }
-        }
         if (recognition) {
             try { recognition.stop(); } catch (e) { /* déjà arrêté */ }
         }
         releaseMicStream();
         hideQuestion();
+        clearHighlight();
         if (voiceStatus) voiceStatus.textContent = 'Dictée en pause. Appuyez sur le micro pour reprendre.';
         updateButtonState();
     }
