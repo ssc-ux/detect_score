@@ -41,6 +41,10 @@ try {
     let micGranted = false;
     let hasWorkedOnce = false;
     let guidedIndex = -1;
+    let interimTimer = null;
+    let lastInterim = '';
+    let consumedAnswer = '';
+    let consumedAt = 0;
     const IS_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
         (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
 
@@ -247,6 +251,17 @@ try {
         }
         showQuestion('✅ Terminé', msg, 'Réappuyez sur le bouton pour recommencer.', 1);
         if (voiceStatus) voiceStatus.textContent = '✅ Questionnaire terminé.';
+    }
+
+    function isActionableAnswer(normText) {
+        if (guidedIndex < 0 || guidedIndex >= GUIDED_STEPS.length) return false;
+        if (/\b(stop|passer?|passez|suivante?|retour|precedente?|repete\w*)\b/.test(normText)) return true;
+        const step = GUIDED_STEPS[guidedIndex];
+        if (step.type === 'bool') {
+            return YES_RE.test(normText) || NO_RE.test(normText);
+        }
+        const num = extractNumber(normText);
+        return num != null && !isNaN(num);
     }
 
     function handleGuidedAnswer(rawTranscript) {
@@ -490,12 +505,34 @@ try {
                 if (res.isFinal) {
                     hasWorkedOnce = true;
                     lastFinal = res[0].transcript.trim();
-                    if (lastFinal) handleGuidedAnswer(lastFinal);
+                    if (lastFinal) {
+                        const nf = normalize(lastFinal);
+                        if (consumedAnswer && Date.now() - consumedAt < 3000 &&
+                            (nf === consumedAnswer || nf.indexOf(consumedAnswer) === 0 || consumedAnswer.indexOf(nf) === 0)) {
+                            consumedAnswer = '';
+                        } else {
+                            handleGuidedAnswer(lastFinal);
+                        }
+                    }
                 } else {
                     interim += res[0].transcript;
                 }
             }
-            showTranscript(interim.trim(), lastFinal);
+            const interimTrim = interim.trim();
+            showTranscript(interimTrim, lastFinal);
+            if (interimTrim && interimTrim !== lastInterim) {
+                lastInterim = interimTrim;
+                if (interimTimer) clearTimeout(interimTimer);
+                interimTimer = setTimeout(function () {
+                    if (!listening || guidedIndex < 0) return;
+                    if (lastInterim !== interimTrim) return;
+                    if (isActionableAnswer(normalize(interimTrim))) {
+                        consumedAnswer = normalize(interimTrim);
+                        consumedAt = Date.now();
+                        handleGuidedAnswer(interimTrim);
+                    }
+                }, 600);
+            }
         };
 
         rec.onerror = function (event) {
@@ -528,7 +565,7 @@ try {
                 setTimeout(function () {
                     if (!listening) return;
                     try { rec.start(); } catch (e) { /* redémarrage déjà en cours */ }
-                }, IS_IOS ? 150 : 0);
+                }, IS_IOS ? 80 : 0);
             } else {
                 updateButtonState();
             }

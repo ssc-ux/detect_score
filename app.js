@@ -259,74 +259,18 @@ try {
         if (!isNaN(fvc) && !isNaN(dlco)) {
             els.step1.badges.fvc_dlco.textContent = `${points.details.fvc_dlco} pts`;
             els.step1.badges.fvc_dlco.classList.add('active');
-            const ratio = (fvc / dlco).toFixed(2);
-            showFormula('formula-fvc_dlco',
-                `Ratio = ${fvc}/${dlco} = <span class="formula-eq">${ratio}</span> → 28 + ${ratio} × 14.4 = <span class="formula-result">${points.detailsExact.fvc_dlco.toFixed(1)}</span>`);
         } else {
             els.step1.badges.fvc_dlco.textContent = '--';
             els.step1.badges.fvc_dlco.classList.remove('active');
-            hideFormula('formula-fvc_dlco');
         }
         updateBadge(els.step1.badges.telang, points.details.telang, els.step1.inputs.telang.checked);
-        if (els.step1.inputs.telang.checked) {
-            showFormula('formula-telang', `Présent → <span class="formula-result">65</span> pts`);
-        } else {
-            showFormula('formula-telang', `Absent → <span class="formula-result">50</span> pts`);
-        }
         updateBadge(els.step1.badges.aca, points.details.aca, els.step1.inputs.aca.checked);
-        if (els.step1.inputs.aca.checked) {
-            showFormula('formula-aca', `Positif → <span class="formula-result">59</span> pts`);
-        } else {
-            showFormula('formula-aca', `Négatif → <span class="formula-result">50</span> pts`);
-        }
-        if (els.step1.inputs.ntprobnp.value) {
-            updateBadge(els.step1.badges.ntprobnp, points.details.ntprobnp, true);
-            const val = parseFloat(els.step1.inputs.ntprobnp.value);
-            const logVal = Math.log10(val > 0 ? val : 1).toFixed(2);
-            showFormula('formula-ntprobnp',
-                `27.5 + log₁₀(<span class="formula-eq">${val}</span>) × 11.3 = 27.5 + ${logVal} × 11.3 = <span class="formula-result">${points.detailsExact.ntprobnp.toFixed(1)}</span>`);
-        } else {
-            updateBadge(els.step1.badges.ntprobnp, 0, false);
-            hideFormula('formula-ntprobnp');
-        }
-        if (els.step1.inputs.urate.value) {
-            updateBadge(els.step1.badges.urate, points.details.urate, true);
-            const urateMgDl = getUrateInMgDl().toFixed(1);
-            const unit = els.step1.inputs.urate_unit.value;
-            let prefix = '';
-            if (unit === 'umol') {
-                prefix = `${els.step1.inputs.urate.value} µmol/L ÷ 59.48 = ${urateMgDl} mg/dL → `;
-            } else if (unit === 'mgl') {
-                prefix = `${els.step1.inputs.urate.value} mg/L ÷ 10 = ${urateMgDl} mg/dL → `;
-            }
-            showFormula('formula-urate',
-                `${prefix}Interpolation(<span class="formula-eq">${urateMgDl}</span> mg/dL) = <span class="formula-result">${points.detailsExact.urate.toFixed(1)}</span>`);
-        } else {
-            updateBadge(els.step1.badges.urate, 0, false);
-            hideFormula('formula-urate');
-        }
+        updateBadge(els.step1.badges.ntprobnp, points.details.ntprobnp, !!els.step1.inputs.ntprobnp.value);
+        updateBadge(els.step1.badges.urate, points.details.urate, !!els.step1.inputs.urate.value);
         updateBadge(els.step1.badges.rad, points.details.rad, els.step1.inputs.rad.checked);
-        if (els.step1.inputs.rad.checked) {
-            showFormula('formula-rad', `Présent → <span class="formula-result">73</span> pts`);
-        } else {
-            showFormula('formula-rad', `Absent → <span class="formula-result">50</span> pts`);
-        }
         if (els.step1.inputs.fvc.value && els.step1.inputs.dlco.value &&
             els.step1.inputs.ntprobnp.value && els.step1.inputs.urate.value) {
             runStep1(true);
-        }
-    }
-    function showFormula(id, html) {
-        const el = document.getElementById(id);
-        if (el) {
-            el.innerHTML = html;
-            el.classList.add('visible');
-        }
-    }
-    function hideFormula(id) {
-        const el = document.getElementById(id);
-        if (el) {
-            el.classList.remove('visible');
         }
     }
     function updateBadge(el, points, isActive) {
@@ -345,22 +289,8 @@ try {
         const ra = parseFloat(els.step2.inputs.ra.value) || 0;
         const tr = parseFloat(els.step2.inputs.tr.value) || 0;
         const points = window.DETECT.calculateStep2Points(0, ra, tr);
-        if (els.step2.inputs.ra.value) {
-            updateBadge(els.step2.badges.ra_area, points.details.ra_area, true);
-            showFormula('formula-ra_area',
-                `4 + <span class="formula-eq">${ra}</span> × 0.375 = <span class="formula-result">${points.detailsExact.ra_area.toFixed(1)}</span>`);
-        } else {
-            updateBadge(els.step2.badges.ra_area, 0, false);
-            hideFormula('formula-ra_area');
-        }
-        if (els.step2.inputs.tr.value) {
-            updateBadge(els.step2.badges.tr_vel, points.details.tr_vel, true);
-            showFormula('formula-tr_vel',
-                `Interpolation(<span class="formula-eq">${tr}</span> m/s) = <span class="formula-result">${points.detailsExact.tr_vel.toFixed(1)}</span>`);
-        } else {
-            updateBadge(els.step2.badges.tr_vel, 0, false);
-            hideFormula('formula-tr_vel');
-        }
+        updateBadge(els.step2.badges.ra_area, points.details.ra_area, !!els.step2.inputs.ra.value);
+        updateBadge(els.step2.badges.tr_vel, points.details.tr_vel, !!els.step2.inputs.tr.value);
         if (step1Result && els.step2.inputs.ra.value && els.step2.inputs.tr.value) {
             runStep2(true);
         }
