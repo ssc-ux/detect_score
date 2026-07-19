@@ -279,6 +279,13 @@ try {
         if (voiceStatus) voiceStatus.textContent = '✅ Questionnaire terminé.';
     }
 
+    function isInstantAnswer(normText) {
+        if (guidedIndex < 0 || guidedIndex >= GUIDED_STEPS.length) return false;
+        if (/^(stop|passer?|suivante?|retour)[\s.!]*$/.test(normText)) return true;
+        const step = GUIDED_STEPS[guidedIndex];
+        return step.type === 'bool' && /^(oui|ouais|non)[\s.!]*$/.test(normText);
+    }
+
     function isActionableAnswer(normText) {
         if (guidedIndex < 0 || guidedIndex >= GUIDED_STEPS.length) return false;
         if (/\b(stop|passer?|passez|suivante?|retour|precedente?|repete\w*)\b/.test(normText)) return true;
@@ -550,15 +557,23 @@ try {
             if (interimTrim && interimTrim !== lastInterim) {
                 lastInterim = interimTrim;
                 if (interimTimer) clearTimeout(interimTimer);
-                interimTimer = setTimeout(function () {
-                    if (!listening || guidedIndex < 0) return;
-                    if (lastInterim !== interimTrim) return;
-                    if (isActionableAnswer(normalize(interimTrim))) {
-                        consumedAnswer = normalize(interimTrim);
-                        consumedAt = Date.now();
-                        handleGuidedAnswer(interimTrim);
-                    }
-                }, 600);
+                const norm = normalize(interimTrim);
+                if (isInstantAnswer(norm)) {
+                    consumedAnswer = norm;
+                    consumedAt = Date.now();
+                    handleGuidedAnswer(interimTrim);
+                } else {
+                    const delay = /\.$|virgule\s*$/.test(norm) ? 700 : 350;
+                    interimTimer = setTimeout(function () {
+                        if (!listening || guidedIndex < 0) return;
+                        if (lastInterim !== interimTrim) return;
+                        if (isActionableAnswer(normalize(interimTrim))) {
+                            consumedAnswer = normalize(interimTrim);
+                            consumedAt = Date.now();
+                            handleGuidedAnswer(interimTrim);
+                        }
+                    }, delay);
+                }
             }
         };
 
@@ -589,7 +604,7 @@ try {
                 setTimeout(function () {
                     if (!listening) return;
                     try { rec.start(); } catch (e) { /* redémarrage déjà en cours */ }
-                }, IS_IOS ? 80 : 0);
+                }, IS_IOS ? 50 : 0);
             } else {
                 updateButtonState();
             }
@@ -705,11 +720,15 @@ try {
             if (answerDebounce) clearTimeout(answerDebounce);
             const val = answerInput.value.trim();
             if (!val) return;
+            if (isInstantAnswer(normalize(val))) {
+                submitKeyboardAnswer();
+                return;
+            }
             answerDebounce = setTimeout(function () {
                 if (keyboardMode && isActionableAnswer(normalize(answerInput.value.trim()))) {
                     submitKeyboardAnswer();
                 }
-            }, 900);
+            }, 500);
         });
         answerInput.addEventListener('keydown', function (e) {
             if (e.key === 'Enter') {

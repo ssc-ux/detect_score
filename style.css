@@ -1063,75 +1063,140 @@ footer {
     }
 
     .app-container {
-        padding-top: 1.4rem;
+        padding-top: 0.9rem;
     }
 
     .masthead {
-        margin-bottom: 1.4rem;
+        margin-bottom: 0.7rem;
     }
 
     .overline {
-        margin-bottom: 0.5rem;
+        display: none;
     }
 
     .masthead h1 {
-        font-size: 2.3rem;
+        font-size: 1.7rem;
     }
 
     .subtitle {
-        margin-top: 0.5rem;
-        font-size: 0.85rem;
+        display: none;
     }
 
     .tab-nav {
-        margin-bottom: 1.1rem;
+        margin-bottom: 0.7rem;
+        padding: 3px;
+    }
+
+    .tab-btn {
+        padding: 7px 16px;
+        font-size: 0.8rem;
     }
 
     #voice-widget {
-        margin-bottom: 0.9rem;
+        margin-bottom: 0.7rem;
+    }
+
+    .voice-btn {
+        padding: 10px 18px;
+        font-size: 0.9rem;
     }
 
     .card {
-        padding: 1.1rem 1rem;
-        margin-bottom: 1.1rem;
+        padding: 0.8rem 0.9rem;
+        margin-bottom: 0.8rem;
     }
 
     .card-header {
-        padding-bottom: 0.8rem;
-        margin-bottom: 0.5rem;
+        padding-bottom: 0.55rem;
+        margin-bottom: 0.3rem;
+    }
+
+    .card-header h2 {
+        font-size: 1rem;
     }
 
     .calc-row {
-        padding: 0.7rem 0.6rem;
+        display: flex;
+        flex-wrap: wrap;
+        row-gap: 6px;
+        column-gap: 10px;
+        padding: 0.5rem 0.6rem;
         margin: 0 -0.6rem;
-        row-gap: 0.45rem;
-        column-gap: 0.8rem;
+    }
+
+    .input-col {
+        flex: 1 1 100%;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
     }
 
     .input-col label {
-        margin-bottom: 0.25rem;
+        margin-bottom: 0;
+        flex: 1;
+        min-width: 0;
+        font-size: 0.72rem;
     }
 
-    input[type="number"],
-    select {
-        padding: 9px 12px;
+    .input-col > input[type="number"] {
+        width: 112px;
+        flex: 0 0 112px;
+        padding: 7px 10px;
+        font-size: 1rem;
+    }
+
+    .input-wrapper {
+        flex: 0 0 auto;
+        width: auto;
+        gap: 6px;
+    }
+
+    .input-wrapper input[type="number"] {
+        width: 80px;
+        flex: 0 0 80px;
+        padding: 7px 8px;
+        font-size: 1rem;
+    }
+
+    .unit-select {
+        width: 82px;
+        padding: 0 4px;
+        font-size: 0.75rem;
+    }
+
+    .points-col {
+        display: none;
     }
 
     .action-bar {
-        margin-top: 1.1rem;
+        margin-top: 0.8rem;
+        flex-direction: row;
+        gap: 8px;
+    }
+
+    .action-bar .btn-primary {
+        flex: 1 1 auto;
+        padding: 11px 14px;
+        font-size: 0.9rem;
+    }
+
+    .action-bar .btn-secondary {
+        padding: 11px 14px;
+        font-size: 0.85rem;
     }
 
     .gauge-wrapper {
-        padding: 1.1rem 1rem;
-        margin-top: 1.1rem;
+        padding: 0.9rem 0.9rem;
+        margin-top: 0.8rem;
     }
 
     .gauge-row {
-        row-gap: 1.1rem;
+        row-gap: 0.9rem;
     }
 
     footer {
-        padding: 1.6rem 0 1rem;
+        padding: 1.2rem 0 0.8rem;
     }
 }
 
