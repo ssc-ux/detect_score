@@ -516,44 +516,6 @@ input[type="number"]::placeholder {
     transform: scale(1.06);
 }
 
-/* ---------- Formula hints ---------- */
-
-.formula-hint {
-    grid-column: 1 / -1;
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    color: var(--ink-2);
-    background: var(--surface-2);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-sm);
-    letter-spacing: 0;
-    line-height: 1.5;
-    max-height: 0;
-    overflow: hidden;
-    opacity: 0;
-    padding: 0 12px;
-    margin-top: 0;
-    transition: max-height 0.35s var(--ease-out), opacity 0.25s ease,
-        padding 0.25s ease, margin 0.25s ease;
-}
-
-.formula-hint.visible {
-    max-height: 80px;
-    opacity: 1;
-    padding: 7px 12px;
-    margin-top: 10px;
-}
-
-.formula-hint .formula-eq {
-    color: var(--ink);
-    font-weight: 600;
-}
-
-.formula-hint .formula-result {
-    color: var(--accent);
-    font-weight: 600;
-}
-
 /* ---------- Buttons ---------- */
 
 .action-bar {
@@ -1098,6 +1060,78 @@ footer {
 
     .step1-reminder {
         margin-left: 0;
+    }
+
+    .app-container {
+        padding-top: 1.4rem;
+    }
+
+    .masthead {
+        margin-bottom: 1.4rem;
+    }
+
+    .overline {
+        margin-bottom: 0.5rem;
+    }
+
+    .masthead h1 {
+        font-size: 2.3rem;
+    }
+
+    .subtitle {
+        margin-top: 0.5rem;
+        font-size: 0.85rem;
+    }
+
+    .tab-nav {
+        margin-bottom: 1.1rem;
+    }
+
+    #voice-widget {
+        margin-bottom: 0.9rem;
+    }
+
+    .card {
+        padding: 1.1rem 1rem;
+        margin-bottom: 1.1rem;
+    }
+
+    .card-header {
+        padding-bottom: 0.8rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .calc-row {
+        padding: 0.7rem 0.6rem;
+        margin: 0 -0.6rem;
+        row-gap: 0.45rem;
+        column-gap: 0.8rem;
+    }
+
+    .input-col label {
+        margin-bottom: 0.25rem;
+    }
+
+    input[type="number"],
+    select {
+        padding: 9px 12px;
+    }
+
+    .action-bar {
+        margin-top: 1.1rem;
+    }
+
+    .gauge-wrapper {
+        padding: 1.1rem 1rem;
+        margin-top: 1.1rem;
+    }
+
+    .gauge-row {
+        row-gap: 1.1rem;
+    }
+
+    footer {
+        padding: 1.6rem 0 1rem;
     }
 }
 
