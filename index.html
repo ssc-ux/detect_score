@@ -8,7 +8,7 @@
     <meta name="theme-color" content="#0e1013" media="(prefers-color-scheme: dark)">
     <link rel="icon"
         href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%232451d6'/%3E%3Cpath d='M10 34h12l5-12 8 22 6-16 4 6h9' fill='none' stroke='white' stroke-width='4.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
-    <link rel="stylesheet" href="style.css?v=10">
+    <link rel="stylesheet" href="style.css?v=11">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -63,10 +63,6 @@
                                 <button id="voice-close-btn" class="voice-icon-btn" title="Fermer">✕</button>
                             </div>
                         </div>
-                        <div class="voice-mode-toggle">
-                            <button id="voice-mode-guided" class="voice-mode-btn active">🎯 Mode guidé</button>
-                            <button id="voice-mode-free" class="voice-mode-btn">📝 Dictée libre</button>
-                        </div>
                         <div id="voice-status" class="voice-status">Appuyez sur le micro : chaque champ est surligné
                             tour à tour, répondez « oui », « non » ou une valeur.</div>
                         <div id="voice-question" class="voice-question hidden"></div>
@@ -74,24 +70,18 @@
                         <div id="voice-transcript" class="voice-transcript hidden"></div>
                         <div id="voice-log" class="voice-log"></div>
                         <div id="voice-help" class="voice-help hidden">
-                            <strong>🎯 Mode guidé (recommandé) :</strong> chaque question s'affiche et le champ
-                            correspondant est surligné dans le formulaire ; répondez simplement « oui », « non » ou
-                            un nombre. Commandes : « passer », « retour », « stop ».
-                            <br><br>
-                            <strong>📝 Dictée libre :</strong> dictez tout d'une phrase, par exemple :
+                            <strong>Comment ça marche :</strong> chaque question s'affiche et le champ correspondant
+                            est surligné dans le formulaire ; répondez simplement « oui », « non » ou un nombre
+                            (« 90 », « 5 virgule 2 »…). Le score se calcule tout seul, et l'échographie s'enchaîne
+                            automatiquement si le score dépasse le seuil.
                             <ul>
-                                <li>« CVF 90, DLCO 50 »</li>
-                                <li>« NT pro BNP 250 »</li>
-                                <li>« Acide urique 52 » — ou « acide urique 5 virgule 2 milligrammes par décilitre »,
-                                    « acide urique 320 micromoles »</li>
-                                <li>« Télangiectasies oui, anti-centromère négatif »</li>
-                                <li>« Déviation axiale droite »</li>
-                                <li>« Surface OD 16, vélocité tricuspide 2 virgule 8 »</li>
-                                <li>« Calculer » / « Réinitialiser »</li>
+                                <li>« <strong>passer</strong> » : champ suivant sans remplir</li>
+                                <li>« <strong>retour</strong> » : question précédente (pour corriger)</li>
+                                <li>« <strong>stop</strong> » : arrêter le questionnaire</li>
                             </ul>
                             <p class="voice-help-note">
-                                Compatible Chrome, Edge et Safari (ordinateur et mobile). La dictée reste active
-                                jusqu'à un nouvel appui sur le bouton.
+                                Compatible Chrome, Edge et Safari (ordinateur et mobile). Le micro reste actif
+                                jusqu'à la fin du questionnaire ou un nouvel appui sur le bouton.
                             </p>
                         </div>
                     </div>
@@ -427,9 +417,9 @@
         </footer>
     </div>
 
-    <script src="logic.js?v=10"></script>
-    <script src="app.js?v=10"></script>
-    <script src="voice.js?v=10"></script>
-    <script src="fx.js?v=10" defer></script>
+    <script src="logic.js?v=11"></script>
+    <script src="app.js?v=11"></script>
+    <script src="voice.js?v=11"></script>
+    <script src="fx.js?v=11" defer></script>
 </body>
 </html>

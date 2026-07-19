@@ -12,27 +12,6 @@ try {
     const voiceHelp = document.getElementById('voice-help');
     const voiceHelpBtn = document.getElementById('voice-help-btn');
     const voiceCloseBtn = document.getElementById('voice-close-btn');
-    const modeGuidedBtn = document.getElementById('voice-mode-guided');
-    const modeFreeBtn = document.getElementById('voice-mode-free');
-
-    const NUMERIC_FIELDS = [
-        { id: 'ntprobnp', label: 'NT-proBNP', re: /(?:nt[\s-]*)?pro[\s-]*bnp|\bbnp\b|peptide/ },
-        { id: 'fvc', label: 'CVF', re: /capacite vitale(?: forcee)?|\bc[\s.]*v[\s.]*f\b/ },
-        { id: 'dlco', label: 'DLCO', re: /\bd[\s.]*l[\s.]*c[\s.]*o\b|\bdlc\b|\bdel?co\b|diffusion(?: du co)?/ },
-        { id: 'urate', label: 'Acide urique', re: /acide[\s-]*urique|uricemie|\burate\b/ },
-        { id: 'ra_area', label: 'Surface OD', re: /surface(?:\s+de)?(?:\s+l['\s])?\s*(?:od\b|auriculaire|oreillette(?:\s+droite)?)|oreillette droite/, step2: true },
-        { id: 'tr_vel', label: 'Vélocité IT', re: /velocite(?: tricuspide| it)?|(?:vitesse|flux|fuite|insuffisance|regurgitation)[\s-]*tricuspide|tricuspide|\bit\b/, step2: true }
-    ];
-
-    const CHECKBOX_FIELDS = [
-        { id: 'telang', label: 'Télangiectasies', re: /telangi\w*|angiectasi\w*/ },
-        { id: 'aca', label: 'Anti-centromère', re: /(?:anticorps[\s-]*)?anti[\s-]*(?:\w{1,4}[\s-]+)?centromere|centromere|\ba[\s.]*c[\s.]*a\b/ },
-        { id: 'rad', label: 'Déviation axiale droite', re: /deviation[\s-]+(?:axiale?|de l'axe|axe)(?:[\s-]+droite?)?|deviation[\s-]+droite|axe[\s-]+(?:droite?|devie)/ }
-    ];
-
-    const NEGATIVE_AFTER_RE = /^[\s,:]*\b(non|pas|absentes?|absents?|absent|absence|negatifs?|negatives?|aucune?|zero)\b/;
-    const NEGATIVE_BEFORE_RE = /\b(pas|sans|aucune?|absence|absentes?)\b[\s\S]{0,20}$/;
-    const NUMBER_RE = /\d+(?:\.\d+)?/;
 
     const GUIDED_STEPS = [
         { id: 'fvc', type: 'number', label: 'CVF', question: 'CVF, en pourcentage de la valeur prédite ?' },
@@ -48,6 +27,7 @@ try {
 
     const YES_RE = /\b(oui|ouais|yes|presentes?|presents?|present|positifs?|positives?|affirmatif|exact)\b/;
     const NO_RE = /\b(non|absentes?|absents?|absent|negatifs?|negatives?|aucune?|nan)\b|\bpas\b/;
+    const NUMBER_RE = /\d+(?:\.\d+)?/;
 
     const WORD_NUMS = {
         zero: 0, un: 1, une: 1, deux: 2, trois: 3, quatre: 4, cinq: 5, six: 6,
@@ -58,12 +38,19 @@ try {
 
     let recognition = null;
     let listening = false;
-    let micStream = null;
+    let micGranted = false;
     let hasWorkedOnce = false;
-    let mode = 'guided';
     let guidedIndex = -1;
     const IS_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
         (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+
+    if (navigator.permissions && navigator.permissions.query) {
+        try {
+            navigator.permissions.query({ name: 'microphone' }).then(function (status) {
+                if (status.state === 'granted') micGranted = true;
+            }, function () { /* API non supportée */ });
+        } catch (e) { /* API non supportée */ }
+    }
 
     function normalize(text) {
         let t = text.toLowerCase();
@@ -110,6 +97,13 @@ try {
         return null;
     }
 
+    function unitLabel(unit) {
+        if (unit === 'umol') return ' µmol/L';
+        if (unit === 'mgl') return ' mg/L';
+        if (unit === 'mgdl') return ' mg/dL';
+        return '';
+    }
+
     function revealStep2IfHidden() {
         const card = document.getElementById('step2-card');
         if (card && card.classList.contains('hidden')) {
@@ -141,84 +135,6 @@ try {
         input.checked = checked;
         input.dispatchEvent(new Event('input', { bubbles: true }));
         return true;
-    }
-
-    function unitLabel(unit) {
-        if (unit === 'umol') return ' µmol/L';
-        if (unit === 'mgl') return ' mg/L';
-        if (unit === 'mgdl') return ' mg/dL';
-        return '';
-    }
-
-    function parseAndApply(rawTranscript) {
-        const text = normalize(rawTranscript);
-        const applied = [];
-
-        const matches = [];
-        function collect(spec, kind) {
-            const re = new RegExp(spec.re.source, 'g');
-            let m;
-            while ((m = re.exec(text)) !== null) {
-                matches.push({ start: m.index, end: re.lastIndex, spec: spec, kind: kind });
-                if (m.index === re.lastIndex) re.lastIndex++;
-            }
-        }
-        NUMERIC_FIELDS.forEach(s => collect(s, 'number'));
-        CHECKBOX_FIELDS.forEach(s => collect(s, 'checkbox'));
-        matches.sort((a, b) => a.start - b.start || b.end - a.end);
-
-        const deduped = [];
-        matches.forEach(m => {
-            const last = deduped[deduped.length - 1];
-            if (last && m.start < last.end) return;
-            deduped.push(m);
-        });
-
-        deduped.forEach((m, i) => {
-            const segmentEnd = (i + 1 < deduped.length) ? deduped[i + 1].start : text.length;
-            const segment = text.slice(m.end, segmentEnd);
-            const before = text.slice(Math.max(0, m.start - 24), m.start);
-
-            if (m.kind === 'number') {
-                const num = segment.match(NUMBER_RE);
-                if (!num) return;
-                let unit = null;
-                if (m.spec.id === 'urate') {
-                    unit = detectUrateUnit(segment);
-                    if (unit) setUrateUnit(unit);
-                }
-                if (setNumberField(m.spec, num[0])) {
-                    applied.push(m.spec.label + ' = ' + num[0] + (unit ? unitLabel(unit) : ''));
-                }
-            } else {
-                const negative = NEGATIVE_AFTER_RE.test(segment) || NEGATIVE_BEFORE_RE.test(before);
-                if (setCheckboxField(m.spec, !negative)) {
-                    applied.push(m.spec.label + (negative ? ' : non ✗' : ' : oui ✓'));
-                }
-            }
-        });
-
-        if (/\b(reinitialise\w*|remise a zero|remets? a zero|efface tout|tout effacer|reset)\b/.test(text)) {
-            const resetBtn = document.getElementById('reset-form');
-            if (resetBtn) {
-                resetBtn.click();
-                applied.push('🔄 Formulaire réinitialisé');
-            }
-        } else if (/\b(calcul\w*|resultat)\b/.test(text)) {
-            const step2Card = document.getElementById('step2-card');
-            const step2Visible = step2Card && !step2Card.classList.contains('hidden');
-            const raVal = document.getElementById('ra_area');
-            const trVal = document.getElementById('tr_vel');
-            const wantsStep2 = /etape 2|final|echo/.test(text) ||
-                (step2Visible && raVal && trVal && raVal.value && trVal.value);
-            const targetBtn = document.getElementById(wantsStep2 && step2Visible ? 'calc-step2' : 'calc-step1');
-            if (targetBtn) {
-                targetBtn.click();
-                applied.push('🧮 Calcul lancé');
-            }
-        }
-
-        return applied;
     }
 
     function highlightField(id) {
@@ -318,7 +234,6 @@ try {
         if (recognition) {
             try { recognition.stop(); } catch (e) { /* déjà arrêté */ }
         }
-        releaseMicStream();
         updateButtonState();
         clearHighlight();
         let msg = 'Questionnaire terminé.';
@@ -340,7 +255,6 @@ try {
 
         if (/\b(stop|arrete\w*|termine\w*|fini)\b/.test(text)) {
             stopListening();
-            hideQuestion();
             return;
         }
         if (/\b(passe|passer|passez|suivante?|sais pas|inconnue?)\b/.test(text)) {
@@ -448,14 +362,14 @@ try {
             return {
                 title: 'Safari sur iPhone / iPad',
                 steps: [
-                    'Touchez le bouton <strong>« aA »</strong> (ou l\'icône de réglages) à gauche de la barre d\'adresse.',
-                    'Choisissez <strong>« Réglages du site web »</strong> puis <strong>Micro → Autoriser</strong>.',
-                    'Si l\'option n\'apparaît pas : <strong>Réglages iOS → Apps → Safari → Micro</strong> → « Autoriser ».',
-                    'Activez la dictée : <strong>Réglages → Général → Claviers → Activer la dictée</strong>.',
-                    '<strong>Rechargez la page</strong> et réappuyez sur « 🎤 Saisie vocale » — acceptez la demande d\'accès au micro qui s\'affiche.',
-                    'Si tout est déjà sur « Autoriser » et que le blocage persiste : <strong>fermez l\'onglet</strong>, rouvrez le site et réessayez.'
+                    'Touchez le bouton <strong>« aA »</strong> (ou l\'icône de réglages) à gauche de la barre d\'adresse → <strong>« Réglages du site web »</strong> → <strong>Micro → Autoriser</strong>.',
+                    'Vérifiez : <strong>Réglages iOS → Apps → Safari → Micro</strong> → « Autoriser » (ou « Demander »).',
+                    'Vérifiez la dictée : <strong>Réglages → Général → Claviers → Activer la dictée</strong>. La reconnaissance vocale de Safari en dépend.',
+                    'Vérifiez le réglage système : <strong>Réglages → Confidentialité et sécurité → Micro</strong> — Safari doit y être autorisé s\'il apparaît.',
+                    'Si Écran de temps est actif : <strong>Réglages → Écran de temps → Restrictions relatives au contenu et à la confidentialité → Micro</strong> → « Autoriser les modifications ».',
+                    'Puis <strong>fermez complètement l\'onglet</strong> (pas seulement recharger), rouvrez le site et réappuyez sur le bouton. Acceptez la demande d\'accès si elle s\'affiche.'
                 ],
-                note: 'La reconnaissance vocale de Safari s\'appuie sur la dictée d\'Apple : si elle est désactivée, le micro reste bloqué.'
+                note: 'Sur iOS, la permission peut sembler activée mais rester bloquée tant que l\'onglet n\'a pas été fermé et rouvert après le changement de réglage.'
             };
         }
         if (isAndroid && isSamsung) {
@@ -514,10 +428,15 @@ try {
         };
     }
 
-    function showMicTutorial() {
+    function showMicTutorial(dictationIssue) {
         if (!voiceTutorial) return;
         const tuto = getMicTutorial();
-        let html = '<div class="voice-tuto-title">📋 Réactiver le micro — ' + tuto.title + '</div><ol>';
+        let html = '';
+        if (dictationIssue) {
+            html += '<div class="voice-tuto-title">⚠️ Le micro est autorisé, mais le service de reconnaissance est bloqué</div>' +
+                '<p class="voice-tuto-note">Cause la plus fréquente sur iPhone : la dictée Apple est désactivée, ou l\'onglet doit être fermé et rouvert. Suivez les étapes 3 à 6 ci-dessous.</p>';
+        }
+        html += '<div class="voice-tuto-title">📋 Réactiver le micro — ' + tuto.title + '</div><ol>';
         tuto.steps.forEach(function (step) {
             html += '<li>' + step + '</li>';
         });
@@ -541,32 +460,19 @@ try {
         voiceBtn.title = listening ? 'Arrêter la dictée' : 'Saisie vocale';
     }
 
-    function updateModeButtons() {
-        if (modeGuidedBtn) modeGuidedBtn.classList.toggle('active', mode === 'guided');
-        if (modeFreeBtn) modeFreeBtn.classList.toggle('active', mode === 'free');
-    }
-
-    function ensureMicPermission() {
+    function requestMicPermission() {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
             return Promise.resolve(true);
         }
-        if (micStream) return Promise.resolve(true);
         return navigator.mediaDevices.getUserMedia({ audio: true }).then(
             function (stream) {
-                micStream = stream;
+                stream.getTracks().forEach(function (t) { t.stop(); });
                 return true;
             },
             function () {
                 return false;
             }
         );
-    }
-
-    function releaseMicStream() {
-        if (micStream) {
-            micStream.getTracks().forEach(function (t) { t.stop(); });
-            micStream = null;
-        }
     }
 
     function buildRecognition() {
@@ -584,19 +490,7 @@ try {
                 if (res.isFinal) {
                     hasWorkedOnce = true;
                     lastFinal = res[0].transcript.trim();
-                    if (lastFinal) {
-                        if (mode === 'guided' && guidedIndex >= 0) {
-                            handleGuidedAnswer(lastFinal);
-                        } else {
-                            const applied = parseAndApply(lastFinal);
-                            logApplied(applied);
-                            if (applied.length === 0 && voiceStatus) {
-                                voiceStatus.textContent = '🤔 Aucune valeur reconnue dans « ' + lastFinal + ' ». Dites par exemple « CVF 90 ».';
-                            } else if (voiceStatus) {
-                                voiceStatus.textContent = '🎙️ En écoute — dictez vos valeurs…';
-                            }
-                        }
-                    }
+                    if (lastFinal) handleGuidedAnswer(lastFinal);
                 } else {
                     interim += res[0].transcript;
                 }
@@ -607,22 +501,22 @@ try {
         rec.onerror = function (event) {
             if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
                 listening = false;
-                releaseMicStream();
                 updateButtonState();
+                clearHighlight();
                 if (hasWorkedOnce) {
                     if (voiceStatus) {
                         voiceStatus.textContent = '⏸️ Dictée interrompue par le navigateur. Réappuyez sur « 🎤 Saisie vocale » pour continuer.';
                     }
                 } else {
                     if (voiceStatus) {
-                        voiceStatus.textContent = '🚫 Le navigateur bloque le micro. Suivez les étapes ci-dessous 👇';
+                        voiceStatus.textContent = '🚫 Le navigateur bloque la reconnaissance vocale. Suivez les étapes ci-dessous 👇';
                     }
-                    showMicTutorial();
+                    showMicTutorial(micGranted || event.error === 'service-not-allowed');
                 }
             } else if (event.error === 'audio-capture') {
                 listening = false;
-                releaseMicStream();
                 updateButtonState();
+                clearHighlight();
                 if (voiceStatus) {
                     voiceStatus.textContent = '🚫 Aucun micro détecté sur cet appareil.';
                 }
@@ -636,7 +530,6 @@ try {
                     try { rec.start(); } catch (e) { /* redémarrage déjà en cours */ }
                 }, IS_IOS ? 150 : 0);
             } else {
-                releaseMicStream();
                 updateButtonState();
             }
         };
@@ -644,32 +537,36 @@ try {
         return rec;
     }
 
+    function beginSession() {
+        if (!recognition) recognition = buildRecognition();
+        listening = true;
+        try {
+            recognition.start();
+        } catch (e) { /* déjà démarré */ }
+        updateButtonState();
+        startGuided();
+    }
+
     function startListening() {
         hideMicTutorial();
         if (voicePanel) voicePanel.classList.remove('hidden');
+        if (micGranted) {
+            beginSession();
+            return;
+        }
         if (voiceStatus) voiceStatus.textContent = '🎤 Demande d\'accès au micro…';
-        ensureMicPermission().then(function (granted) {
+        requestMicPermission().then(function (granted) {
             if (!granted) {
                 listening = false;
                 updateButtonState();
                 if (voiceStatus) {
                     voiceStatus.textContent = '🚫 Le navigateur bloque le micro. Suivez les étapes ci-dessous 👇';
                 }
-                showMicTutorial();
+                showMicTutorial(false);
                 return;
             }
-            if (!recognition) recognition = buildRecognition();
-            listening = true;
-            try {
-                recognition.start();
-            } catch (e) { /* déjà démarré */ }
-            updateButtonState();
-            if (mode === 'guided') {
-                startGuided();
-            } else {
-                hideQuestion();
-                if (voiceStatus) voiceStatus.textContent = '🎙️ En écoute — dictez vos valeurs…';
-            }
+            micGranted = true;
+            beginSession();
         });
     }
 
@@ -679,7 +576,6 @@ try {
         if (recognition) {
             try { recognition.stop(); } catch (e) { /* déjà arrêté */ }
         }
-        releaseMicStream();
         hideQuestion();
         clearHighlight();
         if (voiceStatus) voiceStatus.textContent = 'Dictée en pause. Appuyez sur le micro pour reprendre.';
@@ -702,24 +598,6 @@ try {
         }
     }
 
-    if (modeGuidedBtn) {
-        modeGuidedBtn.onclick = function () {
-            mode = 'guided';
-            updateModeButtons();
-            if (listening) startGuided();
-        };
-    }
-    if (modeFreeBtn) {
-        modeFreeBtn.onclick = function () {
-            mode = 'free';
-            guidedIndex = -1;
-            updateModeButtons();
-            hideQuestion();
-            if (listening && voiceStatus) voiceStatus.textContent = '🎙️ En écoute — dictez vos valeurs…';
-        };
-    }
-    updateModeButtons();
-
     if (voiceHelpBtn && voiceHelp) {
         voiceHelpBtn.onclick = function () {
             voiceHelp.classList.toggle('hidden');
@@ -734,14 +612,12 @@ try {
     }
 
     window.DETECT_VOICE = {
-        parseAndApply: parseAndApply,
         normalize: normalize,
         extractNumber: extractNumber,
         wordsToNumber: wordsToNumber,
         handleGuidedAnswer: handleGuidedAnswer,
         startGuided: startGuided,
         getGuidedIndex: function () { return guidedIndex; },
-        setMode: function (m) { mode = m; updateModeButtons(); },
         showMicTutorial: showMicTutorial,
         getMicTutorial: getMicTutorial
     };
