@@ -8,7 +8,7 @@
     <meta name="theme-color" content="#0e1013" media="(prefers-color-scheme: dark)">
     <link rel="icon"
         href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%232451d6'/%3E%3Cpath d='M10 34h12l5-12 8 22 6-16 4 6h9' fill='none' stroke='white' stroke-width='4.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
-    <link rel="stylesheet" href="style.css?v=18">
+    <link rel="stylesheet" href="style.css?v=19">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -53,41 +53,6 @@
         <main>
             <div id="tab-calculator" class="tab-content active">
                 <p class="privacy-badge">🔒 100 % local — aucune donnée transmise ni stockée, sans IA</p>
-                <div id="voice-widget">
-                    <button id="voice-btn" class="voice-btn" title="Saisie vocale" aria-label="Saisie vocale">🎤
-                        Saisie vocale</button>
-                    <div id="voice-panel" class="voice-panel hidden">
-                        <div class="voice-panel-header">
-                            <span class="voice-panel-title">🎤 Saisie vocale</span>
-                            <div class="voice-panel-actions">
-                                <button id="voice-help-btn" class="voice-icon-btn" title="Aide">?</button>
-                                <button id="voice-close-btn" class="voice-icon-btn" title="Fermer">✕</button>
-                            </div>
-                        </div>
-                        <div id="voice-status" class="voice-status">Appuyez sur le micro : chaque champ est surligné
-                            tour à tour, répondez « oui », « non » ou une valeur.</div>
-                        <div id="voice-question" class="voice-question hidden"></div>
-                        <div id="voice-tutorial" class="voice-tutorial hidden"></div>
-                        <div id="voice-transcript" class="voice-transcript hidden"></div>
-                        <div id="voice-log" class="voice-log"></div>
-                        <div id="voice-help" class="voice-help hidden">
-                            <strong>Comment ça marche :</strong> chaque question s'affiche et le champ correspondant
-                            est surligné dans le formulaire ; répondez simplement « oui », « non » ou un nombre
-                            (« 90 », « 5 virgule 2 »…). Le score se calcule tout seul, et l'échographie s'enchaîne
-                            automatiquement si le score dépasse le seuil.
-                            <ul>
-                                <li>« <strong>passer</strong> » : champ suivant sans remplir</li>
-                                <li>« <strong>retour</strong> » : question précédente (pour corriger)</li>
-                                <li>« <strong>stop</strong> » : arrêter le questionnaire</li>
-                            </ul>
-                            <p class="voice-help-note">
-                                Compatible Safari (iPhone/iPad), Chrome et Edge. Au premier appui, le navigateur
-                                affiche une fenêtre « Autoriser l'accès au micro » : touchez <strong>Autoriser</strong>.
-                                Le micro reste ensuite actif jusqu'à la fin du questionnaire.
-                            </p>
-                        </div>
-                    </div>
-                </div>
                 <section id="step1-card" class="card">
                     <div class="card-header">
                         <div class="step-heading">
@@ -416,9 +381,8 @@
         </footer>
     </div>
 
-    <script src="logic.js?v=18"></script>
-    <script src="app.js?v=18"></script>
-    <script src="voice.js?v=18"></script>
-    <script src="fx.js?v=18" defer></script>
+    <script src="logic.js?v=19"></script>
+    <script src="app.js?v=19"></script>
+    <script src="fx.js?v=19" defer></script>
 </body>
 </html>
