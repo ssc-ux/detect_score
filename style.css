@@ -108,8 +108,6 @@ body {
     padding: clamp(2.5rem, 7vw, 5.5rem) clamp(1.1rem, 4vw, 2rem) 0;
 }
 
-/* ---------- Masthead ---------- */
-
 .masthead {
     text-align: center;
     margin-bottom: clamp(2.5rem, 6vw, 4rem);
@@ -152,8 +150,6 @@ body {
     max-width: 480px;
     text-wrap: balance;
 }
-
-/* ---------- Tabs ---------- */
 
 .tab-nav {
     display: flex;
@@ -217,8 +213,6 @@ body {
     display: block;
     animation: rise 0.5s var(--ease-out) both;
 }
-
-/* ---------- Cards ---------- */
 
 .card {
     position: relative;
@@ -288,8 +282,6 @@ body {
     font-size: 0.85rem;
     font-variant-numeric: tabular-nums;
 }
-
-/* ---------- Calculator rows ---------- */
 
 .calculator-grid {
     display: grid;
@@ -401,8 +393,6 @@ input[type="number"]::placeholder {
     cursor: pointer;
 }
 
-/* ---------- Checkbox ---------- */
-
 .checkbox-container {
     display: flex;
     align-items: center;
@@ -485,8 +475,6 @@ input[type="number"]::placeholder {
     box-shadow: 0 0 0 4px var(--accent-ring);
 }
 
-/* ---------- Points ---------- */
-
 .points-col {
     display: flex;
     flex-direction: column;
@@ -517,8 +505,6 @@ input[type="number"]::placeholder {
     color: var(--ink);
     transform: scale(1.06);
 }
-
-/* ---------- Buttons ---------- */
 
 .action-bar {
     margin-top: 2.25rem;
@@ -616,8 +602,6 @@ input[type="number"]::placeholder {
     outline: none;
     box-shadow: 0 0 0 4px var(--accent-ring);
 }
-
-/* ---------- Result gauge ---------- */
 
 .result-box {
     margin-top: 2rem;
@@ -808,8 +792,6 @@ input[type="number"]::placeholder {
     color: var(--ink-2);
 }
 
-/* ---------- Bypass area ---------- */
-
 .bypass-area {
     text-align: center;
     margin: 0 0 1.75rem;
@@ -825,8 +807,6 @@ input[type="number"]::placeholder {
     max-width: 480px;
     margin: 0 auto 1.1rem;
 }
-
-/* ---------- Tooltip ---------- */
 
 .tooltip {
     display: inline-flex;
@@ -907,8 +887,6 @@ input[type="number"]::placeholder {
     transform: translateX(-50%);
 }
 
-/* ---------- Nomogram tab ---------- */
-
 .nomogram-intro {
     color: var(--ink-2);
     font-size: 0.95rem;
@@ -967,8 +945,6 @@ input[type="number"]::placeholder {
     line-height: 1.65;
 }
 
-/* ---------- Footer ---------- */
-
 footer {
     text-align: center;
     padding: clamp(2.5rem, 6vw, 4rem) 0 max(2.5rem, env(safe-area-inset-bottom));
@@ -999,8 +975,6 @@ footer {
     opacity: 0.85;
 }
 
-/* ---------- Animations ---------- */
-
 @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
@@ -1016,8 +990,6 @@ footer {
         transform: translateY(0);
     }
 }
-
-/* ---------- Responsive ---------- */
 
 @media (max-width: 640px) {
     .calc-row {
@@ -1192,8 +1164,6 @@ footer {
         padding: 1.2rem 0 0.8rem;
     }
 }
-
-/* ---------- Reduced motion ---------- */
 
 @media (prefers-reduced-motion: reduce) {
     *,

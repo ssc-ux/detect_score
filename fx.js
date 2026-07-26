@@ -5,8 +5,6 @@
     var darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
     var hoverCapable = window.matchMedia('(hover: hover) and (pointer: fine)');
 
-    /* ---------- Aurora shader background ---------- */
-
     function initAurora() {
         var canvas = document.getElementById('fx-canvas');
         if (!canvas) return;
@@ -139,8 +137,6 @@
         apply();
     }
 
-    /* ---------- Score count-up ---------- */
-
     function attachCountUp(el) {
         var animating = false;
         var rafId = null;
@@ -178,8 +174,6 @@
         }
     }
 
-    /* ---------- Pointer-tracked card glow ---------- */
-
     function initCardGlow() {
         if (!hoverCapable.matches) return;
         document.addEventListener('pointermove', function (e) {
@@ -190,8 +184,6 @@
             card.style.setProperty('--my', (e.clientY - r.top) + 'px');
         }, { passive: true });
     }
-
-    /* ---------- Button ripple ---------- */
 
     function initRipples() {
         document.addEventListener('pointerdown', function (e) {
@@ -209,8 +201,6 @@
         }, { passive: true });
     }
 
-    /* ---------- Touch tooltips ---------- */
-
     function initTouchTips() {
         if (hoverCapable.matches) return;
         document.addEventListener('click', function (e) {
@@ -222,14 +212,14 @@
         });
     }
 
-    try { initAurora(); } catch (err) { /* decorative only */ }
+    try { initAurora(); } catch (err) {  }
     try {
         var s1 = document.getElementById('s1-points-val');
         var s2 = document.getElementById('s2-points-val');
         if (s1) attachCountUp(s1);
         if (s2) attachCountUp(s2);
-    } catch (err) { /* decorative only */ }
-    try { initCardGlow(); } catch (err) { /* decorative only */ }
-    try { initRipples(); } catch (err) { /* decorative only */ }
-    try { initTouchTips(); } catch (err) { /* decorative only */ }
+    } catch (err) {  }
+    try { initCardGlow(); } catch (err) {  }
+    try { initRipples(); } catch (err) {  }
+    try { initTouchTips(); } catch (err) {  }
 })();
