@@ -12,7 +12,6 @@ try {
                     ntprobnp: document.getElementById('ntprobnp'),
                     urate: document.getElementById('urate'),
                     urate_unit: document.getElementById('urate_unit'),
-                    ntprobnp_unit: document.getElementById('ntprobnp_unit'),
                     rad: document.getElementById('rad')
                 },
                 badges: {
@@ -253,12 +252,10 @@ try {
         };
         return inputs;
     }
-    // NT-proBNP en pg/mL ; pmol/L × 8,457 comme dans le classeur de l'auteur
+    // NT-proBNP en pg/mL
     function getNtproBnpInPgMl() {
-        let val = parseFloat(els.step1.inputs.ntprobnp.value);
-        if (isNaN(val) || val <= 0) return null;
-        if (els.step1.inputs.ntprobnp_unit.value === 'pmol') val = val * 8.457;
-        return val;
+        const val = parseFloat(els.step1.inputs.ntprobnp.value);
+        return isNaN(val) || val <= 0 ? null : val;
     }
     function updateLiveStep1() {
         if (!window.DETECT) return;
