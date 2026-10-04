@@ -93,7 +93,7 @@ try {
     }
     function resetUI() {
         document.querySelectorAll('input[type="number"]').forEach(i => i.value = '');
-        document.querySelectorAll('input[type="checkbox"]').forEach(i => i.checked = false);
+        document.querySelectorAll('.seg input[value="no"]').forEach(i => i.checked = true);
         document.querySelectorAll('.points-value').forEach(b => b.textContent = '--');
         document.querySelectorAll('.result-box').forEach(b => b.classList.add('hidden'));
         if (els.step2.card) els.step2.card.classList.add('hidden');
@@ -147,7 +147,7 @@ try {
     }
     function resetForm() {
         document.querySelectorAll('input[type="number"]').forEach(i => i.value = '');
-        document.querySelectorAll('input[type="checkbox"]').forEach(i => i.checked = false);
+        document.querySelectorAll('.seg input[value="no"]').forEach(i => i.checked = true);
         document.querySelectorAll('.points-value').forEach(b => {
             b.textContent = '--';
             b.classList.remove('active');
@@ -222,6 +222,11 @@ try {
             els.physio.trJet.setAttribute('stroke-width', 0);
         }
     }
+    // Non → false, Oui → true, Inconnu → null (case vide du classeur)
+    function readChoice(group) {
+        const v = group.querySelector('input:checked')?.value;
+        return v === 'yes' ? true : v === 'no' ? false : null;
+    }
     // Champ vide → null (valeur par défaut du classeur)
     function readNumber(el) {
         const v = parseFloat(el.value);
@@ -244,11 +249,11 @@ try {
         }
         const inputs = {
             fvc_dlco: ratio,
-            telang: els.step1.inputs.telang.checked,
-            aca: els.step1.inputs.aca.checked,
+            telang: readChoice(els.step1.inputs.telang),
+            aca: readChoice(els.step1.inputs.aca),
             ntprobnp: getNtproBnpInPgMl(),
             urate: getUrateInMgDl(),
-            rad: els.step1.inputs.rad.checked
+            rad: readChoice(els.step1.inputs.rad)
         };
         return inputs;
     }
@@ -270,11 +275,11 @@ try {
             els.step1.badges.fvc_dlco.textContent = '--';
             els.step1.badges.fvc_dlco.classList.remove('active');
         }
-        updateBadge(els.step1.badges.telang, points.details.telang, els.step1.inputs.telang.checked);
-        updateBadge(els.step1.badges.aca, points.details.aca, els.step1.inputs.aca.checked);
+        updateBadge(els.step1.badges.telang, points.details.telang, readChoice(els.step1.inputs.telang) !== false);
+        updateBadge(els.step1.badges.aca, points.details.aca, readChoice(els.step1.inputs.aca) !== false);
         updateBadge(els.step1.badges.ntprobnp, points.details.ntprobnp, !!els.step1.inputs.ntprobnp.value);
         updateBadge(els.step1.badges.urate, points.details.urate, !!els.step1.inputs.urate.value);
-        updateBadge(els.step1.badges.rad, points.details.rad, els.step1.inputs.rad.checked);
+        updateBadge(els.step1.badges.rad, points.details.rad, readChoice(els.step1.inputs.rad) !== false);
         if (!points.unable) {
             runStep1(true);
         }
@@ -305,7 +310,7 @@ try {
         const inputs = getStep1Inputs();
         const check = window.DETECT.calculateStep1Points(inputs);
         if (check.unable) {
-            if (!auto) alert("Calcul impossible : plus d'une donnée manquante (rapport CVF/DLCO, NT-proBNP, acide urique).");
+            if (!auto) alert("Calcul impossible : plus d'une donnée manquante ou inconnue à l'étape 1.");
             return;
         }
         const result = window.DETECT.calculateStep1Points(inputs);
