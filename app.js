@@ -12,6 +12,7 @@ try {
                     ntprobnp: document.getElementById('ntprobnp'),
                     urate: document.getElementById('urate'),
                     urate_unit: document.getElementById('urate_unit'),
+                    ntprobnp_unit: document.getElementById('ntprobnp_unit'),
                     rad: document.getElementById('rad')
                 },
                 badges: {
@@ -222,10 +223,15 @@ try {
             els.physio.trJet.setAttribute('stroke-width', 0);
         }
     }
+    // Champ vide → null (valeur par défaut du classeur)
+    function readNumber(el) {
+        const v = parseFloat(el.value);
+        return isNaN(v) ? null : v;
+    }
     function getUrateInMgDl() {
         let val = parseFloat(els.step1.inputs.urate.value);
         const unit = els.step1.inputs.urate_unit.value;
-        if (isNaN(val)) return 0;
+        if (isNaN(val)) return null;
         if (unit === 'umol') val = val / 59.48;
         if (unit === 'mgl') val = val / 10;
         return val;
@@ -233,7 +239,7 @@ try {
     function getStep1Inputs() {
         const fvc = parseFloat(els.step1.inputs.fvc.value);
         const dlco = parseFloat(els.step1.inputs.dlco.value);
-        let ratio = 1.0;
+        let ratio = null;
         if (!isNaN(fvc) && !isNaN(dlco) && dlco !== 0) {
             ratio = fvc / dlco;
         }
@@ -241,12 +247,18 @@ try {
             fvc_dlco: ratio,
             telang: els.step1.inputs.telang.checked,
             aca: els.step1.inputs.aca.checked,
-            ntprobnp: parseFloat(els.step1.inputs.ntprobnp.value) || 0,
+            ntprobnp: getNtproBnpInPgMl(),
             urate: getUrateInMgDl(),
             rad: els.step1.inputs.rad.checked
         };
-        if (inputs.ntprobnp < 1) inputs.ntprobnp = 1;
         return inputs;
+    }
+    // NT-proBNP en pg/mL ; pmol/L × 8,457 comme dans le classeur de l'auteur
+    function getNtproBnpInPgMl() {
+        let val = parseFloat(els.step1.inputs.ntprobnp.value);
+        if (isNaN(val) || val <= 0) return null;
+        if (els.step1.inputs.ntprobnp_unit.value === 'pmol') val = val * 8.457;
+        return val;
     }
     function updateLiveStep1() {
         if (!window.DETECT) return;
@@ -266,8 +278,7 @@ try {
         updateBadge(els.step1.badges.ntprobnp, points.details.ntprobnp, !!els.step1.inputs.ntprobnp.value);
         updateBadge(els.step1.badges.urate, points.details.urate, !!els.step1.inputs.urate.value);
         updateBadge(els.step1.badges.rad, points.details.rad, els.step1.inputs.rad.checked);
-        if (els.step1.inputs.fvc.value && els.step1.inputs.dlco.value &&
-            els.step1.inputs.ntprobnp.value && els.step1.inputs.urate.value) {
+        if (!points.unable) {
             runStep1(true);
         }
     }
@@ -284,18 +295,20 @@ try {
     }
     function updateLiveStep2() {
         if (!window.DETECT) return;
-        const ra = parseFloat(els.step2.inputs.ra.value) || 0;
-        const tr = parseFloat(els.step2.inputs.tr.value) || 0;
+        const ra = readNumber(els.step2.inputs.ra);
+        const tr = readNumber(els.step2.inputs.tr);
         const points = window.DETECT.calculateStep2Points(0, ra, tr);
         updateBadge(els.step2.badges.ra_area, points.details.ra_area, !!els.step2.inputs.ra.value);
         updateBadge(els.step2.badges.tr_vel, points.details.tr_vel, !!els.step2.inputs.tr.value);
-        if (step1Result && els.step2.inputs.ra.value && els.step2.inputs.tr.value) {
+        if (step1Result && (els.step2.inputs.ra.value || els.step2.inputs.tr.value)) {
             runStep2(true);
         }
     }
     function runStep1(auto) {
         const inputs = getStep1Inputs();
-        if (!auto && (!els.step1.inputs.fvc.value || !els.step1.inputs.dlco.value) && !confirm("Certaines valeurs (CVF/DLCO) semblent manquantes. Continuer ?")) {
+        const check = window.DETECT.calculateStep1Points(inputs);
+        if (check.unable) {
+            if (!auto) alert("Calcul impossible : plus d'une donnée manquante (rapport CVF/DLCO, NT-proBNP, acide urique).");
             return;
         }
         const result = window.DETECT.calculateStep1Points(inputs);
@@ -330,8 +343,8 @@ try {
             return;
         }
         const inputs = {
-            ra_area: parseFloat(els.step2.inputs.ra.value) || 0,
-            tr_vel: parseFloat(els.step2.inputs.tr.value) || 0
+            ra_area: readNumber(els.step2.inputs.ra),
+            tr_vel: readNumber(els.step2.inputs.tr)
         };
         const result = window.DETECT.calculateStep2Points(step1Result, inputs.ra_area, inputs.tr_vel);
         els.step2.resultBox.classList.remove('hidden');
