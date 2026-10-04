@@ -1,58 +1,36 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Calculateur DETECT — Dépistage HTAP · Sclérodermie</title>
-    <meta name="theme-color" content="#f6f6f4" media="(prefers-color-scheme: light)">
-    <meta name="theme-color" content="#0e1013" media="(prefers-color-scheme: dark)">
-    <link rel="icon"
-        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%232451d6'/%3E%3Cpath d='M10 34h12l5-12 8 22 6-16 4 6h9' fill='none' stroke='white' stroke-width='4.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
-    <link rel="stylesheet" href="style.css?v=20">
+    <meta name="theme-color" content="#1f5fbf">
+    <script>try{var t=localStorage.getItem("theme");if(t==="sombre")document.documentElement.dataset.theme="dark";else if(t==="auto")delete document.documentElement.dataset.theme}catch(e){}</script>
+    <link rel="icon" href="icon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="style.css?v=21">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
         rel="stylesheet">
 </head>
 <body>
-    <canvas id="fx-canvas" aria-hidden="true"></canvas>
-
     <div class="app-container">
-        <header class="masthead">
-            <p class="overline">Dépistage de l'HTAP · Sclérodermie systémique</p>
-            <h1>Calculateur<span class="highlight">DETECT</span></h1>
-            <p class="subtitle">L'algorithme DETECT, fidèle au nomogramme princeps, en deux étapes.</p>
+        <header class="top">
+            <nav class="tab-nav" aria-label="Sections">
+                <button class="tab-btn active" data-tab="tab-calculator">Calculateur</button>
+                <button class="tab-btn" data-tab="tab-nomogram">Source</button>
+            </nav>
         </header>
 
-        <nav class="tab-nav" aria-label="Sections">
-            <button class="tab-btn active" data-tab="tab-calculator">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                    stroke-linejoin="round" aria-hidden="true">
-                    <rect x="5" y="3" width="14" height="18" rx="2.5"></rect>
-                    <line x1="9" y1="7.5" x2="15" y2="7.5"></line>
-                    <line x1="9" y1="12" x2="9.01" y2="12"></line>
-                    <line x1="12" y1="12" x2="12.01" y2="12"></line>
-                    <line x1="15" y1="12" x2="15.01" y2="12"></line>
-                    <line x1="9" y1="16" x2="9.01" y2="16"></line>
-                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                    <line x1="15" y1="16" x2="15.01" y2="16"></line>
-                </svg>
-                Calculateur
-            </button>
-            <button class="tab-btn" data-tab="tab-nomogram">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                    stroke-linejoin="round" aria-hidden="true">
-                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-                </svg>
-                Source
-            </button>
-        </nav>
+        <div class="masthead">
+            <h1 class="logo"><img src="icon.svg" alt="" width="52" height="52"> <span>DETECT</span></h1>
+            <p class="accroche">Dépistage de l'HTAP dans la sclérodermie systémique, fidèle au nomogramme princeps, en deux étapes.</p>
+            <p class="privacy-badge">🔒 100 % local — aucune donnée transmise ni stockée, sans IA</p>
+        </div>
 
         <main>
             <div id="tab-calculator" class="tab-content active">
-                <p class="privacy-badge">🔒 100 % local — aucune donnée transmise ni stockée, sans IA</p>
                 <section id="step1-card" class="card">
                     <div class="card-header">
                         <div class="step-heading">
@@ -367,22 +345,31 @@
         </main>
 
         <footer>
-            <p class="footer-title">Calculateur DETECT — Version bêta</p>
-            <p class="footer-author">Conception : Astouati Quentin</p>
             <p class="footer-privacy">
-                🔒 <strong>Confidentialité :</strong> le calcul s'effectue entièrement dans votre navigateur.
-                Les valeurs saisies ne sont ni transmises à un serveur, ni stockées, ni traitées par une
-                intelligence artificielle — rien n'est conservé après fermeture de la page.
+                <strong>Confidentialité :</strong> le calcul s'effectue entièrement dans votre navigateur.
+                Les valeurs saisies ne sont ni transmises, ni stockées, ni traitées par une intelligence
+                artificielle.
             </p>
             <p class="footer-disclaimer">
-                Cet outil est fourni à titre indicatif. L'exactitude des résultats n'est pas garantie.
-                L'engagement et la responsabilité clinique incombent exclusivement au médecin référent.
+                Outil d'aide (version bêta) : ne remplace pas le jugement médical ; l'exactitude des résultats
+                n'est pas garantie et la responsabilité clinique incombe au médecin référent.
             </p>
+            <p class="footer-author">Créé par <strong>Quentin Astouati</strong></p>
+            <details>
+                <summary>Réglages</summary>
+                <label>Affichage
+                    <select id="theme-select">
+                        <option value="clair">clair</option>
+                        <option value="sombre">sombre</option>
+                        <option value="auto">comme l'appareil</option>
+                    </select>
+                </label>
+            </details>
         </footer>
     </div>
 
     <script src="logic.js?v=20"></script>
-    <script src="app.js?v=20"></script>
+    <script src="app.js?v=21"></script>
     <script src="fx.js?v=20" defer></script>
 </body>
 </html>

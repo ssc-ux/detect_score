@@ -364,3 +364,18 @@ try {
 } catch (err) {
     console.error("FATAL APP ERROR:", err);
 }
+
+// Thème : clair par défaut ; « sombre » ou « comme l'appareil » (même réglage que CorticoPlan).
+(function () {
+    const select = document.getElementById('theme-select');
+    if (!select) return;
+    let theme = 'clair';
+    try { theme = localStorage.getItem('theme') || 'clair'; } catch (e) { /* stockage indisponible */ }
+    select.value = theme;
+    select.addEventListener('change', () => {
+        const racine = document.documentElement;
+        if (select.value === 'auto') delete racine.dataset.theme;
+        else racine.dataset.theme = select.value === 'sombre' ? 'dark' : 'light';
+        try { localStorage.setItem('theme', select.value); } catch (e) { /* non mémorisé */ }
+    });
+})();
