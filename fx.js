@@ -142,12 +142,12 @@
     /* ---------- Score count-up ---------- */
 
     function attachCountUp(el) {
-        var animating = false;
         var rafId = null;
         var shown = null;
+        var written = null; // dernier texte écrit par l'animation elle-même
 
         var mo = new MutationObserver(function () {
-            if (animating) return;
+            if (el.textContent === written) return;
             var target = parseFloat(el.textContent);
             if (isNaN(target)) { shown = null; return; }
             if (reducedMotion.matches) { shown = target; return; }
@@ -155,23 +155,30 @@
         });
         mo.observe(el, { childList: true, characterData: true, subtree: true });
 
+        function write(v) {
+            written = String(v);
+            el.textContent = written;
+        }
+
+        // Une nouvelle valeur pendant l'animation repart de la valeur affichée.
         function animate(target) {
-            animating = true;
             var from = (shown !== null && !isNaN(shown)) ? shown : 0;
             var dur = 900;
             var t0 = performance.now();
             if (rafId) cancelAnimationFrame(rafId);
+            write(Math.round(from));
 
             function tick(now) {
                 var p = Math.min(1, (now - t0) / dur);
                 var eased = 1 - Math.pow(1 - p, 3);
-                el.textContent = Math.round(from + (target - from) * eased);
+                shown = from + (target - from) * eased;
                 if (p < 1) {
+                    write(Math.round(shown));
                     rafId = requestAnimationFrame(tick);
                 } else {
-                    el.textContent = String(target);
                     shown = target;
-                    rafId = requestAnimationFrame(function () { animating = false; });
+                    write(target);
+                    rafId = null;
                 }
             }
             rafId = requestAnimationFrame(tick);

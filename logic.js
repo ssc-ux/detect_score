@@ -10,13 +10,15 @@ function pointsFvcDlco(ratio) {
     return 28 + (ratio * 14.4);
 }
 
-// D3 : No = 50, Yes = 65
+// D3 : No = 50, Yes = 65, inconnu (case vide) = 65
 function pointsTelang(present) {
+    if (present == null) return 65;
     return present ? 65 : 50;
 }
 
-// D4 : No = 50, Yes = 59
+// D4 : No = 50, Yes = 59, inconnu = 50
 function pointsAca(present) {
+    if (present == null) return 50;
     return present ? 59 : 50;
 }
 
@@ -37,8 +39,9 @@ function pointsUrate(val) {
     return 60;
 }
 
-// D7 : No = 50, Yes = 73
+// D7 : No = 50, Yes = 73, inconnu = 50
 function pointsRad(present) {
+    if (present == null) return 50;
     return present ? 73 : 50;
 }
 
@@ -53,7 +56,8 @@ function calculateStep1Points(inputs) {
         rad:      pointsRad(inputs.rad)
     };
 
-    const missing = [inputs.fvc_dlco, inputs.ntprobnp, inputs.urate].filter(v => v == null).length;
+    const missing = [inputs.fvc_dlco, inputs.telang, inputs.aca, inputs.ntprobnp, inputs.urate, inputs.rad]
+        .filter(v => v == null).length;
 
     const total = details.fvc_dlco + details.telang + details.aca +
                   details.ntprobnp + details.urate + details.rad;

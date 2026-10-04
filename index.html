@@ -7,7 +7,7 @@
     <meta name="theme-color" content="#1f5fbf">
     <script>try{var t=localStorage.getItem("theme");if(t==="sombre")document.documentElement.dataset.theme="dark";else if(t==="auto")delete document.documentElement.dataset.theme}catch(e){}</script>
     <link rel="icon" href="icon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="style.css?v=21">
+    <link rel="stylesheet" href="style.css?v=22">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -77,16 +77,14 @@
                         </div>
                         <div class="calc-row">
                             <div class="input-col full-width">
-                                <label class="checkbox-container">
-                                    <input type="checkbox" id="telang">
-                                    <span class="checkmark">
-                                        <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.2"
-                                            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                            <path d="M2.5 7.5 5.5 10.5 11.5 3.5"></path>
-                                        </svg>
-                                    </span>
+                                <div class="choice">
                                     <span class="label-text">Télangiectasies <small>actuelles ou passées</small></span>
-                                </label>
+                                    <div class="seg" id="telang" role="radiogroup" aria-label="Télangiectasies">
+                                        <label><input type="radio" name="telang" value="no" checked><span>Non</span></label>
+                                        <label><input type="radio" name="telang" value="yes"><span>Oui</span></label>
+                                        <label><input type="radio" name="telang" value="unknown"><span>Inconnu</span></label>
+                                    </div>
+                                </div>
                             </div>
                             <div class="points-col">
                                 <span class="points-label">Points</span>
@@ -95,16 +93,14 @@
                         </div>
                         <div class="calc-row">
                             <div class="input-col full-width">
-                                <label class="checkbox-container">
-                                    <input type="checkbox" id="aca">
-                                    <span class="checkmark">
-                                        <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.2"
-                                            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                            <path d="M2.5 7.5 5.5 10.5 11.5 3.5"></path>
-                                        </svg>
-                                    </span>
+                                <div class="choice">
                                     <span class="label-text">Anticorps anti-centromère <small>ACA</small></span>
-                                </label>
+                                    <div class="seg" id="aca" role="radiogroup" aria-label="Anticorps anti-centromère">
+                                        <label><input type="radio" name="aca" value="no" checked><span>Non</span></label>
+                                        <label><input type="radio" name="aca" value="yes"><span>Oui</span></label>
+                                        <label><input type="radio" name="aca" value="unknown"><span>Inconnu</span></label>
+                                    </div>
+                                </div>
                             </div>
                             <div class="points-col">
                                 <span class="points-label">Points</span>
@@ -162,16 +158,14 @@
                         </div>
                         <div class="calc-row">
                             <div class="input-col full-width">
-                                <label class="checkbox-container">
-                                    <input type="checkbox" id="rad">
-                                    <span class="checkmark">
-                                        <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.2"
-                                            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                            <path d="M2.5 7.5 5.5 10.5 11.5 3.5"></path>
-                                        </svg>
-                                    </span>
+                                <div class="choice">
                                     <span class="label-text">Déviation axiale droite <small>ECG</small></span>
-                                </label>
+                                    <div class="seg" id="rad" role="radiogroup" aria-label="Déviation axiale droite">
+                                        <label><input type="radio" name="rad" value="no" checked><span>Non</span></label>
+                                        <label><input type="radio" name="rad" value="yes"><span>Oui</span></label>
+                                        <label><input type="radio" name="rad" value="unknown"><span>Inconnu</span></label>
+                                    </div>
+                                </div>
                             </div>
                             <div class="points-col">
                                 <span class="points-label">Points</span>
@@ -334,8 +328,8 @@
                             </p>
                         </div>
                         <p class="nomogram-note">
-                            Ce calculateur reproduit fidèlement les points attribués par ce nomogramme pour chaque
-                            variable, assurant une concordance parfaite avec la méthode papier.
+                            Ce calculateur reproduit les points attribués par ce nomogramme, en se basant sur
+                            l'article princeps.
                         </p>
                     </div>
                 </section>
@@ -366,8 +360,8 @@
         </footer>
     </div>
 
-    <script src="logic.js?v=24"></script>
-    <script src="app.js?v=24"></script>
-    <script src="fx.js?v=20" defer></script>
+    <script src="logic.js?v=25"></script>
+    <script src="app.js?v=25"></script>
+    <script src="fx.js?v=25" defer></script>
 </body>
 </html>
