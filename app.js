@@ -28,7 +28,6 @@ try {
                 pointsVal: document.getElementById('s1-points-val'),
                 decision: document.getElementById('s1-decision'),
                 exactScore: document.getElementById('s1-exact-score'),
-                exactProb: document.getElementById('s1-exact-prob')
             },
             step2: {
                 card: document.getElementById('step2-card'),
@@ -46,7 +45,6 @@ try {
                 pointsVal: document.getElementById('s2-points-val'),
                 decision: document.getElementById('s2-decision'),
                 exactScore: document.getElementById('s2-exact-score'),
-                exactProb: document.getElementById('s2-exact-prob'),
                 rec: document.getElementById('final-recommendation')
             },
             bypassS2: {
@@ -315,10 +313,6 @@ try {
         const icon = `<span class="status-indicator ${statusClass}"></span>`;
         els.step1.decision.innerHTML = `${icon} ${label} (Seuil > 300)`;
         if (els.step1.exactScore) els.step1.exactScore.textContent = result.totalExact.toFixed(1);
-        if (els.step1.exactProb) {
-            const pctOfThreshold = (result.totalExact / 300 * 100).toFixed(1);
-            els.step1.exactProb.textContent = pctOfThreshold;
-        }
         if (result.isHighRisk) {
             els.step2.card.classList.remove('hidden');
             if (els.step1CarriedScore) els.step1CarriedScore.textContent = result.total;
@@ -352,7 +346,6 @@ try {
         const label = result.isReferral ? 'CATHÉTÉRISME INDIQUÉ' : 'CATHÉTÉRISME NON INDIQUÉ';
         const icon = `<span class="status-indicator ${statusClass}"></span>`;
         if (els.step2.exactScore) els.step2.exactScore.textContent = result.totalExact.toFixed(1);
-        if (els.step2.exactProb) els.step2.exactProb.textContent = (result.totalExact / 35 * 100).toFixed(1);
         els.step2.decision.innerHTML = `${icon} ${label} (Seuil > 35)`;
         if (result.isReferral) {
             els.step2.rec.textContent = "Indication de Cathétérisme Cardiaque Droit : Le patient présente un risque significatif d'HTAP.";

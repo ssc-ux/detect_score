@@ -205,9 +205,8 @@
                             </div>
                             <div class="gauge-decision-line" id="s1-decision">--</div>
                             <div class="precise-result" id="precise-step1">
-                                <span class="label">Résultat précis</span>
-                                <span class="val">Score <span id="s1-exact-score">--</span> · Risque <span
-                                        id="s1-exact-prob">--</span>%</span>
+                                <span class="label">Score exact</span>
+                                <span class="val"><span id="s1-exact-score">--</span> points · seuil &gt; 300</span>
                             </div>
                         </div>
                     </div>
@@ -291,9 +290,8 @@
                             </div>
                             <div class="gauge-decision-line" id="s2-decision">--</div>
                             <div class="precise-result" id="precise-step2">
-                                <span class="label">Résultat précis</span>
-                                <span class="val">Score <span id="s2-exact-score">--</span> · Risque <span
-                                        id="s2-exact-prob">--</span>%</span>
+                                <span class="label">Score exact</span>
+                                <span class="val"><span id="s2-exact-score">--</span> points · seuil &gt; 35</span>
                             </div>
                             <div class="gauge-recommendation" id="final-recommendation">--</div>
                         </div>
@@ -336,8 +334,10 @@
                             </p>
                         </div>
                         <p class="nomogram-note">
-                            Ce calculateur reproduit fidèlement les points attribués par ce nomogramme pour chaque
-                            variable, assurant une concordance parfaite avec la méthode papier.
+                            Les points sont calculés à partir des coefficients du modèle publié (tableau 2 de
+                            l'article : rapport CVF/DLCO, log<sub>10</sub> du NT-proBNP, splines cubiques restreintes de
+                            l'urate et de la vélocité IT) et calés sur l'échelle de la figure 3 : chaque
+                            graduation du nomogramme est reproduite à 0,1 point près.
                         </p>
                     </div>
                 </section>
@@ -368,8 +368,8 @@
         </footer>
     </div>
 
-    <script src="logic.js?v=20"></script>
-    <script src="app.js?v=21"></script>
+    <script src="logic.js?v=22"></script>
+    <script src="app.js?v=22"></script>
     <script src="fx.js?v=20" defer></script>
 </body>
 </html>
