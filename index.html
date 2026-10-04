@@ -113,7 +113,7 @@
                         </div>
                         <div class="calc-row">
                             <div class="input-col">
-                                <label for="ntprobnp">NT-proBNP <small>pg/mL</small>
+                                <label for="ntprobnp">NT-proBNP
                                     <span class="tooltip" tabindex="0"
                                         data-tip="Peptide natriurétique de type B, marqueur de stress cardiaque (10–35 000 pg/mL)">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
@@ -124,8 +124,14 @@
                                         </svg>
                                     </span>
                                 </label>
-                                <input type="number" id="ntprobnp" placeholder="150" min="10" max="35000"
-                                    inputmode="decimal" autocomplete="off">
+                                <div class="input-wrapper">
+                                    <input type="number" id="ntprobnp" placeholder="150" min="1" max="35000"
+                                        step="any" inputmode="decimal" autocomplete="off">
+                                    <select id="ntprobnp_unit" class="unit-select" aria-label="Unité du NT-proBNP">
+                                        <option value="pg" selected>pg/mL</option>
+                                        <option value="pmol">pmol/L</option>
+                                    </select>
+                                </div>
                             </div>
                             <div class="points-col">
                                 <span class="points-label">Points</span>
@@ -334,10 +340,10 @@
                             </p>
                         </div>
                         <p class="nomogram-note">
-                            Les points sont calculés à partir des coefficients du modèle publié (tableau 2 de
-                            l'article : rapport CVF/DLCO, log<sub>10</sub> du NT-proBNP, splines cubiques restreintes de
-                            l'urate et de la vélocité IT) et calés sur l'échelle de la figure 3 : chaque
-                            graduation du nomogramme est reproduite à 0,1 point près.
+                            Les points sont calculés avec les formules du classeur de calcul de l'auteur
+                            (DETECT_Algo_V4), qui reproduisent les graduations de ce nomogramme. Une seule donnée
+                            manquante est tolérée à l'étape 1 (elle compte alors 50 points) ; en l'absence de surface
+                            OD ou de vélocité IT, la variable compte 10 points.
                         </p>
                     </div>
                 </section>
@@ -368,8 +374,8 @@
         </footer>
     </div>
 
-    <script src="logic.js?v=22"></script>
-    <script src="app.js?v=22"></script>
+    <script src="logic.js?v=23"></script>
+    <script src="app.js?v=23"></script>
     <script src="fx.js?v=20" defer></script>
 </body>
 </html>
