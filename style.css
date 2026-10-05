@@ -469,8 +469,9 @@ input[type="number"]::placeholder {
 }
 
 .seg input[value="yes"]:checked + span {
-    background: var(--accent);
-    color: var(--accent-texte);
+    background: var(--accent-soft);
+    color: var(--accent);
+    box-shadow: inset 0 0 0 1px var(--accent-ring);
 }
 
 .seg input:focus-visible + span {
