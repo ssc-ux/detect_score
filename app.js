@@ -52,19 +52,7 @@ try {
                 btn: document.getElementById('btn-force-s2')
             },
             resetBtn: document.getElementById('reset-form'),
-            step1CarriedScore: document.getElementById('step1-carried-score'),
-            physio: {
-                slider: document.getElementById('paps-slider'),
-                valText: document.getElementById('paps-val'),
-                stageTitle: document.getElementById('stage-title'),
-                stageDesc: document.getElementById('stage-desc'),
-                rvWall: document.getElementById('rv-wall-path'),
-                lvWall: document.getElementById('lv-wall-path'),
-                septumWall: document.getElementById('septum-wall-path'),
-                rvCavity: document.getElementById('rv-cavity-path'),
-                lvCavity: document.getElementById('lv-cavity-path'),
-                trJet: document.getElementById('tr-jet')
-            }
+            step1CarriedScore: document.getElementById('step1-carried-score')
         };
     }
     let step1Result = null;
@@ -120,10 +108,6 @@ try {
                 if (inp) inp.addEventListener('input', updateLiveStep2);
             });
         }
-        if (els.physio.slider) {
-            els.physio.slider.addEventListener('input', updatePhysioViz);
-            updatePhysioViz();
-        }
         attachEnterNavigation();
     }
     function attachEnterNavigation() {
@@ -161,66 +145,6 @@ try {
         step1Result = null;
         if (els.step1CarriedScore) els.step1CarriedScore.textContent = '--';
         els.step1.card.scrollIntoView({ behavior: "smooth" });
-    }
-    function updatePhysioViz() {
-        const paps = parseInt(els.physio.slider.value);
-        els.physio.valText.textContent = paps;
-        let stage = { title: "", desc: "", color: "" };
-        if (paps < 40) {
-            stage = {
-                title: "Cœur Normal (Pression Basse)",
-                desc: "Hémodynamique normale. Le VD est de faible épaisseur et éjecte sans contrainte. Le septum est courbé vers le VD (concavité normale).",
-                color: "#2ecc71"
-            };
-        } else if (paps < 55) {
-            stage = {
-                title: "Phase Compensatrice (Hypertrophie)",
-                desc: "Le muscle du VD s'épaissit (hypertrophie concentrique) pour lutter contre la post-charge. La fonction systolique est préservée. Début d'aplatissement septal.",
-                color: "#f39c12"
-            };
-        } else if (paps < 75) {
-            stage = {
-                title: "Décompensation & Dilatation",
-                desc: "Le mécanisme de Frank-Starling est dépassé. Le VD se dilate, l'anneau tricuspide s'élargit (fuite). Le septum devient paradoxal.",
-                color: "#e67e22"
-            };
-        } else {
-            stage = {
-                title: "Insuffisance Cardiaque Droite Sévère",
-                desc: "Ventricule droit sphérique et hypokinétique. Compression majeure du VG ('D-shape') réduisant le débit cardiaque. Risque vital.",
-                color: "#c0392b"
-            };
-        }
-        els.physio.stageTitle.textContent = stage.title;
-        els.physio.stageDesc.textContent = stage.desc;
-        els.physio.stageTitle.style.color = stage.color;
-        const t = (paps - 30) / (70); 
-        const dilationFactor = t * 60; 
-        const hypertrophyFactor = t < 0.5 ? t * 15 : (0.5 * 15) - ((t - 0.5) * 5); 
-        const rvOuterControlX = 120 - dilationFactor;
-        const rvInnerControlX = 135 - dilationFactor + hypertrophyFactor; 
-        els.physio.rvWall.setAttribute('d',
-            `M 160,200 Q ${rvOuterControlX},200 ${rvOuterControlX},300 Q ${rvOuterControlX},380 230,350 L 230,200 Z`
-        );
-        els.physio.rvCavity.setAttribute('d',
-            `M 160,200 Q ${rvInnerControlX},200 ${rvInnerControlX},300 Q ${rvInnerControlX},360 230,350 L 230,200 Z`
-        );
-        const septumShift = t * 70; 
-        const septControlX = 210 + septumShift;
-        els.physio.septumWall.setAttribute('d',
-            `M 230,180 Q ${septControlX},280 230,350 L 245,350 Q ${septControlX + 15},280 260,180 Z`
-        );
-        const lvOuterControl = 350 - (t * 10);
-        els.physio.lvCavity.setAttribute('d',
-            `M 260,180 Q ${lvOuterControl},180 ${lvOuterControl},320 Q ${lvOuterControl},390 290,380 Q 250,390 245,350 L 245,180 Z`
-        );
-        if (paps > 45) {
-            els.physio.trJet.style.opacity = (paps - 45) / 55;
-            els.physio.trJet.setAttribute('stroke-width', (paps - 45) / 10);
-        } else {
-            els.physio.trJet.style.opacity = 0;
-            els.physio.trJet.setAttribute('stroke-width', 0);
-        }
     }
     // Non → false, Oui → true, Inconnu → null (case vide du classeur)
     function readChoice(group) {

@@ -133,6 +133,23 @@
         ['Vmax IT (écho)', '↑', "La vitesse du jet d'IT donne le gradient VD-OD (4 V²), donc une estimation de la PAPs.", 'trv']
     ];
 
+    var TOUR = [
+        { k: 'normal', t: 'Le circuit normal',
+            x: "Le poumon reçoit tout le débit cardiaque sous une pression moyenne d'environ 15 mmHg : son lit vasculaire est immense et très compliant. Le VD, à paroi fine, travaille à basse pression." },
+        { v: { pvr: 3.5, pawp: 9, co: 5.2 }, ov: '1', t: 'HTAP débutante',
+            x: "Les artérioles se remodèlent : la RVP dépasse 2 UW et la PAPm franchit 20 mmHg. Le VD compense et le débit reste normal ; le patient est encore peu symptomatique, d'où l'intérêt du dépistage (DETECT)." },
+        { k: 'g1', t: 'HTAP évoluée (groupe 1)',
+            x: "La RVP continue de monter : le VD se dilate, le septum s'aplatit et comprime le VG, le débit chute. Piège : quand le débit baisse, la PAPm peut cesser de monter alors que la maladie s'aggrave." },
+        { k: 'g2i', t: 'Cœur gauche : post-capillaire isolée (groupe 2)', x: null },
+        { k: 'g2c', t: 'Cœur gauche : post-capillaire combinée (groupe 2)', x: null },
+        { k: 'g3', t: 'Poumon et hypoxie (groupe 3)', x: null },
+        { k: 'g4', t: 'Obstruction artérielle (groupe 4)', x: null },
+        { k: 'g5', t: 'Mécanismes multiples (groupe 5)', x: null },
+        { k: 'hd', t: 'Hyperdébit : HTP non classée', x: null },
+        { k: 'normal', t: 'À retenir',
+            x: "PAPO ≤ 15 et RVP > 2 UW : précapillaire (groupes 1, 3, 4, parfois 5). PAPO > 15 : post-capillaire (groupe 2), combinée si RVP > 2 UW. L'échographie estime une probabilité ; seul le cathétérisme droit tranche." }
+    ];
+
     var GROUP_OPTS = ['Groupe 1', 'Groupe 2', 'Groupe 3', 'Groupe 4', 'Groupe 5'];
     var PROFILE_OPTS = ["Pas d'HTP", 'Précapillaire', 'Post-capillaire isolée', 'Post-capillaire combinée', 'Non classée'];
 
@@ -181,7 +198,9 @@
     /* ---------- Simulateur ---------- */
 
     var el = {};
-    var state = { co: 5.5 };
+    var state = { co: 5.5, ov: null };
+    var last = null;
+    var view3d = null;
 
     function render() {
         var pvr = +el.pvr.value, pawp = +el.pawp.value, co = +el.co.value;
@@ -239,6 +258,8 @@
 
         renderShortAxis(r.mpap);
         renderDetectLive(r);
+        last = { pvr: pvr, pawp: pawp, co: co, mpap: r.mpap, pod: r.pod, ov: state.ov };
+        if (view3d) view3d.update(last);
     }
 
     function renderShortAxis(mpap) {
@@ -258,31 +279,144 @@
     }
 
     function setOverlay(ov) {
+        state.ov = ov;
         document.querySelectorAll('.htp-ov').forEach(function (g) {
             g.classList.toggle('is-on', g.id === 'htp-ov-' + ov);
         });
         el.svg.classList.toggle('is-hypoxic', ov === '3');
     }
 
-    function applyValues(v, presetKey) {
-        el.pvr.value = v.pvr;
-        el.pawp.value = v.pawp;
-        el.co.value = v.co;
+    function setPresetUI(presetKey, ov) {
         var pr = presetKey && PRESETS[presetKey];
-        setOverlay(pr ? pr.ov : null);
-        el.hint.hidden = !pr;
+        setOverlay(ov !== undefined ? ov : pr ? pr.ov : null);
+        el.hint.hidden = !pr || tour.on;
         if (pr) el.hint.innerHTML = '<strong>À observer :</strong> ' + pr.hint;
-        document.querySelectorAll('.htp-chip').forEach(function (c) {
+        document.querySelectorAll('.htp-chip[data-preset]').forEach(function (c) {
             var on = c.dataset.preset === presetKey;
             c.classList.toggle('is-on', on);
             c.setAttribute('aria-pressed', on);
         });
+    }
+
+    var tweenId = 0;
+    function applyValues(v, presetKey, ov) {
+        cancelAnimationFrame(tweenId);
+        setPresetUI(presetKey, ov);
+        el.pvr.value = v.pvr;
+        el.pawp.value = v.pawp;
+        el.co.value = v.co;
         render();
     }
 
-    function goSim(v, presetKey) {
-        applyValues(v, presetKey);
+    // Transition animée des curseurs vers de nouvelles valeurs
+    function tweenTo(v, presetKey, ov) {
+        if (reducedMotion.matches) return applyValues(v, presetKey, ov);
+        cancelAnimationFrame(tweenId);
+        setPresetUI(presetKey, ov);
+        var from = { pvr: +el.pvr.value, pawp: +el.pawp.value, co: +el.co.value };
+        var t0 = performance.now();
+        (function step(now) {
+            var t = Math.min(1, (now - t0) / 1200);
+            var e = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+            el.pvr.value = from.pvr + (v.pvr - from.pvr) * e;
+            el.pawp.value = Math.round(from.pawp + (v.pawp - from.pawp) * e);
+            el.co.value = from.co + (v.co - from.co) * e;
+            render();
+            if (t < 1) tweenId = requestAnimationFrame(step);
+        })(t0);
+    }
+
+    function goSim(v, presetKey, ov) {
+        stopTour();
+        tweenTo(v, presetKey, ov);
         $('htp-sim').scrollIntoView({ behavior: reducedMotion.matches ? 'auto' : 'smooth', block: 'start' });
+    }
+
+    /* ---------- Visite guidée ---------- */
+
+    var tour = { on: false, i: 0, play: true, timer: 0 };
+
+    function tourGo(i) {
+        tour.i = clamp(i, 0, TOUR.length - 1);
+        var s = TOUR[tour.i];
+        tweenTo(s.v || PRESETS[s.k], s.k || null, s.ov);
+        $('htp-tour-step').textContent = 'Étape ' + (tour.i + 1) + ' / ' + TOUR.length;
+        $('htp-tour-title').textContent = s.t;
+        $('htp-tour-text').textContent = s.x || PRESETS[s.k].hint;
+        el.tour.querySelector('[data-tour="prev"]').disabled = tour.i === 0;
+        el.tour.querySelector('[data-tour="next"]').textContent = tour.i === TOUR.length - 1 ? 'Terminer' : 'Suivant ▶';
+        scheduleTour();
+    }
+
+    function scheduleTour() {
+        clearTimeout(tour.timer);
+        $('htp-tour-play').textContent = tour.play ? '⏸ Pause' : '▶ Lecture';
+        if (tour.play && tour.i < TOUR.length - 1) tour.timer = setTimeout(function () { tourGo(tour.i + 1); }, 11000);
+    }
+
+    function startTour() {
+        tour.on = true;
+        tour.play = !reducedMotion.matches;
+        el.tour.hidden = false;
+        el.hint.hidden = true;
+        el.patient.hidden = true;
+        tourGo(0);
+        $('htp-sim').scrollIntoView({ behavior: reducedMotion.matches ? 'auto' : 'smooth', block: 'start' });
+    }
+
+    function stopTour() {
+        if (!tour.on) return;
+        tour.on = false;
+        clearTimeout(tour.timer);
+        el.tour.hidden = true;
+    }
+
+    /* ---------- Depuis le calculateur DETECT ---------- */
+
+    function fromPatient() {
+        var trv = parseFloat($('tr_vel').value), raa = parseFloat($('ra_area').value);
+        if (isNaN(trv)) return;
+        var pod = isNaN(raa) ? 5 : clamp(4 + (raa - 13) / 1.1, 3, 22);
+        var paps = 4 * trv * trv + pod;
+        var mpap = 0.61 * paps + 2;
+        var pvr = clamp(Math.round((mpap - 10) / 5 * 10) / 10, 0.5, 15);
+        document.querySelector('.tab-btn[data-tab="tab-htp"]').click();
+        goSim({ pvr: pvr, pawp: 10, co: 5 }, null);
+        el.patient.hidden = false;
+        el.patient.innerHTML = '<button type="button" class="htp-tour-x" aria-label="Fermer">✕</button>' +
+            '<strong>Votre patient :</strong> Vmax IT ' + fr(trv, 1) + ' m/s' +
+            (isNaN(raa) ? '' : ', surface OD ' + fr(raa, 0) + ' cm²') + ' → PAPs ≈ ' + Math.round(paps) +
+            ' mmHg, PAPm ≈ ' + Math.round(10 + pvr * 5) + ' mmHg.<br>PAPO et débit sont inconnus sans cathétérisme : ' +
+            'hypothèse PAPO 10 mmHg et DC 5 L/min, d\'où une RVP ≈ ' + fr(pvr, 1) + ' UW. ' +
+            'Bougez les curseurs pour voir les autres explications possibles. ' +
+            '<small>Les estimations échographiques du simulateur suivent son propre modèle et peuvent différer de vos mesures.</small>';
+    }
+
+    /* ---------- Vue 3D ---------- */
+
+    var loading3d = false;
+    function setViewMode(mode) {
+        var is3d = mode === '3d';
+        el.d2.hidden = is3d;
+        el.d3.hidden = !is3d;
+        if (!is3d || view3d || loading3d) return;
+        var msg = el.d3.querySelector('.htp3d-msg');
+        var c = document.createElement('canvas');
+        if (!(c.getContext('webgl2') || c.getContext('webgl'))) {
+            msg.hidden = false;
+            msg.textContent = 'Vue 3D indisponible sur cet appareil (WebGL désactivé).';
+            return;
+        }
+        loading3d = true;
+        msg.hidden = false;
+        msg.textContent = 'Chargement de la 3D…';
+        import('./htp3d.js?v=2').then(function (m) {
+            view3d = m.mount(el.d3);
+            if (last) view3d.update(last);
+            msg.hidden = true;
+        }).catch(function () {
+            msg.textContent = 'Impossible de charger la vue 3D.';
+        }).then(function () { loading3d = false; });
     }
 
     /* ---------- Particules (débit) ---------- */
@@ -427,10 +561,47 @@
         el.quizBody = $('htp-quiz-body'); el.quizScore = $('htp-quiz-score');
 
         [el.pvr, el.pawp, el.co].forEach(function (s) {
-            s.addEventListener('input', function () { applyValues({ pvr: +el.pvr.value, pawp: +el.pawp.value, co: +el.co.value }, null); });
+            s.addEventListener('input', function () { stopTour(); el.patient.hidden = true; applyValues({ pvr: +el.pvr.value, pawp: +el.pawp.value, co: +el.co.value }, null); });
         });
-        document.querySelectorAll('.htp-chip').forEach(function (c) {
-            c.addEventListener('click', function () { applyValues(PRESETS[c.dataset.preset], c.dataset.preset); });
+        document.querySelectorAll('.htp-chip[data-preset]').forEach(function (c) {
+            c.addEventListener('click', function () { stopTour(); tweenTo(PRESETS[c.dataset.preset], c.dataset.preset); });
+        });
+        el.tour = $('htp-tour');
+        el.patient = $('htp-patient');
+        el.d2 = $('htp-2d');
+        el.d3 = $('htp-3d');
+        $('htp-tour-btn').addEventListener('click', startTour);
+        el.tour.addEventListener('click', function (e) {
+            var b = e.target.closest('[data-tour]');
+            if (!b) return;
+            var a = b.dataset.tour;
+            if (a === 'stop') stopTour();
+            else if (a === 'prev') tourGo(tour.i - 1);
+            else if (a === 'next') { if (tour.i === TOUR.length - 1) stopTour(); else tourGo(tour.i + 1); }
+            else if (a === 'play') { tour.play = !tour.play; scheduleTour(); }
+        });
+        el.patient.addEventListener('click', function (e) {
+            if (e.target.closest('.htp-tour-x')) el.patient.hidden = true;
+        });
+        var link = $('btn-htp-link'), trInput = $('tr_vel');
+        if (link && trInput) {
+            var syncLink = function () { link.hidden = !trInput.value; };
+            trInput.addEventListener('input', syncLink);
+            syncLink();
+            link.addEventListener('click', fromPatient);
+        }
+        document.querySelectorAll('input[name="htp-view"]').forEach(function (r) {
+            r.addEventListener('change', function () { setViewMode(r.value); });
+        });
+        el.d3.addEventListener('click', function (e) {
+            var b = e.target.closest('[data-view]');
+            if (b && view3d) view3d.setView(b.dataset.view);
+        });
+        el.d3.addEventListener('change', function (e) {
+            if (e.target.dataset.layer && view3d) view3d.setLayer(e.target.dataset.layer, e.target.checked);
+        });
+        $('htp3d-opacity').addEventListener('input', function (e) {
+            if (view3d) view3d.setHeartOpacity(+e.target.value);
         });
         document.querySelectorAll('input[name="htp-group"]').forEach(function (r) {
             r.addEventListener('change', function () { renderGroup(r.value); });

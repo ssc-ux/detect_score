@@ -833,3 +833,260 @@
         font-size: 16px;
     }
 }
+
+/* ---------- Barre d'outils, visite guidée, patient ---------- */
+
+#tab-htp [hidden],
+.htp-link[hidden] {
+    display: none !important;
+}
+
+.htp-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 0.8rem;
+}
+
+.htp-view-seg span {
+    min-width: 5.5rem;
+}
+
+.htp-tour-btn {
+    font-weight: 600;
+}
+
+.htp-tour,
+.htp-patient {
+    position: relative;
+    margin-top: 0.9rem;
+    padding: 14px 16px;
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-md);
+    background: var(--accent-soft);
+    animation: rise 0.4s var(--ease-out) both;
+}
+
+.htp-patient {
+    margin: 0 0 0.8rem;
+    padding-right: 40px;
+    font-size: 0.86rem;
+    line-height: 1.55;
+    color: var(--ink-2);
+}
+
+.htp-tour-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.htp-tour-step {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+}
+
+.htp-tour-x {
+    border: 0;
+    background: none;
+    color: var(--ink-3);
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 4px 6px;
+}
+
+.htp-patient .htp-tour-x {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+}
+
+.htp-tour .htp-h3 {
+    margin: 4px 0 6px;
+}
+
+.htp-tour-text {
+    margin: 0 0 12px;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--ink-2);
+}
+
+.htp-tour-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.htp-tour-nav button:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+.htp-link {
+    margin-top: 12px;
+}
+
+/* ---------- Vue 3D ---------- */
+
+.htp3d-stage {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    background: radial-gradient(ellipse at 50% 40%, var(--surface), var(--surface-2));
+    min-height: 280px;
+}
+
+.htp3d-canvas canvas {
+    display: block;
+    touch-action: none;
+    cursor: grab;
+}
+
+.htp3d-canvas canvas:active {
+    cursor: grabbing;
+}
+
+.htp3d-labels {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.htp3d-label {
+    position: absolute;
+    left: 0;
+    top: 0;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--surface) 82%, transparent);
+    border: 1px solid var(--line);
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--ink);
+    white-space: nowrap;
+    will-change: transform;
+}
+
+.htp3d-msg {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    margin: 0;
+    color: var(--ink-3);
+    font-size: 0.9rem;
+}
+
+.htp3d-controls {
+    margin-top: 10px;
+}
+
+.htp3d-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+    margin-bottom: 8px;
+}
+
+.htp3d-cap {
+    min-width: 5.5rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+}
+
+.htp3d-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.85rem;
+    color: var(--ink-2);
+    cursor: pointer;
+}
+
+.htp3d-check input,
+#htp3d-opacity {
+    accent-color: var(--accent);
+}
+
+#htp3d-opacity {
+    flex: 1;
+    min-width: 140px;
+}
+
+.htp3d-help {
+    margin: 0;
+    font-size: 0.75rem;
+    color: var(--ink-3);
+}
+
+/* ---------- Marquage bêta (onglet et liens vers l'onglet) ---------- */
+
+.beta-tag {
+    display: inline-block;
+    margin-left: 4px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: var(--chip);
+    border: 1px solid var(--line-strong);
+    color: var(--ink-3);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    vertical-align: 2px;
+    line-height: 1.4;
+}
+
+.tab-btn.tab-beta,
+.tab-btn.tab-beta:hover {
+    color: var(--ink-3);
+    opacity: 0.75;
+}
+
+.tab-btn.tab-beta.active {
+    color: var(--ink-3);
+    border-bottom-color: var(--ink-3);
+    opacity: 1;
+}
+
+.htp-link {
+    color: var(--ink-3);
+    border-color: var(--line-strong);
+    background: var(--chip);
+}
+
+.htp-beta-note {
+    margin: 0 0 8px;
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    background: var(--chip);
+    color: var(--ink-3);
+    font-size: 0.78rem;
+}
+
+@media (max-width: 400px) {
+    .tab-nav {
+        gap: 8px;
+    }
+
+    .tab-btn {
+        font-size: 0.76rem;
+    }
+
+    .tab-btn .beta-tag {
+        margin-left: 2px;
+        padding: 0 4px;
+        font-size: 0.55rem;
+    }
+}
