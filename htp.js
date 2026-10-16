@@ -177,7 +177,20 @@
             e: "La sarcoïdose associe compression, fibrose, atteinte vasculaire et parfois cardiaque : groupe 5." },
         { t: 'p', a: 4, h: { pawp: 10, pvr: 1.8, co: 9.0 },
             q: "Hémodialysé avec fistule artérioveineuse à haut débit. Cathétérisme : PAPm 26, PAPO 10 mmHg, DC 9 L/min. Quel profil ?",
-            e: "RVP = 16 / 9 ≈ 1,8 UW et PAPO normale : la PAPm monte par le seul débit. HTP non classée (la maladie rénale chronique relève du groupe 5)." }
+            e: "RVP = 16 / 9 ≈ 1,8 UW et PAPO normale : la PAPm monte par le seul débit. HTP non classée (la maladie rénale chronique relève du groupe 5)." },
+        // Questions sur schéma : le simulateur est photographié dans l'état du cas
+        { t: 'g', a: 3, vis: 'g4',
+            q: "Observez le schéma : PAPO normale, RVP élevée et lésions dans l'artère pulmonaire. Quel groupe ?",
+            e: "Obstruction mécanique par des thrombus organisés : HTP thromboembolique chronique (groupe 4)." },
+        { t: 'p', a: 2, vis: 'g2i',
+            q: "Observez le schéma (OG, PAPO, RVP). Quel profil hémodynamique ?",
+            e: "OG dilatée, PAPO 22 mmHg, RVP 1,5 UW : la pression remonte du cœur gauche sans atteinte artériolaire. Post-capillaire isolée." },
+        { t: 'g', a: 2, vis: 'g3',
+            q: "Observez le schéma : alvéoles mal ventilées, HTP précapillaire modérée. Quel groupe ?",
+            e: "L'hypoxie alvéolaire entraîne une vasoconstriction et un remodelage artériolaires : groupe 3." },
+        { t: 'p', a: 4, vis: 'hd',
+            q: "Observez le schéma (DC, RVP, PAPO). Quel profil hémodynamique ?",
+            e: "DC 9 L/min, RVP 1,5 UW, PAPO 10 mmHg : la PAPm monte par le seul débit. HTP non classée." }
     ];
 
     /* ---------- Modèle ---------- */
@@ -288,6 +301,7 @@
 
     function setPresetUI(presetKey, ov) {
         var pr = presetKey && PRESETS[presetKey];
+        state.preset = presetKey || null;
         setOverlay(ov !== undefined ? ov : pr ? pr.ov : null);
         el.hint.hidden = !pr || tour.on;
         if (pr) el.hint.innerHTML = '<strong>À observer :</strong> ' + pr.hint;
@@ -410,11 +424,12 @@
         loading3d = true;
         msg.hidden = false;
         msg.textContent = 'Chargement de la 3D…';
-        import('./htp3d.js?v=2').then(function (m) {
+        import('./htp3d.js?v=6').then(function (m) {
             view3d = m.mount(el.d3);
             if (last) view3d.update(last);
             msg.hidden = true;
-        }).catch(function () {
+        }).catch(function (err) {
+            console.error(err);
             msg.textContent = 'Impossible de charger la vue 3D.';
         }).then(function () { loading3d = false; });
     }
@@ -509,16 +524,59 @@
 
     /* ---------- Quiz ---------- */
 
-    var quiz = { i: 0, score: 0, done: false };
+    var quiz = { i: 0, score: 0, done: false, order: [] };
+
+    function shuffle() {
+        quiz.order = QUIZ.map(function (_, i) { return i; });
+        for (var i = quiz.order.length - 1; i > 0; i--) {
+            var j = Math.floor(Math.random() * (i + 1)), t = quiz.order[i];
+            quiz.order[i] = quiz.order[j];
+            quiz.order[j] = t;
+        }
+    }
+    function item() { return QUIZ[quiz.order[quiz.i]]; }
+
+    function bestScore(v) {
+        try {
+            if (v !== undefined) localStorage.setItem('htp-quiz-best', v);
+            return +localStorage.getItem('htp-quiz-best') || 0;
+        } catch (e) { return 0; }
+    }
+
+    // Photographie du schéma 2D dans l'état d'un cas, sans les textes qui donnent la réponse
+    function snapshot(key) {
+        var cur = { pvr: +el.pvr.value, pawp: +el.pawp.value, co: +el.co.value };
+        var curPreset = state.preset, curOv = state.ov;
+        applyValues(PRESETS[key], key);
+        var c = el.svg.cloneNode(true);
+        c.querySelector('#htp-particles').remove();
+        c.querySelector('title').remove();
+        // Dégradé et flèches recopiés sous un autre id : ceux d'origine ne s'affichent pas si la figure est masquée
+        c.querySelectorAll('defs [id]').forEach(function (n) { n.id += '-q'; });
+        c.querySelectorAll('[marker-end]').forEach(function (n) {
+            n.setAttribute('marker-end', n.getAttribute('marker-end').replace(')', '-q)'));
+        });
+        c.querySelectorAll('.htp-cap path').forEach(function (n) { n.style.stroke = 'url(#htp-grad-cap-q)'; });
+        c.querySelectorAll(':not(defs) [id]:not(defs *)').forEach(function (n) { n.removeAttribute('id'); });
+        c.removeAttribute('id');
+        c.removeAttribute('aria-labelledby');
+        c.setAttribute('aria-label', 'Schéma du cas à identifier');
+        c.classList.add('htp-quiz-svg');
+        applyValues(cur, curPreset, curOv);
+        return c;
+    }
 
     function renderQuiz() {
         el.quizScore.textContent = 'Score ' + quiz.score + ' / ' + QUIZ.length;
         if (quiz.i >= QUIZ.length) {
+            var best = Math.max(bestScore(), quiz.score);
+            bestScore(best);
             el.quizBody.innerHTML = '<p class="htp-quiz-end">Terminé : <strong>' + quiz.score + ' / ' + QUIZ.length +
-                '</strong></p><div class="htp-actions"><button type="button" class="btn-secondary" data-quiz="restart">Recommencer</button></div>';
+                '</strong> · meilleur score : ' + best + ' / ' + QUIZ.length + '</p>' +
+                '<div class="htp-actions"><button type="button" class="btn-secondary" data-quiz="restart">Recommencer</button></div>';
             return;
         }
-        var it = QUIZ[quiz.i];
+        var it = item();
         var opts = it.t === 'g' ? GROUP_OPTS : PROFILE_OPTS;
         quiz.done = false;
         el.quizBody.innerHTML = '<p class="htp-quiz-n">Question ' + (quiz.i + 1) + ' / ' + QUIZ.length + '</p>' +
@@ -526,12 +584,18 @@
             '<div class="htp-opts">' + opts.map(function (o, j) {
                 return '<button type="button" class="htp-opt" data-opt="' + j + '">' + esc(o) + '</button>';
             }).join('') + '</div><div id="htp-quiz-fb" class="htp-quiz-fb" aria-live="polite"></div>';
+        if (it.vis) {
+            var fig = document.createElement('figure');
+            fig.className = 'htp-quiz-fig';
+            fig.appendChild(snapshot(it.vis));
+            el.quizBody.querySelector('.htp-quiz-q').after(fig);
+        }
     }
 
     function answer(j) {
         if (quiz.done) return;
         quiz.done = true;
-        var it = QUIZ[quiz.i], ok = j === it.a;
+        var it = item(), ok = j === it.a;
         if (ok) quiz.score++;
         el.quizBody.querySelectorAll('.htp-opt').forEach(function (b) {
             var k = +b.dataset.opt;
@@ -603,6 +667,16 @@
         $('htp3d-opacity').addEventListener('input', function (e) {
             if (view3d) view3d.setHeartOpacity(+e.target.value);
         });
+        var cutBox = $('htp3d-cut'), cutLvl = $('htp3d-cut-level');
+        var syncCut = function () {
+            cutLvl.disabled = !cutBox.checked;
+            if (view3d) view3d.setCut(cutBox.checked, +cutLvl.value);
+        };
+        cutBox.addEventListener('change', function () {
+            syncCut();
+            if (view3d) view3d.setView(cutBox.checked ? 'coupe' : 'face');
+        });
+        cutLvl.addEventListener('input', syncCut);
         document.querySelectorAll('input[name="htp-group"]').forEach(function (r) {
             r.addEventListener('change', function () { renderGroup(r.value); });
         });
@@ -616,14 +690,19 @@
             var a = e.target.closest('[data-quiz]');
             if (!a) return;
             if (a.dataset.quiz === 'next') { quiz.i++; renderQuiz(); }
-            else if (a.dataset.quiz === 'restart') { quiz.i = 0; quiz.score = 0; renderQuiz(); }
-            else if (a.dataset.quiz === 'sim') goSim(QUIZ[quiz.i].h, null);
+            else if (a.dataset.quiz === 'restart') { quiz.i = 0; quiz.score = 0; shuffle(); renderQuiz(); }
+            else if (a.dataset.quiz === 'sim') {
+                var it = item();
+                if (it.vis) goSim(PRESETS[it.vis], it.vis);
+                else goSim(it.h, null);
+            }
         });
 
         renderDetect();
         renderGroup('1');
-        renderQuiz();
         applyValues(PRESETS.normal, 'normal');
+        shuffle();
+        renderQuiz();
         initParticles();
     }
 

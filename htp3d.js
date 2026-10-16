@@ -27,6 +27,21 @@ const PA_PTS = {
     right: [BIF, V(-0.6, 1.25, -0.05), V(-1.55, 1.05, -0.25)],
     left: [BIF, V(1.0, 1.35, -0.05), V(1.6, 1.15, -0.3)]
 };
+// Trajets du sang : cœur droit → poumons, puis poumons → cœur gauche → aorte
+const RVOT = [V(-0.15, -0.55, 0.55), V(0.05, -0.1, 0.75), V(0.2, 0.6, 0.55), BIF];
+const ROUTES_V = [
+    [V(-1.0, 2.2, 0), V(-1.0, 0.15, 0.15), ...RVOT, V(-0.6, 1.25, -0.05), V(-1.55, 1.05, -0.25), V(-2.3, 1.0, -0.3)],
+    [V(-1.0, -2.2, -0.2), V(-1.0, 0.15, 0.15), ...RVOT, V(1.0, 1.35, -0.05), V(1.6, 1.15, -0.3), V(2.3, 1.1, -0.35)]
+];
+const AORTA = [V(0.35, 0.45, -0.75), V(0.65, -0.55, -0.15), V(0.45, 0.05, -0.1), V(0.2, 0.9, 0.0), V(0.1, 1.7, -0.2),
+    V(0.5, 1.95, -0.6), V(0.8, 1.4, -1.0), V(0.85, 0, -1.05), V(0.85, -2.2, -1.0)];
+const ROUTES_A = [
+    [V(-2.3, 0.3, -0.5), V(-1.6, 0.2, -0.6), V(-0.6, 0.35, -0.8), ...AORTA],
+    [V(2.3, 0.3, -0.5), V(1.6, 0.25, -0.6), V(1.0, 0.4, -0.85), ...AORTA]
+];
+// Grand axe du VG (pour la coupe petit axe)
+const LV_AXIS = V(-Math.sin(0.45), Math.cos(0.45), 0).normalize();
+
 const LABELS = [
     ['OD', V(-1.25, 0.3, 0.55)], ['VD', V(-0.2, -0.6, 1.0)], ['OG', V(0.95, 0.65, -1.1)],
     ['VG', V(1.0, -0.9, 0.3)], ['AP', V(-0.25, 0.55, 0.95)], ['Aorte', V(0.1, 1.95, -0.2)],
@@ -40,6 +55,7 @@ export function mount(root) {
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.localClippingEnabled = true;
     wrap.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
@@ -69,10 +85,36 @@ export function mount(root) {
         alert: new THREE.MeshStandardMaterial({ roughness: 0.4, transparent: true, opacity: 0.85 })
     };
 
+    // Coupe petit axe : on garde la partie apicale, perpendiculaire au grand axe du VG
+    const cut = { on: false, level: 0, plane: new THREE.Plane(LV_AXIS.clone().negate(), 0) };
+    const clipList = [];
+    Object.values(mat).forEach((m) => { m.clippingPlanes = clipList; });
+    const ringMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.55, side: THREE.DoubleSide, depthWrite: false });
+    const ring = new THREE.Mesh(new THREE.RingGeometry(1.45, 1.52, 64), ringMat);
+    ring.quaternion.setFromUnitVectors(V(0, 0, 1), LV_AXIS);
+    ring.visible = false;
+    scene.add(ring);
+    function applyCut() {
+        const c = CH.lv.c.clone().addScaledVector(LV_AXIS, cut.level);
+        cut.plane.setFromNormalAndCoplanarPoint(LV_AXIS.clone().negate(), c);
+        clipList.length = 0;
+        if (cut.on) clipList.push(cut.plane);
+        ring.position.copy(c).addScaledVector(LV_AXIS, -0.01);
+        ring.visible = cut.on;
+        Object.values(chambers).forEach((m) => { m.children[0].visible = cut.on; });
+        applyVisibility();
+        applyState();
+    }
+
     const groups = { heart: new THREE.Group(), lungs: new THREE.Group(), vessels: new THREE.Group(), ov: new THREE.Group() };
     Object.values(groups).forEach((g) => scene.add(g));
 
-    // Cavités
+    // Cavités ; la face interne, unie, dessine la section quand on coupe
+    const innerMat = {
+        v: new THREE.MeshBasicMaterial({ side: THREE.BackSide, clippingPlanes: clipList }),
+        // Le VG est dessiné par-dessus le VD : le VD apparaît en croissant, comme en échographie
+        a: new THREE.MeshBasicMaterial({ side: THREE.BackSide, clippingPlanes: clipList, depthTest: false })
+    };
     const sphere = new THREE.SphereGeometry(1, 40, 28);
     const chambers = {};
     for (const [k, d] of Object.entries(CH)) {
@@ -81,6 +123,10 @@ export function mount(root) {
         m.scale.copy(d.s);
         if (d.rz) m.rotation.z = d.rz;
         m.renderOrder = 2;
+        const inner = new THREE.Mesh(sphere, d.col === 'v' ? innerMat.v : innerMat.a);
+        inner.visible = false;
+        inner.renderOrder = d.col === 'a' ? 10 : 6;
+        m.add(inner);
         groups.heart.add(m);
         chambers[k] = m;
     }
@@ -146,6 +192,37 @@ export function mount(root) {
     grow(PA_PTS.right[2], V(-1, 0, 0), 0.6, 0.085, 0, -1);
     grow(PA_PTS.left[2], V(1, 0, 0), 0.6, 0.085, 0, 1);
 
+    // Flux sanguin : particules instanciées le long des trajets
+    const flow = { v: [], a: [] };
+    const dotGeo = new THREE.SphereGeometry(0.06, 8, 6);
+    const flowGroup = new THREE.Group();
+    scene.add(flowGroup);
+    groups.flow = flowGroup;
+    [['v', ROUTES_V, mat.vVessel], ['a', ROUTES_A, mat.aVessel]].forEach(([k, routes, m]) => {
+        const curves = routes.map((pts) => new THREE.CatmullRomCurve3(pts));
+        const n = 36;
+        const dm = new THREE.MeshBasicMaterial({ clippingPlanes: clipList });
+        const inst = new THREE.InstancedMesh(dotGeo, dm, n);
+        inst.renderOrder = 5;
+        flowGroup.add(inst);
+        flow[k] = { inst, curves, dm, base: m, t: Array.from({ length: n }, (_, i) => (i / n + (i % 2) * 0.013) % 1) };
+    });
+    const dummy = new THREE.Object3D();
+    function stepFlow(dt) {
+        const speed = (st.co / 5) * 0.07;                       // fraction de trajet par seconde
+        ['v', 'a'].forEach((k) => {
+            const f = flow[k];
+            f.t.forEach((t, i) => {
+                const nt = (t + speed * dt) % 1;
+                f.t[i] = nt;
+                f.curves[i % f.curves.length].getPointAt(nt, dummy.position);
+                dummy.updateMatrix();
+                f.inst.setMatrixAt(i, dummy.matrix);
+            });
+            f.inst.instanceMatrix.needsUpdate = true;
+        });
+    }
+
     // Calques des mécanismes
     const ov = {};
     ov['4'] = new THREE.Group();
@@ -169,11 +246,12 @@ export function mount(root) {
         el.className = 'htp3d-label';
         el.textContent = txt;
         labelLayer.appendChild(el);
-        return { el, p };
+        return { el, p, txt };
     });
 
     let st = { pvr: 1.2, pawp: 9, co: 5.5, mpap: 15, pod: 4, ov: null };
     let heartOpacity = 0.85;
+    stepFlow(0);
 
     function applyColors() {
         const v = new THREE.Color(css('--htp-veineux'));
@@ -183,6 +261,11 @@ export function mount(root) {
         mat.vVessel.color.copy(v);
         mat.aVessel.color.copy(a);
         mat.alert.color.set(css('--htp-alerte'));
+        ringMat.color.set(css('--htp-alerte'));
+        innerMat.v.color.copy(v).offsetHSL(0, 0, -0.08);
+        innerMat.a.color.copy(a).offsetHSL(0, 0, -0.08);
+        flow.v.dm.color.copy(v).offsetHSL(0, 0.1, 0.18);
+        flow.a.dm.color.copy(a).offsetHSL(0, 0.1, 0.18);
         applyState();
     }
 
@@ -215,18 +298,28 @@ export function mount(root) {
         // Groupe 4 : artères translucides pour voir les caillots
         mat.vVessel.opacity = st.ov === '4' ? 0.35 : 1;
         mat.vVessel.depthWrite = st.ov !== '4';
-        mat.v.opacity = mat.a.opacity = heartOpacity;
-        mat.v.depthWrite = mat.a.depthWrite = heartOpacity > 0.95;
+        const op = cut.on ? 1 : heartOpacity;
+        mat.v.opacity = mat.a.opacity = op;
+        mat.v.depthWrite = mat.a.depthWrite = op > 0.95;
         Object.entries(ov).forEach(([key, g]) => { g.visible = st.ov === key; });
+    }
+
+    const layerOn = { heart: true, lungs: true, vessels: true, flow: true, ov: true, labels: true };
+    function applyVisibility() {
+        for (const k of Object.keys(groups)) groups[k].visible = layerOn[k] && (!cut.on || k === 'heart');
+        labelLayer.hidden = !layerOn.labels;
+        labels.forEach((l) => { l.el.hidden = cut.on && l.txt !== 'VD' && l.txt !== 'VG'; });
     }
 
     // Vues animées
     let camAnim = null;
     function setView(name) {
-        const to = VIEWS[name];
+        const lvc = CH.lv.c.clone().addScaledVector(LV_AXIS, cut.level);
+        const to = name === 'coupe' ? lvc.clone().addScaledVector(LV_AXIS, 6.5) : VIEWS[name];
         if (!to) return;
-        if (reduce.matches) { camera.position.copy(to); controls.update(); return; }
-        camAnim = { from: camera.position.clone(), to, t0: performance.now() };
+        const target = name === 'coupe' ? lvc : V(0, 0.3, 0);
+        if (reduce.matches) { camera.position.copy(to); controls.target.copy(target); controls.update(); return; }
+        camAnim = { from: camera.position.clone(), to, tFrom: controls.target.clone(), tTo: target, t0: performance.now() };
     }
 
     function resize() {
@@ -243,14 +336,19 @@ export function mount(root) {
     resize();
 
     const tmp = new THREE.Vector3();
+    const onPlane = { VD: 'rv', VG: 'lv' };
     let raf = 0;
+    let prev = 0;
     function loop(now) {
+        const dt = prev ? Math.min(0.05, (now - prev) / 1000) : 0;
+        prev = now;
         raf = requestAnimationFrame(loop);
         if (!wrap.offsetParent || document.hidden) return;
         if (camAnim) {
             const t = clamp((now - camAnim.t0) / 800, 0, 1);
             const e = 1 - Math.pow(1 - t, 3);
             camera.position.lerpVectors(camAnim.from, camAnim.to, e);
+            controls.target.lerpVectors(camAnim.tFrom, camAnim.tTo, e);
             if (t === 1) camAnim = null;
         }
         controls.update();
@@ -258,12 +356,14 @@ export function mount(root) {
         if (!reduce.matches) {
             const beat = 1 + 0.025 * Math.max(0, Math.sin(now / 1000 * 2 * Math.PI * 70 / 60));
             groups.heart.scale.setScalar(beat);
+            if (flowGroup.visible) stepFlow(dt);
             ov['5'].children.forEach((m, i) => { m.rotation.x = now / 900 + i; m.rotation.y = now / 1300; });
         }
         renderer.render(scene, camera);
         const w = renderer.domElement.clientWidth, h = renderer.domElement.clientHeight;
         labels.forEach((l) => {
-            tmp.copy(l.p).project(camera);
+            if (cut.on && onPlane[l.txt]) cut.plane.projectPoint(chambers[onPlane[l.txt]].position, tmp).project(camera);
+            else tmp.copy(l.p).project(camera);
             l.el.style.transform = `translate(-50%,-50%) translate(${((tmp.x + 1) / 2) * w}px,${((1 - tmp.y) / 2) * h}px)`;
             l.el.style.opacity = tmp.z < 1 ? '' : 0;
         });
@@ -280,10 +380,15 @@ export function mount(root) {
         update(s) { st = s; applyState(); },
         setView,
         setLayer(name, on) {
-            if (name === 'labels') labelLayer.hidden = !on;
-            else if (groups[name]) groups[name].visible = on;
+            layerOn[name] = on;
+            applyVisibility();
         },
         setHeartOpacity(o) { heartOpacity = o; applyState(); },
+        setCut(on, level) {
+            cut.on = on;
+            if (level !== undefined) cut.level = level;
+            applyCut();
+        },
         dispose() { cancelAnimationFrame(raf); ro.disconnect(); mo.disconnect(); renderer.dispose(); }
     };
 }

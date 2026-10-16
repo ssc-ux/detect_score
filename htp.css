@@ -1090,3 +1090,33 @@
         font-size: 0.55rem;
     }
 }
+
+#htp3d-cut-level {
+    flex: 1;
+    min-width: 140px;
+    accent-color: var(--htp-alerte);
+}
+
+.htp3d-cap-check {
+    min-width: 9rem;
+    font-weight: 600;
+}
+
+.htp-quiz-fig {
+    margin: 0 0 12px;
+    padding: 6px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    background: var(--surface-2);
+}
+
+.htp-quiz-svg {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.htp-quiz-svg .htp-ov-txt,
+.htp-quiz-svg .htp-hl {
+    display: none;
+}
