@@ -8,7 +8,7 @@
     <script>try{var t=localStorage.getItem("theme");if(t==="sombre")document.documentElement.dataset.theme="dark";else if(t==="auto")delete document.documentElement.dataset.theme}catch(e){}</script>
     <link rel="icon" href="icon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="style.css?v=23">
-    <link rel="stylesheet" href="htp.css?v=6">
+    <link rel="stylesheet" href="htp.css?v=7">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="apple-touch-icon" href="icon-180.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -344,6 +344,10 @@
                         <div class="htp3d-stage">
                             <div class="htp3d-canvas"></div>
                             <div class="htp3d-labels"></div>
+                            <div class="htp3d-hud" aria-live="off">
+                                <span class="htp3d-live">EN DIRECT</span>
+                                <span id="htp3d-hud-txt"></span>
+                            </div>
                             <p class="htp3d-msg" hidden></p>
                         </div>
                         <div class="htp3d-controls">
@@ -696,7 +700,7 @@
     <script src="logic.js?v=25"></script>
     <script src="app.js?v=26"></script>
     <script src="fx.js?v=25" defer></script>
-    <script src="htp.js?v=8" defer></script>
+    <script src="htp.js?v=10" defer></script>
     <script>
         if ('serviceWorker' in navigator && location.protocol === 'https:') {
             window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });

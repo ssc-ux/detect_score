@@ -297,6 +297,10 @@
         renderShortAxis(r.mpap);
         renderDetectLive(r);
         last = { pvr: pvr, pawp: pawp, co: co, mpap: r.mpap, pod: r.pod, ov: state.ov };
+        if (el.hud) {
+            el.hud.innerHTML = '<b>PAPm ' + Math.round(r.mpap) + '</b> mmHg · RVP ' + fr(pvr, 1) + ' UW · PAPO ' + pawp +
+                ' · DC ' + fr(co, 1) + '<span class="htp3d-hud-prof ' + p.cls + '">' + p.label + '</span>';
+        }
         if (view3d) view3d.update(last);
     }
 
@@ -438,11 +442,28 @@
     /* ---------- Vue 3D ---------- */
 
     var loading3d = false;
+    // Grand écran : 3D et schéma 2D côte à côte ; sinon bascule 2D / 3D
+    var wideMQ = window.matchMedia('(min-width: 1100px)');
+    function layoutView() {
+        if (!document.body.classList.contains('is-htp')) return;
+        if (wideMQ.matches) {
+            el.d2.hidden = false;
+            el.d3.hidden = false;
+            load3d();
+        } else {
+            setViewMode(document.querySelector('input[name="htp-view"]:checked').value);
+        }
+    }
+
     function setViewMode(mode) {
         var is3d = mode === '3d';
         el.d2.hidden = is3d;
         el.d3.hidden = !is3d;
-        if (!is3d || view3d || loading3d) return;
+        if (is3d) load3d();
+    }
+
+    function load3d() {
+        if (view3d || loading3d) return;
         var msg = el.d3.querySelector('.htp3d-msg');
         var c = document.createElement('canvas');
         if (!(c.getContext('webgl2') || c.getContext('webgl'))) {
@@ -453,7 +474,7 @@
         loading3d = true;
         msg.hidden = false;
         msg.textContent = 'Chargement de la 3D…';
-        import('./htp3d.js?v=6').then(function (m) {
+        import('./htp3d.js?v=8').then(function (m) {
             view3d = m.mount(el.d3);
             if (last) view3d.update(last);
             msg.hidden = true;
@@ -728,6 +749,14 @@
             syncLink();
             link.addEventListener('click', fromPatient);
         }
+        el.hud = $('htp3d-hud-txt');
+        document.querySelectorAll('.tab-btn').forEach(function (b) {
+            b.addEventListener('click', function () {
+                document.body.classList.toggle('is-htp', b.dataset.tab === 'tab-htp');
+                layoutView();
+            });
+        });
+        wideMQ.addEventListener('change', layoutView);
         document.querySelectorAll('input[name="htp-view"]').forEach(function (r) {
             r.addEventListener('change', function () { setViewMode(r.value); });
         });

@@ -1181,3 +1181,214 @@
     right: 0;
     transform: none;
 }
+
+/* ---------- Scène 3D : écran sombre façon salle de cathétérisme ---------- */
+
+.htp3d-stage {
+    background: radial-gradient(ellipse at 50% 35%, #1f2a4d 0%, #0c1120 72%);
+    border-color: #1d2540;
+    box-shadow: inset 0 0 60px rgb(0 0 0 / 0.45);
+}
+
+.htp3d-label {
+    background: rgb(12 17 32 / 0.72);
+    border-color: rgb(255 255 255 / 0.16);
+    color: #e6ecff;
+}
+
+.htp3d-msg {
+    color: #9fb0d8;
+}
+
+.htp3d-hud {
+    position: absolute;
+    top: 10px;
+    left: 12px;
+    right: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 12px;
+    pointer-events: none;
+    font-size: 0.74rem;
+    font-variant-numeric: tabular-nums;
+    color: #c9d4f5;
+}
+
+.htp3d-hud b {
+    color: #fff;
+    font-size: 0.9rem;
+}
+
+.htp3d-live {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgb(255 80 80 / 0.16);
+    color: #ff8f8f;
+    font-size: 0.64rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+}
+
+.htp3d-live::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #ff5a5a;
+    animation: htp-pulse-dot 1.4s ease-in-out infinite;
+}
+
+@keyframes htp-pulse-dot {
+    50% {
+        opacity: 0.25;
+    }
+}
+
+.htp3d-hud-prof {
+    margin-left: 4px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgb(255 255 255 / 0.1);
+    font-weight: 700;
+    color: #dfe6ff;
+}
+
+.htp3d-hud-prof.is-good {
+    color: #6fdc9e;
+}
+
+.htp3d-hud-prof.is-bad {
+    color: #ff8f86;
+}
+
+.htp3d-hud-prof.is-warn {
+    color: #ffb37a;
+}
+
+.htp3d-hud-prof.is-info {
+    color: #9fbfff;
+}
+
+/* ---------- Grand écran : onglet en mode « labo » ---------- */
+
+@media (min-width: 1100px) {
+    body.is-htp .app-container {
+        max-width: 1440px;
+        padding: 0 32px;
+    }
+
+    body.is-htp .masthead {
+        display: none;
+    }
+
+    body.is-htp #tab-htp.active {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        column-gap: 1.25rem;
+        align-items: start;
+        margin-top: 1rem;
+    }
+
+    #tab-htp > * {
+        grid-column: 1 / -1;
+    }
+
+    #tab-htp > #htp-detect,
+    #tab-htp > #htp-quiz {
+        grid-column: auto;
+    }
+
+    /* Bandeau d'accueil */
+    .htp-intro {
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+        column-gap: 3rem;
+        align-items: center;
+        padding: 2rem 2.4rem;
+        background: linear-gradient(120deg, var(--surface) 35%, var(--accent-soft) 100%);
+    }
+
+    .htp-intro > * {
+        grid-column: 1;
+    }
+
+    .htp-kicker { grid-row: 1; }
+    .htp-intro .htp-title { grid-row: 2; font-size: 2.3rem; }
+    .htp-lead { grid-row: 3; }
+    .htp-beta-note { grid-row: 4; margin: 12px 0 0; justify-self: start; }
+
+    .htp-intro .htp-eq {
+        grid-column: 2;
+        grid-row: 1 / 4;
+        margin: 0;
+        padding: 1.6rem 1rem;
+        font-size: 1.75rem;
+        letter-spacing: 0.02em;
+        box-shadow: inset 0 0 0 1px var(--accent-ring);
+    }
+
+    .htp-intro .htp-lead-small {
+        grid-column: 2;
+        grid-row: 4;
+        margin-top: 12px;
+    }
+
+    /* Simulateur : 3D à gauche, schéma et commandes à droite */
+    #htp-sim {
+        display: grid;
+        grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+        column-gap: 1.5rem;
+        align-items: start;
+        grid-template-areas:
+            "head head"
+            "presets tools"
+            "patient patient"
+            "v3d v2d"
+            "v3d hint"
+            "v3d tour"
+            "v3d grid"
+            "v3d ."
+            "echo echo";
+    }
+
+    #htp-sim > .card-header { grid-area: head; }
+    #htp-sim > .htp-presets { grid-area: presets; }
+    #htp-sim > .htp-toolbar { grid-area: tools; justify-content: flex-end; align-self: start; margin: 0.4rem 0 0.9rem; }
+    #htp-sim > #htp-patient { grid-area: patient; }
+    #htp-sim > #htp-3d { grid-area: v3d; }
+    #htp-sim > #htp-2d { grid-area: v2d; }
+    #htp-sim > #htp-hint { grid-area: hint; }
+    #htp-sim > #htp-tour { grid-area: tour; }
+    #htp-sim > .htp-grid { grid-area: grid; }
+    #htp-sim > .htp-echo { grid-area: echo; }
+
+    .htp-view-seg {
+        display: none;
+    }
+
+    #htp-sim .htp3d-stage {
+        min-height: 520px;
+    }
+
+    /* Mécanismes : cascade à gauche, repères à droite */
+    .htp-group-body {
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+        column-gap: 2.5rem;
+        align-items: start;
+    }
+
+    .htp-group-body > .htp-h3,
+    .htp-group-body > .htp-site {
+        grid-column: 1 / -1;
+        justify-self: start;
+    }
+
+    .htp-group-body > .htp-chain { grid-column: 1; grid-row: 3 / span 2; }
+    .htp-group-body > .htp-facts { grid-column: 2; grid-row: 3; }
+    .htp-group-body > .htp-actions { grid-column: 2; grid-row: 4; }
+}

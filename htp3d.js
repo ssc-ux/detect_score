@@ -8,10 +8,10 @@ const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim() || '#888';
 
 const VIEWS = {
-    face: V(0, 0.6, 9),
-    gauche: V(9, 0.6, 0.4),
-    dos: V(0, 0.6, -9),
-    oblique: V(6, 3.2, 6)
+    face: V(0, 0.5, 7.6),
+    gauche: V(7.6, 0.5, 0.4),
+    dos: V(0, 0.5, -7.6),
+    oblique: V(5.1, 2.7, 5.1)
 };
 
 // Géométrie de repos
@@ -324,7 +324,7 @@ export function mount(root) {
 
     function resize() {
         const w = wrap.clientWidth || 600;
-        const h = Math.max(280, Math.min(520, w * 0.66));
+        const h = Math.max(280, Math.min(640, w * 0.72));
         renderer.setSize(w, h, false);
         renderer.domElement.style.width = '100%';
         renderer.domElement.style.height = h + 'px';
