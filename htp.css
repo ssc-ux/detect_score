@@ -1392,3 +1392,8 @@
     .htp-group-body > .htp-facts { grid-column: 2; grid-row: 3; }
     .htp-group-body > .htp-actions { grid-column: 2; grid-row: 4; }
 }
+
+.htp-badge-sm {
+    border-radius: 10px;
+    line-height: 1.45;
+}

@@ -41,7 +41,7 @@
         cpc: { label: 'HTP post-capillaire combinée', cls: 'is-bad',
             txt: "Rétro-transmission gauche (PAPO > 15) et composante artériolaire surajoutée (RVP > 2 UW). Groupe 2 évolué." },
         uncl: { label: 'HTP non classée', cls: 'is-info',
-            txt: "PAPm élevée par le seul débit, sans résistance ni pression gauche anormale (shunt, hyperdébit)." }
+            txt: "PAPm > 20 mmHg mais PAPO ≤ 15 et RVP ≤ 2 UW : profil qui n'entre dans aucune des définitions précédentes. Souvent lié à un débit élevé (shunt, fistule artérioveineuse, anémie, cirrhose) ; surveillance recommandée." }
     };
 
     var GROUPS = {
@@ -55,8 +55,8 @@
                 "Lumière artériolaire rétrécie → RVP ↑ → PAPm ↑ avec PAPO normale",
                 "Post-charge du VD ↑ : hypertrophie, puis dilatation et insuffisance cardiaque droite"
             ],
-            ex: "HTAP idiopathique, héritable, médicamenteuse ou toxique, associée aux connectivites (ScS ++), au VIH, à l'hypertension portale, aux cardiopathies congénitales, à la schistosomiase.",
-            exam: "Cathétérisme cardiaque droit (profil précapillaire) après avoir écarté les groupes 2, 3 et 4. Dans la ScS : dépistage annuel (DETECT).",
+            ex: "HTAP idiopathique, héritable, médicamenteuse ou toxique, associée aux connectivites (ScS ++), au VIH, à l'hypertension portale, aux cardiopathies congénitales, à la schistosomiase. Inclut la maladie veino-occlusive / hémangiomatose capillaire (MVO/HCP), fréquente dans la ScS et moins sensible aux traitements.",
+            exam: "Cathétérisme cardiaque droit (profil précapillaire) après avoir écarté les groupes 2, 3 et 4. Dans la ScS : évaluation annuelle du risque ; algorithme DETECT si ScS > 3 ans, DLCO < 60 % et CVF ≥ 40 %.",
             ttt: "Traitements ciblant les 3 voies (endothéline, NO, prostacycline) ± sotatercept (voie de l'activine).",
             presets: [['g1', 'Voir dans le simulateur']]
         },
@@ -87,21 +87,21 @@
             ],
             ex: "BPCO, emphysème, pneumopathies interstitielles (dont la PID de la ScS), syndrome emphysème-fibrose, syndrome obésité-hypoventilation, haute altitude.",
             exam: "EFR, gazométrie, scanner thoracique ; cathétérisme droit si la prise en charge en dépend.",
-            ttt: "Traiter la maladie respiratoire, oxygène si hypoxémie ; tréprostinil inhalé possible dans l'HTP des PID.",
+            ttt: "Traiter la maladie respiratoire, oxygène si hypoxémie ; tréprostinil inhalé possible dans l'HTP des PID ; autres traitements de l'HTAP non recommandés en routine (riociguat déconseillé dans les PID idiopathiques) ; HTP sévère (RVP > 5 UW) : avis en centre expert.",
             presets: [['g3', 'Voir dans le simulateur']]
         },
         '4': {
             title: 'Groupe 4 · Obstruction des artères pulmonaires',
             site: 'Précapillaire · artères proximales et segmentaires',
             chain: [
-                "Embolie pulmonaire dont le caillot ne se résorbe pas complètement",
+                "Embolie pulmonaire dont le caillot ne se résorbe pas complètement (environ 25 % des patients n'ont pas d'antécédent d'EP connu)",
                 "Le thrombus s'organise en tissu fibreux adhérent à la paroi (bandes, membranes)",
                 "Obstruction mécanique des artères pulmonaires → RVP ↑",
                 "Les territoires restés libres reçoivent tout le débit → microvasculopathie secondaire, RVP ↑ encore",
                 "Insuffisance cardiaque droite progressive"
             ],
             ex: "HTP thromboembolique chronique (HTP-TEC) ; plus rarement sarcome de l'artère pulmonaire, artérites, parasitoses.",
-            exam: "Scintigraphie de ventilation/perfusion (défects de perfusion non concordants) après ≥ 3 mois d'anticoagulation, puis angioscanner et angiographie.",
+            exam: "Scintigraphie de ventilation/perfusion (à faire devant toute HTP) : défects de perfusion non concordants persistant après ≥ 3 mois d'anticoagulation ; cathétérisme droit (profil précapillaire) ; angioscanner et angiographie pour l'opérabilité, en centre expert.",
             ttt: "Anticoagulation au long cours ; endartériectomie pulmonaire (guérison possible), angioplastie par ballonnet, riociguat.",
             presets: [['g4', 'Voir dans le simulateur']]
         },
@@ -115,7 +115,7 @@
                 "Hyperdébit et surcharge : insuffisance rénale chronique avec fistule artérioveineuse",
                 "Souvent plusieurs mécanismes intriqués, dont une composante cardiaque gauche ou respiratoire"
             ],
-            ex: "Sarcoïdose, histiocytose langerhansienne, syndromes myéloprolifératifs, anémies hémolytiques chroniques, insuffisance rénale chronique, maladies métaboliques (Gaucher, glycogénoses), médiastinite fibrosante, cardiopathies congénitales complexes.",
+            ex: "Sarcoïdose, histiocytose langerhansienne, neurofibromatose de type 1, syndromes myéloprolifératifs, anémies hémolytiques chroniques, insuffisance rénale chronique (avec ou sans dialyse), maladies métaboliques (Gaucher, glycogénoses), microangiopathie thrombotique tumorale, médiastinite fibrosante.",
             exam: "Bilan orienté par la maladie causale ; cathétérisme droit pour préciser la part de chaque mécanisme.",
             ttt: "Traiter la maladie causale ; traitements de l'HTAP au cas par cas, en centre expert.",
             presets: [['g5', 'Voir dans le simulateur']]
@@ -123,7 +123,7 @@
     };
 
     var DETECT = [
-        ['Rapport CVF % / DLCO %', '↑', "La vasculopathie réduit le volume sanguin capillaire, donc la DLCO, alors que la CVF reste normale (pas de fibrose)."],
+        ['Rapport CVF % / DLCO %', '↑', "La vasculopathie réduit le volume sanguin capillaire, donc la DLCO, alors que la CVF reste relativement préservée (peu ou pas de fibrose)."],
         ['Télangiectasies', '+', "Témoin cutané de la microangiopathie diffuse de la ScS, qui touche aussi les artérioles pulmonaires."],
         ['Anticorps anti-centromère', '+', "Associés à la forme cutanée limitée, le phénotype vasculaire le plus exposé à l'HTAP."],
         ['NT-proBNP', '↑', "Sécrété par les cardiomyocytes étirés : reflète la distension du VD sous post-charge élevée."],
@@ -147,7 +147,7 @@
         { k: 'g5', t: 'Mécanismes multiples (groupe 5)', x: null },
         { k: 'hd', t: 'Hyperdébit : HTP non classée', x: null },
         { k: 'normal', t: 'À retenir',
-            x: "PAPO ≤ 15 et RVP > 2 UW : précapillaire (groupes 1, 3, 4, parfois 5). PAPO > 15 : post-capillaire (groupe 2), combinée si RVP > 2 UW. L'échographie estime une probabilité ; seul le cathétérisme droit tranche." }
+            x: "HTP si PAPm > 20 mmHg. Puis : PAPO ≤ 15 et RVP > 2 UW → précapillaire (groupes 1, 3, 4, parfois 5) ; PAPO > 15 → post-capillaire (groupe 2), combinée si RVP > 2 UW ; PAPO ≤ 15 et RVP ≤ 2 UW → HTP non classée. L'échographie estime une probabilité ; seul le cathétérisme droit tranche." }
     ];
 
     var GLOSSARY = {
@@ -166,7 +166,7 @@
         'DLCO': "Capacité de diffusion du monoxyde de carbone : explore la surface d'échange alvéolo-capillaire.",
         'CVF': "Capacité vitale forcée.",
         'PID': "Pneumopathie interstitielle diffuse.",
-        'NT-proBNP': "Peptide natriurétique libéré par les cardiomyocytes étirés."
+        'NT-proBNP': "Fragment N-terminal inactif du pro-BNP, libéré avec le BNP par les cardiomyocytes étirés."
     };
     var GLOSS_RE = new RegExp('(^|[^\\wÀ-ÿ-])(' + Object.keys(GLOSSARY).sort(function (a, b) { return b.length - a.length; })
         .map(function (k) { return k.replace(/[-]/g, '\\-'); }).join('|') + ')(?![\\wÀ-ÿ-])');
@@ -176,7 +176,7 @@
 
     var QUIZ = [
         { t: 'g', a: 0, h: { pawp: 9, pvr: 6.9, co: 4.2 },
-            q: "Femme de 58 ans, ScS cutanée limitée, ACA+, DLCO 38 %, CVF 95 %. Cathétérisme : PAPm 38, PAPO 9 mmHg, DC 4,2 L/min. Quel groupe ?",
+            q: "Femme de 58 ans, ScS cutanée limitée, ACA+, DLCO 38 %, CVF 95 %, scanner sans PID, scintigraphie V/Q normale. Cathétérisme : PAPm 38, PAPO 9 mmHg, DC 4,2 L/min. Quel groupe ?",
             e: "RVP = (38 − 9) / 4,2 ≈ 6,9 UW : profil précapillaire, sans fibrose (CVF normale) ni cardiopathie gauche. HTAP associée à la ScS (groupe 1)." },
         { t: 'p', a: 2, h: { pawp: 22, pvr: 1.9, co: 5.4 },
             q: "Homme de 76 ans, HTA, fibrillation atriale, obésité, FEVG 60 %, OG dilatée. Cathétérisme : PAPm 32, PAPO 22 mmHg, DC 5,4 L/min. Quel profil ?",
@@ -185,8 +185,8 @@
             q: "BPCO très sévère, PaO₂ 55 mmHg. Cathétérisme : PAPm 27, PAPO 10 mmHg, DC 5 L/min. Quel groupe ?",
             e: "Précapillaire modérée (RVP 3,4 UW) dans un contexte d'hypoxémie chronique : groupe 3." },
         { t: 'g', a: 3, h: { pawp: 11, pvr: 8.5, co: 3.9 },
-            q: "Dyspnée persistante 6 mois après une embolie pulmonaire, malgré l'anticoagulation. Scintigraphie V/Q : défects de perfusion multiples non concordants. Quel groupe ?",
-            e: "Défects de perfusion non concordants après ≥ 3 mois d'anticoagulation : HTP thromboembolique chronique (groupe 4), parfois curable par endartériectomie." },
+            q: "Dyspnée persistante 6 mois après une embolie pulmonaire, malgré l'anticoagulation. Scintigraphie V/Q : défects de perfusion multiples non concordants. Cathétérisme : PAPm 44, PAPO 11 mmHg, DC 3,9 L/min. Quel groupe ?",
+            e: "RVP = (44 − 11) / 3,9 ≈ 8,5 UW : précapillaire. Défects de perfusion non concordants après ≥ 3 mois d'anticoagulation : HTP thromboembolique chronique (groupe 4), parfois curable par endartériectomie." },
         { t: 'p', a: 0, h: { pawp: 8, pvr: 2.2, co: 5.0 },
             q: "Cathétérisme : PAPm 19, PAPO 8 mmHg, DC 5 L/min. Quel profil ?",
             e: "Le seuil est une PAPm > 20 mmHg (ESC/ERS 2022). À 19 mmHg, il n'y a pas d'HTP, même avec une RVP à 2,2 UW." },
@@ -263,7 +263,7 @@
         el.trv.textContent = '≈ ' + fr(r.trv, 1) + ' m/s';
         el.raa.textContent = '≈ ' + Math.round(r.raa) + ' cm²';
         var proba = r.trv <= 2.8 ? ['faible', 'is-good'] : r.trv <= 3.4 ? ['intermédiaire', 'is-warn'] : ['élevée', 'is-bad'];
-        el.proba.textContent = 'Probabilité échographique ' + proba[0] + ' (sur la seule Vmax IT)';
+        el.proba.textContent = 'Probabilité échographique ' + proba[0] + ' d\'après la seule Vmax IT (selon l\'ESC, des signes dans ≥ 2 catégories – ventricules, AP, VCI/OD – la relèvent d\'un niveau)';
         el.proba.className = 'htp-badge htp-badge-sm ' + proba[1];
 
         // Étiquettes de pression sur le schéma
@@ -317,7 +317,7 @@
         el.saRv.style.strokeWidth = (2 + k * 3).toFixed(1);
         el.saCap.textContent = f < 0.3 ? 'Petit axe : septum normal, VG circulaire'
             : f < 0.85 ? 'Petit axe : septum aplati, VG en «\u00a0D\u00a0»'
-            : 'Petit axe : septum paradoxal, VG comprimé';
+            : 'Petit axe : septum bombant vers le VG, VG comprimé';
     }
 
     function setOverlay(ov) {
@@ -432,10 +432,13 @@
         el.patient.hidden = false;
         el.patient.innerHTML = '<button type="button" class="htp-tour-x" aria-label="Fermer">✕</button>' +
             '<strong>Votre patient :</strong> Vmax IT ' + fr(trv, 1) + ' m/s' +
-            (isNaN(raa) ? '' : ', surface OD ' + fr(raa, 0) + ' cm²') + ' → PAPs ≈ ' + Math.round(paps) +
+            (isNaN(raa) ? '' : ', surface OD ' + fr(raa, 0) + ' cm² (POD déduite de la surface OD : approximation non validée, la POD s\'estime par la VCI)') + ' → PAPs ≈ ' + Math.round(paps) +
             ' mmHg, PAPm ≈ ' + Math.round(10 + pvr * 5) + ' mmHg.<br>PAPO et débit sont inconnus sans cathétérisme : ' +
             'hypothèse PAPO 10 mmHg et DC 5 L/min, d\'où une RVP ≈ ' + fr(pvr, 1) + ' UW. ' +
-            'Bougez les curseurs pour voir les autres explications possibles. ' +
+            'Bougez les curseurs pour voir les autres explications possibles.' +
+            '<br><strong>Attention :</strong> l\'échographie ne permet ni d\'affirmer une HTP ni d\'en déterminer le profil. ' +
+            'Une Vmax IT ≤ 2,8 m/s correspond à une probabilité échographique faible, même si la formule donne une PAPm > 20 mmHg. ' +
+            'Le profil affiché ne découle que des hypothèses ci-dessus. ' +
             '<small>Les estimations échographiques du simulateur suivent son propre modèle et peuvent différer de vos mesures.</small>';
     }
 
