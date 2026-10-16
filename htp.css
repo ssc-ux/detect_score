@@ -1,0 +1,835 @@
+/* Onglet « Comprendre l'HTP » */
+:root {
+    --htp-veineux: #4f6bd8;
+    --htp-arteriel: #d64545;
+    --htp-paroi: #ecc2b4;
+    --htp-muscle: #c9776b;
+    --htp-alerte: #e0702f;
+    --htp-poumon: #f3f5fb;
+    --htp-warn-soft: #fdf1e7;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+        --htp-veineux: #8299f2;
+        --htp-arteriel: #ff7070;
+        --htp-paroi: #6e4239;
+        --htp-muscle: #a85a4e;
+        --htp-alerte: #f08a4b;
+        --htp-poumon: #1f2229;
+        --htp-warn-soft: #33241a;
+    }
+}
+
+:root[data-theme='dark'] {
+    --htp-veineux: #8299f2;
+    --htp-arteriel: #ff7070;
+    --htp-paroi: #6e4239;
+    --htp-muscle: #a85a4e;
+    --htp-alerte: #f08a4b;
+    --htp-poumon: #1f2229;
+    --htp-warn-soft: #33241a;
+}
+
+/* ---------- Introduction ---------- */
+
+.htp-kicker {
+    margin: 0 0 4px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+}
+
+.htp-title {
+    margin: 0 0 10px;
+    font-size: clamp(1.3rem, 4.5vw, 1.65rem);
+    letter-spacing: -0.02em;
+}
+
+.htp-lead,
+.htp-lead-small,
+.htp-p {
+    margin: 0;
+    color: var(--ink-2);
+    line-height: 1.6;
+}
+
+.htp-lead-small {
+    font-size: 0.88rem;
+    color: var(--ink-3);
+}
+
+.htp-eq {
+    margin: 12px 0;
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+    font-weight: 700;
+    font-size: 1.1rem;
+    text-align: center;
+    letter-spacing: 0.01em;
+}
+
+/* ---------- Cas cliniques ---------- */
+
+.htp-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0.4rem 0 0.9rem;
+}
+
+.htp-chip {
+    border: 1px solid var(--line-strong);
+    background: var(--surface);
+    color: var(--ink-2);
+    border-radius: 999px;
+    padding: 6px 12px;
+    font: 500 0.8rem/1.2 var(--font-sans);
+    cursor: pointer;
+    transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast);
+    -webkit-tap-highlight-color: transparent;
+}
+
+.htp-chip:hover {
+    border-color: var(--accent);
+    color: var(--ink);
+}
+
+.htp-chip.is-on {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-texte);
+}
+
+.htp-chip:focus-visible,
+.htp-opt:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+/* ---------- Schéma ---------- */
+
+.htp-stage {
+    margin: 0;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    background: var(--surface-2);
+    padding: 8px 8px 10px;
+}
+
+#htp-svg {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+#htp-svg text {
+    font-family: var(--font-sans);
+}
+
+.htp-sys {
+    fill: none;
+    stroke: var(--line-strong);
+    stroke-width: 2;
+    stroke-dasharray: 5 5;
+}
+
+.htp-lung {
+    fill: var(--htp-poumon);
+    stroke: var(--line-strong);
+}
+
+.htp-zone {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    fill: var(--ink-3);
+}
+
+.htp-vessel {
+    fill: none;
+    stroke-linecap: round;
+    transition: stroke-width var(--t-med);
+}
+
+.htp-v {
+    stroke: var(--htp-veineux);
+    stroke-width: 12;
+}
+
+.htp-a {
+    stroke: var(--htp-arteriel);
+    stroke-width: 10;
+}
+
+.htp-wall {
+    fill: var(--htp-paroi);
+}
+
+.htp-lumen {
+    fill: var(--htp-veineux);
+    transition: height var(--t-med), y var(--t-med);
+}
+
+.htp-cap path {
+    fill: none;
+    stroke: url(#htp-grad-cap);
+    stroke-width: 3;
+}
+
+.htp-alv circle {
+    fill: var(--surface);
+    stroke: var(--htp-veineux);
+    stroke-opacity: 0.35;
+    stroke-width: 1.5;
+    transition: fill var(--t-med);
+}
+
+.is-hypoxic .htp-alv circle {
+    fill: var(--chip);
+    stroke: var(--ink-3);
+    stroke-dasharray: 3 3;
+}
+
+.htp-chamber {
+    stroke: var(--htp-muscle);
+    stroke-width: 2;
+    transition: rx var(--t-med), ry var(--t-med), stroke-width var(--t-med);
+}
+
+.htp-cv {
+    fill: color-mix(in srgb, var(--htp-veineux) 30%, var(--surface));
+}
+
+.htp-ca {
+    fill: color-mix(in srgb, var(--htp-arteriel) 28%, var(--surface));
+}
+
+.htp-jet {
+    fill: none;
+    stroke: var(--htp-alerte);
+    stroke-linecap: round;
+    stroke-dasharray: 4 3;
+    opacity: 0;
+    animation: htp-dash 0.6s linear infinite;
+}
+
+@keyframes htp-dash {
+    to {
+        stroke-dashoffset: -7;
+    }
+}
+
+.htp-dot-p {
+    fill: var(--htp-veineux);
+    stroke: var(--surface);
+    stroke-width: 1;
+}
+
+.htp-dot-p.is-a {
+    fill: var(--htp-arteriel);
+}
+
+.htp-label {
+    font-size: 13px;
+    font-weight: 700;
+    fill: var(--ink);
+}
+
+.htp-small {
+    font-size: 10px;
+    fill: var(--ink-3);
+}
+
+.htp-tag {
+    font-size: 11px;
+    font-weight: 600;
+    fill: var(--ink-2);
+}
+
+.htp-tag-strong {
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.htp-tag.is-high {
+    fill: var(--bad);
+}
+
+/* Calques des mécanismes */
+.htp-ov {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--t-med), visibility var(--t-med);
+}
+
+.htp-ov.is-on {
+    opacity: 1;
+    visibility: visible;
+}
+
+.htp-hl {
+    fill: none;
+    stroke: var(--htp-alerte);
+    stroke-width: 2;
+    stroke-dasharray: 5 4;
+}
+
+.htp-ov.is-on .htp-hl {
+    animation: htp-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes htp-pulse {
+    50% {
+        stroke-opacity: 0.35;
+    }
+}
+
+.htp-ov-txt {
+    font-size: 10.5px;
+    font-weight: 700;
+    fill: var(--htp-alerte);
+}
+
+.htp-back {
+    fill: none;
+    stroke: var(--htp-alerte);
+    stroke-width: 2.5;
+    stroke-dasharray: 6 4;
+}
+
+.htp-clot {
+    fill: #5a1f1a;
+    stroke: #2c0d0a;
+}
+
+.htp-q {
+    fill: var(--htp-alerte);
+}
+
+.htp-q-txt {
+    font-size: 12px;
+    font-weight: 700;
+    fill: #fff;
+}
+
+.htp-legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px 16px;
+    margin-top: 4px;
+    font-size: 0.75rem;
+    color: var(--ink-3);
+}
+
+.htp-dot {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    margin-right: 6px;
+    border-radius: 50%;
+    vertical-align: -1px;
+}
+
+.htp-dot-v {
+    background: var(--htp-veineux);
+}
+
+.htp-dot-a {
+    background: var(--htp-arteriel);
+}
+
+.htp-dot-j {
+    background: var(--htp-alerte);
+}
+
+.htp-hint {
+    margin: 0.9rem 0 0;
+    padding: 10px 14px;
+    border-left: 3px solid var(--htp-alerte);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    background: var(--htp-warn-soft);
+    font-size: 0.88rem;
+    line-height: 1.55;
+    color: var(--ink-2);
+}
+
+/* ---------- Curseurs et résultats ---------- */
+
+.htp-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 1.25rem;
+    margin-top: 1.1rem;
+}
+
+.htp-slider {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: baseline;
+    gap: 2px 8px;
+    margin-bottom: 0.9rem;
+}
+
+.htp-slider label {
+    font-weight: 600;
+    font-size: 0.92rem;
+}
+
+.htp-slider small {
+    font-weight: 400;
+    color: var(--ink-3);
+    font-size: 0.78rem;
+}
+
+.htp-slider output {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--accent);
+}
+
+.htp-slider input[type="range"] {
+    grid-column: 1 / -1;
+    width: 100%;
+    accent-color: var(--accent);
+    margin: 4px 0 0;
+}
+
+.htp-formula {
+    margin: 0;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    background: var(--chip);
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-2);
+}
+
+.htp-results {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    background: var(--surface-2);
+}
+
+.htp-mpap {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.htp-mpap-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--ink-3);
+}
+
+.htp-mpap-val {
+    font-size: 2.6rem;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+}
+
+.htp-mpap-unit {
+    color: var(--ink-3);
+    font-size: 0.85rem;
+}
+
+.htp-badge {
+    display: inline-block;
+    margin: 10px 0 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    background: var(--chip);
+    color: var(--ink-2);
+}
+
+.htp-badge-sm {
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.htp-badge.is-good {
+    background: var(--good-soft);
+    color: var(--good);
+}
+
+.htp-badge.is-bad {
+    background: var(--bad-soft);
+    color: var(--bad);
+}
+
+.htp-badge.is-warn {
+    background: var(--htp-warn-soft);
+    color: var(--htp-alerte);
+}
+
+.htp-badge.is-info {
+    background: var(--accent-soft);
+    color: var(--accent);
+}
+
+.htp-profile-txt {
+    margin: 0 0 8px;
+    font-size: 0.84rem;
+    line-height: 1.5;
+    color: var(--ink-2);
+}
+
+.htp-kv {
+    margin: 0;
+}
+
+.htp-kv div {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 5px 0;
+    border-top: 1px solid var(--line);
+    font-size: 0.86rem;
+}
+
+.htp-kv dt {
+    color: var(--ink-3);
+}
+
+.htp-kv dd {
+    margin: 0;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Échographie ---------- */
+
+.htp-echo {
+    display: grid;
+    grid-template-columns: 1fr 200px;
+    gap: 1.25rem;
+    align-items: center;
+    margin-top: 1.25rem;
+    padding-top: 1.1rem;
+    border-top: 1px solid var(--line);
+}
+
+.htp-h3 {
+    margin: 0 0 8px;
+    font-size: 1rem;
+}
+
+.htp-h3 small {
+    font-weight: 400;
+    color: var(--ink-3);
+    font-size: 0.78rem;
+}
+
+.htp-sa {
+    margin: 0;
+    text-align: center;
+}
+
+.htp-sa svg {
+    width: 100%;
+    max-width: 200px;
+    height: auto;
+}
+
+.htp-sa figcaption {
+    font-size: 0.76rem;
+    color: var(--ink-3);
+}
+
+.htp-sa-rv {
+    fill: color-mix(in srgb, var(--htp-veineux) 30%, var(--surface));
+    stroke: var(--htp-muscle);
+    stroke-linejoin: round;
+}
+
+.htp-sa-lv {
+    fill: color-mix(in srgb, var(--htp-arteriel) 28%, var(--surface));
+    stroke: var(--htp-muscle);
+    stroke-width: 8;
+    stroke-linejoin: round;
+}
+
+/* ---------- Mécanismes ---------- */
+
+.htp-seg {
+    margin: 0.4rem 0 1rem;
+}
+
+.htp-seg span {
+    min-width: 2.8rem;
+}
+
+.htp-group-body {
+    animation: rise 0.4s var(--ease-out) both;
+}
+
+.htp-site {
+    display: inline-block;
+    margin: 0 0 12px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.htp-chain {
+    list-style: none;
+    counter-reset: htp;
+    margin: 0 0 1rem;
+    padding: 0;
+}
+
+.htp-chain li {
+    position: relative;
+    counter-increment: htp;
+    padding: 0 0 14px 38px;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.htp-chain li::before {
+    content: counter(htp);
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--accent-texte);
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: grid;
+    place-items: center;
+}
+
+.htp-chain li:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    left: 11px;
+    top: 26px;
+    bottom: 2px;
+    width: 2px;
+    background: var(--line-strong);
+}
+
+.htp-chain li:last-child {
+    padding-bottom: 0;
+    font-weight: 600;
+}
+
+.htp-facts {
+    margin: 0 0 1rem;
+}
+
+.htp-facts div {
+    padding: 8px 0;
+    border-top: 1px solid var(--line);
+}
+
+.htp-facts dt {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+}
+
+.htp-facts dd {
+    margin: 2px 0 0;
+    font-size: 0.88rem;
+    line-height: 1.55;
+    color: var(--ink-2);
+}
+
+.htp-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* ---------- DETECT ---------- */
+
+.htp-detect-list {
+    list-style: none;
+    margin: 0.8rem 0 0;
+    padding: 0;
+}
+
+.htp-detect-list li {
+    padding: 10px 0;
+    border-top: 1px solid var(--line);
+}
+
+.htp-detect-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.htp-dir {
+    min-width: 26px;
+    text-align: center;
+    border-radius: 6px;
+    background: var(--bad-soft);
+    color: var(--bad);
+    font-weight: 700;
+}
+
+.htp-detect-list p {
+    margin: 4px 0 0;
+    font-size: 0.86rem;
+    line-height: 1.5;
+    color: var(--ink-2);
+}
+
+.htp-live {
+    display: inline-block;
+    margin-left: 4px;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 0.78rem;
+}
+
+/* ---------- Quiz ---------- */
+
+.htp-quiz-score {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+}
+
+.htp-quiz-n {
+    margin: 0 0 4px;
+    font-size: 0.75rem;
+    color: var(--ink-3);
+}
+
+.htp-quiz-q {
+    margin: 0 0 12px;
+    line-height: 1.55;
+}
+
+.htp-opts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 8px;
+}
+
+.htp-opt {
+    border: 1px solid var(--line-strong);
+    background: var(--surface);
+    color: var(--ink);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    font: 500 0.88rem/1.3 var(--font-sans);
+    text-align: left;
+    cursor: pointer;
+    transition: border-color var(--t-fast), background var(--t-fast);
+}
+
+.htp-opt:hover:not(:disabled) {
+    border-color: var(--accent);
+}
+
+.htp-opt:disabled {
+    cursor: default;
+}
+
+.htp-opt.is-right {
+    border-color: var(--good);
+    background: var(--good-soft);
+    color: var(--good);
+    font-weight: 700;
+}
+
+.htp-opt.is-wrong {
+    border-color: var(--bad);
+    background: var(--bad-soft);
+    color: var(--bad);
+}
+
+.htp-quiz-fb p {
+    margin: 12px 0;
+    font-size: 0.9rem;
+    line-height: 1.55;
+    color: var(--ink-2);
+}
+
+.htp-next {
+    padding: 10px 18px;
+}
+
+.htp-quiz-end {
+    font-size: 1.05rem;
+}
+
+.htp-ref-gap {
+    margin-top: 0.9rem;
+}
+
+/* ---------- Mobile ---------- */
+
+@media (max-width: 640px) {
+    .htp-grid,
+    .htp-echo {
+        grid-template-columns: 1fr;
+    }
+
+    .htp-sa svg {
+        max-width: 170px;
+    }
+
+    .htp-stage {
+        margin: 0 -6px;
+        padding: 4px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .htp-jet,
+    .htp-ov.is-on .htp-hl {
+        animation: none;
+    }
+}
+
+/* Petits écrans : le schéma est réduit de moitié, on grossit le texte et on masque les libellés secondaires. */
+@media (max-width: 640px) {
+    #htp-svg .htp-small,
+    #htp-svg .htp-zone {
+        display: none;
+    }
+
+    #htp-svg .htp-label {
+        font-size: 20px;
+    }
+
+    #htp-svg .htp-tag {
+        font-size: 18px;
+    }
+
+    #htp-svg .htp-tag-strong {
+        font-size: 21px;
+    }
+
+    #htp-svg .htp-ov-txt {
+        font-size: 16px;
+    }
+}

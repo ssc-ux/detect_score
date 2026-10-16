@@ -8,6 +8,7 @@
     <script>try{var t=localStorage.getItem("theme");if(t==="sombre")document.documentElement.dataset.theme="dark";else if(t==="auto")delete document.documentElement.dataset.theme}catch(e){}</script>
     <link rel="icon" href="icon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="style.css?v=23">
+    <link rel="stylesheet" href="htp.css?v=1">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -19,6 +20,7 @@
         <header class="top">
             <nav class="tab-nav" aria-label="Sections">
                 <button class="tab-btn active" data-tab="tab-calculator">Calculateur</button>
+                <button class="tab-btn" data-tab="tab-htp">Comprendre l'HTP</button>
                 <button class="tab-btn" data-tab="tab-nomogram">Source</button>
             </nav>
         </header>
@@ -293,6 +295,272 @@
                 </section>
             </div>
 
+            <div id="tab-htp" class="tab-content">
+                <section class="card htp-intro">
+                    <p class="htp-kicker">Laboratoire d'hémodynamique</p>
+                    <h2 class="htp-title">Comprendre l'hypertension pulmonaire</h2>
+                    <p class="htp-lead">Bouge les curseurs ou choisis un cas : le schéma, les pressions et l'échographie
+                        se mettent à jour. Une seule équation résume tout :</p>
+                    <p class="htp-eq">PAPm = PAPO + RVP × DC</p>
+                    <p class="htp-lead-small">La pression dans l'artère pulmonaire (PAPm) monte si la pression gauche
+                        remonte (PAPO), si les artérioles résistent (RVP) ou si le débit augmente (DC).</p>
+                </section>
+
+                <section class="card" id="htp-sim">
+                    <div class="card-header">
+                        <div class="step-heading">
+                            <span class="step-index">A</span>
+                            <h2>Simulateur</h2>
+                        </div>
+                    </div>
+
+                    <div class="htp-presets" role="group" aria-label="Cas cliniques">
+                        <button type="button" class="htp-chip" data-preset="normal">Normal</button>
+                        <button type="button" class="htp-chip" data-preset="g1">G1 · HTAP (ScS)</button>
+                        <button type="button" class="htp-chip" data-preset="g2i">G2 · post-cap. isolée</button>
+                        <button type="button" class="htp-chip" data-preset="g2c">G2 · post-cap. combinée</button>
+                        <button type="button" class="htp-chip" data-preset="g3">G3 · poumon / hypoxie</button>
+                        <button type="button" class="htp-chip" data-preset="g4">G4 · HTP-TEC</button>
+                        <button type="button" class="htp-chip" data-preset="g5">G5 · multifactorielle</button>
+                        <button type="button" class="htp-chip" data-preset="hd">Hyperdébit</button>
+                    </div>
+
+                    <figure class="htp-stage">
+                        <svg id="htp-svg" viewBox="0 0 640 282" role="img" aria-labelledby="htp-svg-title">
+                            <title id="htp-svg-title">Schéma de la circulation pulmonaire : cœur droit, artère
+                                pulmonaire, poumon, cœur gauche</title>
+                            <defs>
+                                <linearGradient id="htp-grad-cap" gradientUnits="userSpaceOnUse" x1="315" y1="0"
+                                    x2="375" y2="0">
+                                    <stop offset="0" style="stop-color:var(--htp-veineux)" />
+                                    <stop offset="1" style="stop-color:var(--htp-arteriel)" />
+                                </linearGradient>
+                                <marker id="htp-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6"
+                                    markerHeight="6" orient="auto-start-reverse">
+                                    <path d="M0,0 L10,5 L0,10 z" style="fill:var(--ink-3)" />
+                                </marker>
+                                <marker id="htp-arrow-alerte" viewBox="0 0 10 10" refX="8" refY="5"
+                                    markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                                    <path d="M0,0 L10,5 L0,10 z" style="fill:var(--htp-alerte)" />
+                                </marker>
+                            </defs>
+
+                            <!-- Retour systémique -->
+                            <path class="htp-sys" d="M592,190 H620 V262 H20 V80 H40" marker-end="url(#htp-arrow)" />
+                            <text class="htp-small" x="320" y="278" text-anchor="middle">retour par la circulation
+                                systémique</text>
+                            <text id="htp-t-dc" class="htp-tag" x="320" y="255" text-anchor="middle">DC 5,0 L/min</text>
+
+                            <!-- Poumon -->
+                            <rect class="htp-lung" x="232" y="36" width="216" height="196" rx="36" />
+                            <text class="htp-zone" x="250" y="56">POUMON</text>
+
+                            <!-- Artère pulmonaire -->
+                            <path id="htp-pa" class="htp-vessel htp-v" d="M112,152 C140,120 170,130 254,130" />
+
+                            <!-- Artériole : paroi + lumière -->
+                            <rect class="htp-wall" x="252" y="116" width="64" height="28" rx="6" />
+                            <rect id="htp-lumen" class="htp-lumen" x="252" y="120" width="64" height="20" />
+
+                            <!-- Capillaires et alvéoles -->
+                            <g class="htp-cap">
+                                <path d="M315,130 Q325,104 345,104 Q365,104 375,130" />
+                                <path d="M315,130 H375" />
+                                <path d="M315,130 Q325,156 345,156 Q365,156 375,130" />
+                            </g>
+                            <g class="htp-alv">
+                                <circle cx="330" cy="80" r="13" />
+                                <circle cx="362" cy="80" r="13" />
+                                <circle cx="330" cy="180" r="13" />
+                                <circle cx="362" cy="180" r="13" />
+                            </g>
+                            <text class="htp-small" x="346" y="58" text-anchor="middle">alvéoles</text>
+
+                            <!-- Veine pulmonaire -->
+                            <path id="htp-vp" class="htp-vessel htp-a" d="M374,130 C420,130 470,100 516,98" />
+
+                            <!-- Particules (débit) -->
+                            <g id="htp-particles"></g>
+
+                            <!-- Cavités -->
+                            <ellipse id="htp-ra" class="htp-chamber htp-cv" cx="80" cy="80" rx="28" ry="24" />
+                            <ellipse id="htp-rv" class="htp-chamber htp-cv" cx="90" cy="178" rx="40" ry="32" />
+                            <path id="htp-jet" class="htp-jet" d="M86,150 L80,100" marker-end="url(#htp-arrow-alerte)" />
+                            <ellipse id="htp-la" class="htp-chamber htp-ca" cx="548" cy="96" rx="28" ry="24" />
+                            <ellipse id="htp-lv" class="htp-chamber htp-ca" cx="550" cy="188" rx="42" ry="36" />
+
+                            <text class="htp-label" x="80" y="84" text-anchor="middle">OD</text>
+                            <text class="htp-label" x="90" y="182" text-anchor="middle">VD</text>
+                            <text class="htp-label" x="548" y="100" text-anchor="middle">OG</text>
+                            <text class="htp-label" x="550" y="192" text-anchor="middle">VG</text>
+                            <text class="htp-small" x="196" y="148" text-anchor="middle">artère pulm.</text>
+                            <text class="htp-small" x="440" y="100" text-anchor="middle">veine pulm.</text>
+
+                            <!-- Pressions -->
+                            <text id="htp-t-pod" class="htp-tag" x="80" y="40" text-anchor="middle">POD</text>
+                            <text id="htp-t-pap" class="htp-tag htp-tag-strong" x="176" y="102"
+                                text-anchor="middle">PAPm</text>
+                            <text id="htp-t-rvp" class="htp-tag" x="284" y="166" text-anchor="middle">RVP</text>
+                            <text id="htp-t-papo" class="htp-tag" x="548" y="56" text-anchor="middle">PAPO</text>
+
+                            <!-- Calques des mécanismes -->
+                            <g id="htp-ov-1" class="htp-ov">
+                                <rect class="htp-hl" x="244" y="108" width="80" height="44" rx="10" />
+                                <text class="htp-ov-txt" x="284" y="210" text-anchor="middle">remodelage +<tspan x="284" dy="1.15em">vasoconstriction</tspan></text>
+                            </g>
+                            <g id="htp-ov-2" class="htp-ov">
+                                <ellipse class="htp-hl" cx="548" cy="96" rx="52" ry="46" />
+                                <path class="htp-back" d="M500,114 C470,126 440,138 398,140"
+                                    marker-end="url(#htp-arrow-alerte)" />
+                                <text class="htp-ov-txt" x="450" y="170" text-anchor="middle">rétro-transmission</text>
+                                <text class="htp-ov-txt" x="550" y="242" text-anchor="middle">VG rigide / défaillant</text>
+                            </g>
+                            <g id="htp-ov-3" class="htp-ov">
+                                <text class="htp-ov-txt" x="346" y="210" text-anchor="middle">O₂ alvéolaire ↓<tspan x="346" dy="1.15em">→ vasoconstriction</tspan></text>
+                            </g>
+                            <g id="htp-ov-4" class="htp-ov">
+                                <path class="htp-clot" d="M196,124 q8,-4 16,0 q4,6 -2,11 q-8,3 -15,-2 q-3,-5 1,-9z" />
+                                <path class="htp-clot" d="M254,126 q6,-2 10,1 q2,4 -1,7 q-5,2 -9,-1z" />
+                                <text class="htp-ov-txt" x="180" y="168" text-anchor="middle">thrombus<tspan x="180" dy="1.15em">organisés</tspan></text>
+                            </g>
+                            <g id="htp-ov-5" class="htp-ov">
+                                <circle class="htp-q" cx="204" cy="128" r="9" /><text class="htp-q-txt" x="204" y="132" text-anchor="middle">?</text>
+                                <circle class="htp-q" cx="346" cy="130" r="9" /><text class="htp-q-txt" x="346" y="134" text-anchor="middle">?</text>
+                                <circle class="htp-q" cx="550" cy="160" r="9" /><text class="htp-q-txt" x="550" y="164" text-anchor="middle">?</text>
+                                <text class="htp-ov-txt" x="346" y="210" text-anchor="middle">mécanismes<tspan x="346" dy="1.15em">multiples</tspan></text>
+                            </g>
+                            <g id="htp-ov-hd" class="htp-ov">
+                                <text class="htp-ov-txt" x="196" y="174" text-anchor="middle">débit ↑↑</text>
+                            </g>
+                        </svg>
+                        <figcaption class="htp-legend">
+                            <span><i class="htp-dot htp-dot-v"></i>sang désoxygéné</span>
+                            <span><i class="htp-dot htp-dot-a"></i>sang oxygéné</span>
+                            <span><i class="htp-dot htp-dot-j"></i>jet d'insuffisance tricuspide</span>
+                        </figcaption>
+                    </figure>
+
+                    <p id="htp-hint" class="htp-hint" hidden></p>
+
+                    <div class="htp-grid">
+                        <div class="htp-controls">
+                            <div class="htp-slider">
+                                <label for="htp-pvr">RVP <small>résistance artériolaire</small></label>
+                                <output id="htp-pvr-out" for="htp-pvr">1,2 UW</output>
+                                <input type="range" id="htp-pvr" min="0.5" max="15" step="0.1" value="1.2">
+                            </div>
+                            <div class="htp-slider">
+                                <label for="htp-pawp">PAPO <small>pression du cœur gauche</small></label>
+                                <output id="htp-pawp-out" for="htp-pawp">9 mmHg</output>
+                                <input type="range" id="htp-pawp" min="4" max="35" step="1" value="9">
+                            </div>
+                            <div class="htp-slider">
+                                <label for="htp-co">DC <small>débit cardiaque</small></label>
+                                <output id="htp-co-out" for="htp-co">5,5 L/min</output>
+                                <input type="range" id="htp-co" min="2" max="10" step="0.1" value="5.5">
+                            </div>
+                            <p id="htp-formula" class="htp-formula"></p>
+                        </div>
+
+                        <div class="htp-results">
+                            <div class="htp-mpap">
+                                <span class="htp-mpap-label">PAPm</span>
+                                <span id="htp-mpap" class="htp-mpap-val">--</span>
+                                <span class="htp-mpap-unit">mmHg</span>
+                            </div>
+                            <p id="htp-profile" class="htp-badge">--</p>
+                            <p id="htp-profile-txt" class="htp-profile-txt"></p>
+                            <dl class="htp-kv">
+                                <div><dt>GTP (PAPm − PAPO)</dt><dd id="htp-tpg">--</dd></div>
+                            </dl>
+                        </div>
+                    </div>
+
+                    <div class="htp-echo">
+                        <div class="htp-echo-txt">
+                            <h3 class="htp-h3">Ce que verrait l'échographie <small>(estimations)</small></h3>
+                            <dl class="htp-kv">
+                                <div><dt>PAPs</dt><dd id="htp-paps">--</dd></div>
+                                <div><dt>POD</dt><dd id="htp-pod">--</dd></div>
+                                <div><dt>Vmax IT</dt><dd id="htp-trv">--</dd></div>
+                                <div><dt>Surface OD</dt><dd id="htp-raa">--</dd></div>
+                            </dl>
+                            <p id="htp-proba" class="htp-badge htp-badge-sm">--</p>
+                        </div>
+                        <figure class="htp-sa">
+                            <svg viewBox="0 0 200 180" role="img" aria-labelledby="htp-sa-title">
+                                <title id="htp-sa-title">Coupe petit axe : ventricule droit et ventricule gauche</title>
+                                <path id="htp-sa-rv" class="htp-sa-rv" d="" />
+                                <path id="htp-sa-lv" class="htp-sa-lv" d="" />
+                                <text class="htp-label" x="40" y="94" text-anchor="middle">VD</text>
+                                <text class="htp-label" x="112" y="94" text-anchor="middle">VG</text>
+                            </svg>
+                            <figcaption id="htp-sa-cap">Coupe petit axe</figcaption>
+                        </figure>
+                    </div>
+                </section>
+
+                <section class="card" id="htp-mech">
+                    <div class="card-header">
+                        <div class="step-heading">
+                            <span class="step-index">B</span>
+                            <h2>Mécanismes des 5 groupes</h2>
+                        </div>
+                    </div>
+                    <div class="seg htp-seg" role="tablist" aria-label="Groupes d'HTP">
+                        <label><input type="radio" name="htp-group" value="1" checked><span>G1</span></label>
+                        <label><input type="radio" name="htp-group" value="2"><span>G2</span></label>
+                        <label><input type="radio" name="htp-group" value="3"><span>G3</span></label>
+                        <label><input type="radio" name="htp-group" value="4"><span>G4</span></label>
+                        <label><input type="radio" name="htp-group" value="5"><span>G5</span></label>
+                    </div>
+                    <div id="htp-group-body" class="htp-group-body" aria-live="polite"></div>
+                </section>
+
+                <section class="card" id="htp-detect">
+                    <div class="card-header">
+                        <div class="step-heading">
+                            <span class="step-index">C</span>
+                            <h2>Du mécanisme au score DETECT</h2>
+                        </div>
+                    </div>
+                    <p class="htp-p">Chaque variable du score repère une étape de la cascade de l'HTAP de la
+                        sclérodermie.</p>
+                    <ul id="htp-detect-list" class="htp-detect-list"></ul>
+                </section>
+
+                <section class="card" id="htp-quiz">
+                    <div class="card-header">
+                        <div class="step-heading">
+                            <span class="step-index">D</span>
+                            <h2>Quiz : quel groupe, quel profil ?</h2>
+                        </div>
+                        <span id="htp-quiz-score" class="htp-quiz-score"></span>
+                    </div>
+                    <div id="htp-quiz-body"></div>
+                </section>
+
+                <section class="card">
+                    <div class="card-header">
+                        <div class="step-heading">
+                            <span class="step-index">§</span>
+                            <h2>Références</h2>
+                        </div>
+                    </div>
+                    <div class="reference-box">
+                        <span class="reference-label">Définitions et classification</span>
+                        <p>Humbert M, Kovacs G, Hoeper MM, et&nbsp;al. <em>2022 ESC/ERS Guidelines for the diagnosis
+                                and treatment of pulmonary hypertension.</em> Eur Heart J 2022;43:3618–3731.</p>
+                        <span class="reference-label htp-ref-gap">PAPs → PAPm</span>
+                        <p>Chemla D, Castelain V, Humbert M, et&nbsp;al. <em>New formula for predicting mean
+                                pulmonary artery pressure using systolic pulmonary artery pressure.</em> Chest
+                            2004;126:1313–1317.</p>
+                    </div>
+                    <p class="nomogram-note">Modèle volontairement simplifié, à visée pédagogique. La POD, la PAPs, la
+                        Vmax IT et la surface OD sont des estimations illustratives, à ne pas utiliser en clinique.</p>
+                </section>
+            </div>
+
             <div id="tab-nomogram" class="tab-content">
                 <section class="card">
                     <div class="card-header">
@@ -363,5 +631,6 @@
     <script src="logic.js?v=25"></script>
     <script src="app.js?v=25"></script>
     <script src="fx.js?v=25" defer></script>
+    <script src="htp.js?v=1" defer></script>
 </body>
 </html>
