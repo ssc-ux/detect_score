@@ -150,6 +150,27 @@
             x: "PAPO ≤ 15 et RVP > 2 UW : précapillaire (groupes 1, 3, 4, parfois 5). PAPO > 15 : post-capillaire (groupe 2), combinée si RVP > 2 UW. L'échographie estime une probabilité ; seul le cathétérisme droit tranche." }
     ];
 
+    var GLOSSARY = {
+        'PAPm': "Pression artérielle pulmonaire moyenne, mesurée au cathétérisme droit. HTP si > 20 mmHg.",
+        'PAPs': "Pression artérielle pulmonaire systolique, estimée en échographie à partir de la Vmax IT.",
+        'PAPO': "Pression artérielle pulmonaire d'occlusion (« capillaire ») : reflet de la pression de l'OG. Normale ≤ 15 mmHg.",
+        'RVP': "Résistance vasculaire pulmonaire = (PAPm − PAPO) / DC. Anormale si > 2 UW.",
+        'GTP': "Gradient transpulmonaire = PAPm − PAPO : la part de pression due au lit vasculaire pulmonaire.",
+        'UW': "Unité Wood = mmHg·min/L (1 UW = 80 dyn·s·cm⁻⁵).",
+        'DC': "Débit cardiaque, en L/min (environ 4 à 8 L/min au repos).",
+        'POD': "Pression de l'oreillette droite, estimée en échographie par la veine cave inférieure.",
+        'Vmax IT': "Vitesse maximale du jet d'insuffisance tricuspide. PAPs ≈ 4 × Vmax² + POD.",
+        'HTAP': "Hypertension artérielle pulmonaire : HTP précapillaire du groupe 1.",
+        'HTP-TEC': "HTP thromboembolique chronique (groupe 4).",
+        'ScS': "Sclérodermie systémique.",
+        'DLCO': "Capacité de diffusion du monoxyde de carbone : explore la surface d'échange alvéolo-capillaire.",
+        'CVF': "Capacité vitale forcée.",
+        'PID': "Pneumopathie interstitielle diffuse.",
+        'NT-proBNP': "Peptide natriurétique libéré par les cardiomyocytes étirés."
+    };
+    var GLOSS_RE = new RegExp('(^|[^\\wÀ-ÿ-])(' + Object.keys(GLOSSARY).sort(function (a, b) { return b.length - a.length; })
+        .map(function (k) { return k.replace(/[-]/g, '\\-'); }).join('|') + ')(?![\\wÀ-ÿ-])');
+
     var GROUP_OPTS = ['Groupe 1', 'Groupe 2', 'Groupe 3', 'Groupe 4', 'Groupe 5'];
     var PROFILE_OPTS = ["Pas d'HTP", 'Précapillaire', 'Post-capillaire isolée', 'Post-capillaire combinée', 'Non classée'];
 
@@ -230,7 +251,11 @@
         var p = PROFILES[r.prof];
         el.profile.textContent = p.label;
         el.profile.className = 'htp-badge ' + p.cls;
-        el.profileTxt.textContent = p.txt;
+        if (el.profileTxt.dataset.prof !== r.prof) {
+            el.profileTxt.dataset.prof = r.prof;
+            el.profileTxt.textContent = p.txt;
+            glossify(el.profileTxt);
+        }
         el.tpg.textContent = Math.round(r.mpap - pawp) + ' mmHg';
 
         el.paps.textContent = '≈ ' + Math.round(r.paps) + ' mmHg';
@@ -304,7 +329,10 @@
         state.preset = presetKey || null;
         setOverlay(ov !== undefined ? ov : pr ? pr.ov : null);
         el.hint.hidden = !pr || tour.on;
-        if (pr) el.hint.innerHTML = '<strong>À observer :</strong> ' + pr.hint;
+        if (pr) {
+            el.hint.innerHTML = '<strong>À observer :</strong> ' + pr.hint;
+            glossify(el.hint);
+        }
         document.querySelectorAll('.htp-chip[data-preset]').forEach(function (c) {
             var on = c.dataset.preset === presetKey;
             c.classList.toggle('is-on', on);
@@ -357,6 +385,7 @@
         $('htp-tour-step').textContent = 'Étape ' + (tour.i + 1) + ' / ' + TOUR.length;
         $('htp-tour-title').textContent = s.t;
         $('htp-tour-text').textContent = s.x || PRESETS[s.k].hint;
+        glossify($('htp-tour-text'));
         el.tour.querySelector('[data-tour="prev"]').disabled = tour.i === 0;
         el.tour.querySelector('[data-tour="next"]').textContent = tour.i === TOUR.length - 1 ? 'Terminer' : 'Suivant ▶';
         scheduleTour();
@@ -503,6 +532,7 @@
                 return '<button type="button" class="btn-secondary" data-go="' + p[0] + '">' + esc(p[1]) + '</button>';
             }).join('') + '</div>';
         el.groupBody.innerHTML = html;
+        glossify(el.groupBody);
     }
 
     /* ---------- DETECT ---------- */
@@ -590,6 +620,7 @@
             fig.appendChild(snapshot(it.vis));
             el.quizBody.querySelector('.htp-quiz-q').after(fig);
         }
+        glossify(el.quizBody.querySelector('.htp-quiz-q'));
     }
 
     function answer(j) {
@@ -608,6 +639,49 @@
             '<button type="button" class="btn-primary htp-next" data-quiz="next">' +
             (quiz.i + 1 < QUIZ.length ? 'Question suivante' : 'Voir le score') + '</button></div>';
         el.quizScore.textContent = 'Score ' + quiz.score + ' / ' + QUIZ.length;
+        glossify($('htp-quiz-fb'));
+    }
+
+    /* ---------- Lexique : sigles expliqués au survol ou au toucher ---------- */
+
+    // Chaque sigle n'est souligné qu'une fois par paragraphe pour ne pas surcharger la lecture
+    function glossify(root) {
+        if (!root) return;
+        var seen = new Map();
+        var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+            acceptNode: function (n) {
+                return n.parentElement.closest('button, svg, .htp-term, .htp-tag, output, script') ?
+                    NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
+            }
+        });
+        var nodes = [];
+        while (walker.nextNode()) nodes.push(walker.currentNode);
+        nodes.forEach(function (node) {
+            var block = node.parentElement.closest('p, li, dd, dt, label, h3, figcaption') || root;
+            if (!seen.has(block)) seen.set(block, {});
+            var used = seen.get(block);
+            var m;
+            while ((m = GLOSS_RE.exec(node.nodeValue))) {
+                var term = m[2];
+                var start = m.index + m[1].length;
+                if (used[term]) {
+                    // Déjà expliqué dans ce paragraphe : on continue après ce mot
+                    var rest = node.splitText(start + term.length);
+                    node = rest;
+                    continue;
+                }
+                used[term] = true;
+                var after = node.splitText(start);
+                node = after.splitText(term.length);
+                var span = document.createElement('span');
+                span.className = 'htp-term';
+                span.tabIndex = 0;
+                span.dataset.tip = GLOSSARY[term];
+                span.setAttribute('aria-label', term + ' : ' + GLOSSARY[term]);
+                after.parentNode.replaceChild(span, after);
+                span.textContent = term;
+            }
+        });
     }
 
     /* ---------- Initialisation ---------- */
@@ -703,6 +777,26 @@
         applyValues(PRESETS.normal, 'normal');
         shuffle();
         renderQuiz();
+        ['.htp-intro', '.htp-controls', '.htp-echo-txt', '#htp-detect'].forEach(function (sel) {
+            glossify(document.querySelector('#tab-htp ' + sel));
+        });
+        // La bulle s'aligne sur le bord le plus proche pour rester dans l'écran
+        var placeTip = function (e) {
+            var t = e.target.closest && e.target.closest('.htp-term');
+            if (!t) return;
+            var r = t.getBoundingClientRect(), w = document.documentElement.clientWidth;
+            t.classList.toggle('tip-l', r.left + r.width / 2 < w * 0.35);
+            t.classList.toggle('tip-r', r.left + r.width / 2 > w * 0.65);
+        };
+        document.addEventListener('pointerover', placeTip);
+        document.addEventListener('focusin', placeTip);
+        // Toucher : ouvre ou ferme la définition
+        document.addEventListener('click', function (e) {
+            placeTip(e);
+            var t = e.target.closest && e.target.closest('.htp-term');
+            document.querySelectorAll('.htp-term.tip-open').forEach(function (x) { if (x !== t) x.classList.remove('tip-open'); });
+            if (t) { e.preventDefault(); t.classList.toggle('tip-open'); }
+        });
         initParticles();
     }
 

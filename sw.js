@@ -1,6 +1,6 @@
 /* Service worker : l'app fonctionne hors ligne une fois ouverte.
    Page HTML : réseau d'abord ; autres fichiers : cache d'abord, mis à jour en arrière-plan. */
-const CACHE = 'detect-v2';
+const CACHE = 'detect-v3';
 const CORE = [
     './', 'index.html', 'style.css', 'htp.css', 'logic.js', 'app.js', 'fx.js', 'htp.js', 'htp3d.js',
     'vendor/three.module.min.js', 'vendor/OrbitControls.js',

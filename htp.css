@@ -1120,3 +1120,64 @@
 .htp-quiz-svg .htp-hl {
     display: none;
 }
+
+/* ---------- Lexique ---------- */
+
+.htp-term {
+    position: relative;
+    text-decoration: underline dotted;
+    text-decoration-color: var(--ink-3);
+    text-underline-offset: 3px;
+    cursor: help;
+    outline: none;
+}
+
+.htp-term:hover,
+.htp-term:focus-visible,
+.htp-term.tip-open {
+    text-decoration-color: var(--accent);
+    color: var(--accent);
+}
+
+/* display (et non visibility) : une bulle masquée ne crée pas de défilement horizontal */
+.htp-term::after {
+    content: attr(data-tip);
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: max-content;
+    max-width: min(240px, 70vw);
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    background: var(--ink);
+    color: var(--bg);
+    box-shadow: var(--shadow-pop);
+    font-size: 0.74rem;
+    font-weight: 450;
+    line-height: 1.45;
+    letter-spacing: 0;
+    text-transform: none;
+    text-align: left;
+    white-space: normal;
+    z-index: 100;
+    pointer-events: none;
+}
+
+.htp-term:hover::after,
+.htp-term:focus-visible::after,
+.htp-term.tip-open::after {
+    display: block;
+}
+
+.htp-term.tip-l::after {
+    left: 0;
+    transform: none;
+}
+
+.htp-term.tip-r::after {
+    left: auto;
+    right: 0;
+    transform: none;
+}
