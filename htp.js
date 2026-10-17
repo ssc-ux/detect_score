@@ -133,22 +133,36 @@
         ['Vmax IT (écho)', '↑', "La vitesse du jet d'IT donne le gradient VD-OD (4 V²), donc une estimation de la PAPs.", 'trv']
     ];
 
-    var TOUR = [
-        { k: 'normal', t: 'Le circuit normal',
-            x: "Le poumon reçoit tout le débit cardiaque sous une pression moyenne d'environ 15 mmHg : son lit vasculaire est immense et très compliant. Le VD, à paroi fine, travaille à basse pression." },
-        { v: { pvr: 3.5, pawp: 9, co: 5.2 }, ov: '1', t: 'HTAP débutante',
-            x: "Les artérioles se remodèlent : la RVP dépasse 2 UW et la PAPm franchit 20 mmHg. Le VD compense et le débit reste normal ; le patient est encore peu symptomatique, d'où l'intérêt du dépistage (DETECT)." },
-        { k: 'g1', t: 'HTAP évoluée (groupe 1)',
-            x: "La RVP continue de monter : le VD se dilate, le septum s'aplatit et comprime le VG, le débit chute. Piège : quand le débit baisse, la PAPm peut cesser de monter alors que la maladie s'aggrave." },
-        { k: 'g2i', t: 'Cœur gauche : post-capillaire isolée (groupe 2)', x: null },
-        { k: 'g2c', t: 'Cœur gauche : post-capillaire combinée (groupe 2)', x: null },
-        { k: 'g3', t: 'Poumon et hypoxie (groupe 3)', x: null },
-        { k: 'g4', t: 'Obstruction artérielle (groupe 4)', x: null },
-        { k: 'g5', t: 'Mécanismes multiples (groupe 5)', x: null },
-        { k: 'hd', t: 'Hyperdébit : HTP non classée', x: null },
-        { k: 'normal', t: 'À retenir',
-            x: "HTP si PAPm > 20 mmHg. Puis : PAPO ≤ 15 et RVP > 2 UW → précapillaire (groupes 1, 3, 4, parfois 5) ; PAPO > 15 → post-capillaire (groupe 2), combinée si RVP > 2 UW ; PAPO ≤ 15 et RVP ≤ 2 UW → HTP non classée. L'échographie estime une probabilité ; seul le cathétérisme droit tranche." }
-    ];
+    // Mode pas à pas : chaque étape a son état hémodynamique et la structure à regarder
+    GROUPS.normal = {
+        title: 'Circulation pulmonaire normale',
+        site: 'Basse pression, basse résistance',
+        chain: [
+            "Le VD éjecte tout le débit cardiaque dans l'artère pulmonaire",
+            "Le lit vasculaire pulmonaire est immense et compliant : la résistance est faible (RVP ≈ 1 UW)",
+            "Le sang traverse les capillaires au contact des alvéoles et s'oxygène",
+            "Il revient à l'OG à basse pression (PAPO ≈ 9 mmHg)",
+            "Résultat : PAPm ≈ 15 mmHg ; un VD à paroi fine suffit"
+        ]
+    };
+    var N = { pvr: 1.2, pawp: 9, co: 5.5 };
+    var STEPS = {
+        normal: [[N, 'rv'], [N, 'endo'], [N, 'alv'], [N, 'la'], [N, 'pa']],
+        '1': [[N, 'endo'], [{ pvr: 2, pawp: 9, co: 5.4 }, 'endo'], [{ pvr: 3.5, pawp: 9, co: 5.2 }, 'endo'],
+            [{ pvr: 8, pawp: 10, co: 4 }, 'pa'], [{ pvr: 11, pawp: 10, co: 3.2 }, 'rv']],
+        '2': [[{ pvr: 1.2, pawp: 12, co: 5.2 }, 'lv'], [{ pvr: 1.4, pawp: 20, co: 5 }, 'la'], [{ pvr: 1.5, pawp: 22, co: 5 }, 'vp'],
+            [{ pvr: 4, pawp: 24, co: 4.5 }, 'endo'], [{ pvr: 4.5, pawp: 25, co: 4 }, 'rv']],
+        '3': [[{ pvr: 1.5, pawp: 9, co: 5.3 }, 'alv'], [{ pvr: 2.5, pawp: 9, co: 5.2 }, 'endo'], [{ pvr: 3, pawp: 9, co: 5.1 }, 'alv'],
+            [{ pvr: 3.5, pawp: 9, co: 5 }, 'pa'], [{ pvr: 6, pawp: 9, co: 4.5 }, 'rv']],
+        '4': [[N, 'pa'], [{ pvr: 3, pawp: 9, co: 5.2 }, 'pa'], [{ pvr: 6, pawp: 10, co: 4.5 }, 'pa'],
+            [{ pvr: 9, pawp: 10, co: 3.8 }, 'endo'], [{ pvr: 11, pawp: 10, co: 3.3 }, 'rv']],
+        '5': [[{ pvr: 3, pawp: 10, co: 5 }, 'pa'], [{ pvr: 4, pawp: 11, co: 5 }, 'endo'], [{ pvr: 3.5, pawp: 10, co: 6 }, 'endo'],
+            [{ pvr: 2, pawp: 12, co: 8 }, 'pa'], [{ pvr: 4.5, pawp: 12, co: 4.8 }, 'lv']]
+    };
+    var GROUP_ORDER = ['normal', '1', '2', '3', '4', '5'];
+    // Structure mise en évidence sur le schéma 2D
+    var FOCUS_2D = { rv: '#htp-rv', ra: '#htp-ra', la: '#htp-la', lv: '#htp-lv', pa: '#htp-pa', vp: '#htp-vp',
+        endo: '.htp-wall', alv: '.htp-alv circle' };
 
     var GLOSSARY = {
         'PAPm': "Pression artérielle pulmonaire moyenne, mesurée au cathétérisme droit. HTP si > 20 mmHg.",
@@ -232,7 +246,7 @@
     /* ---------- Simulateur ---------- */
 
     var el = {};
-    var state = { co: 5.5, ov: null };
+    var state = { co: 5.5, ov: null, focus: null };
     var last = null;
     var view3d = null;
 
@@ -296,7 +310,11 @@
 
         renderShortAxis(r.mpap);
         renderDetectLive(r);
-        last = { pvr: pvr, pawp: pawp, co: co, mpap: r.mpap, pod: r.pod, ov: state.ov };
+        el.mpapMini.textContent = Math.round(r.mpap);
+        el.profMini.textContent = p.label;
+        el.profMini.className = 'htp-badge ' + p.cls;
+        placeFocus();
+        last = { pvr: pvr, pawp: pawp, co: co, mpap: r.mpap, pod: r.pod, ov: state.ov, focus: state.focus };
         if (el.hud) {
             el.hud.innerHTML = '<b>PAPm ' + Math.round(r.mpap) + '</b> mmHg · RVP ' + fr(pvr, 1) + ' UW · PAPO ' + pawp +
                 ' · DC ' + fr(co, 1) + '<span class="htp3d-hud-prof ' + p.cls + '">' + p.label + '</span>';
@@ -332,7 +350,7 @@
         var pr = presetKey && PRESETS[presetKey];
         state.preset = presetKey || null;
         setOverlay(ov !== undefined ? ov : pr ? pr.ov : null);
-        el.hint.hidden = !pr || tour.on;
+        el.hint.hidden = !pr;
         if (pr) {
             el.hint.innerHTML = '<strong>À observer :</strong> ' + pr.hint;
             glossify(el.hint);
@@ -373,49 +391,96 @@
     }
 
     function goSim(v, presetKey, ov) {
-        stopTour();
+        stopSteps();
+        state.focus = null;
+        $('htp-adv').open = true;
         tweenTo(v, presetKey, ov);
         $('htp-sim').scrollIntoView({ behavior: reducedMotion.matches ? 'auto' : 'smooth', block: 'start' });
     }
 
-    /* ---------- Visite guidée ---------- */
+    /* ---------- Explorer le mécanisme, étape par étape ---------- */
 
-    var tour = { on: false, i: 0, play: true, timer: 0 };
+    var explore = { g: 'normal', i: 0, play: false, timer: 0 };
 
-    function tourGo(i) {
-        tour.i = clamp(i, 0, TOUR.length - 1);
-        var s = TOUR[tour.i];
-        tweenTo(s.v || PRESETS[s.k], s.k || null, s.ov);
-        $('htp-tour-step').textContent = 'Étape ' + (tour.i + 1) + ' / ' + TOUR.length;
-        $('htp-tour-title').textContent = s.t;
-        $('htp-tour-text').textContent = s.x || PRESETS[s.k].hint;
-        glossify($('htp-tour-text'));
-        el.tour.querySelector('[data-tour="prev"]').disabled = tour.i === 0;
-        el.tour.querySelector('[data-tour="next"]').textContent = tour.i === TOUR.length - 1 ? 'Terminer' : 'Suivant ▶';
-        scheduleTour();
+    function selectGroup(g) {
+        explore.g = g;
+        document.querySelectorAll('.htp-gbtn').forEach(function (b) {
+            var on = b.dataset.group === g;
+            b.classList.toggle('is-on', on);
+            b.setAttribute('aria-selected', on);
+        });
+        var d = GROUPS[g];
+        $('htp-g-title').textContent = d.title;
+        $('htp-g-site').textContent = d.site;
+        el.stepList.innerHTML = d.chain.map(function (c, k) {
+            return '<li data-i="' + k + '" tabindex="0" role="button">' + esc(c) + '</li>';
+        }).join('');
+        glossify(el.stepList);
+        var facts = $('htp-g-facts');
+        facts.closest('details').hidden = !d.ex;
+        if (d.ex) {
+            facts.innerHTML = '<div><dt>Causes</dt><dd>' + esc(d.ex) + '</dd></div>' +
+                '<div><dt>Examen clé</dt><dd>' + esc(d.exam) + '</dd></div>' +
+                '<div><dt>Principe du traitement</dt><dd>' + esc(d.ttt) + '</dd></div>';
+            glossify(facts);
+        }
+        goStep(0);
     }
 
-    function scheduleTour() {
-        clearTimeout(tour.timer);
-        $('htp-tour-play').textContent = tour.play ? '⏸ Pause' : '▶ Lecture';
-        if (tour.play && tour.i < TOUR.length - 1) tour.timer = setTimeout(function () { tourGo(tour.i + 1); }, 11000);
-    }
-
-    function startTour() {
-        tour.on = true;
-        tour.play = !reducedMotion.matches;
-        el.tour.hidden = false;
-        el.hint.hidden = true;
+    function goStep(k) {
+        var steps = STEPS[explore.g];
+        explore.i = clamp(k, 0, steps.length - 1);
+        var st = steps[explore.i];
+        state.focus = st[1];
         el.patient.hidden = true;
-        tourGo(0);
-        $('htp-sim').scrollIntoView({ behavior: reducedMotion.matches ? 'auto' : 'smooth', block: 'start' });
+        tweenTo(st[0], null, explore.g === 'normal' ? null : explore.g);
+        el.stepList.querySelectorAll('li').forEach(function (li, n) {
+            li.classList.toggle('is-current', n === explore.i);
+            li.classList.toggle('is-done', n < explore.i);
+        });
+        var isLast = explore.i === steps.length - 1;
+        el.steps.querySelector('[data-step="prev"]').disabled = explore.i === 0;
+        var nextG = GROUP_ORDER[(GROUP_ORDER.indexOf(explore.g) + 1) % GROUP_ORDER.length];
+        el.steps.querySelector('[data-step="next"]').textContent = isLast ?
+            (nextG === 'normal' ? 'Recommencer ▶' : 'Groupe suivant ▶') : 'Étape suivante ▶';
+        scheduleStep();
     }
 
-    function stopTour() {
-        if (!tour.on) return;
-        tour.on = false;
-        clearTimeout(tour.timer);
-        el.tour.hidden = true;
+    function scheduleStep() {
+        clearTimeout(explore.timer);
+        if (explore.play && explore.i === STEPS[explore.g].length - 1) explore.play = false;
+        $('htp-step-play').textContent = explore.play ? '⏸ Pause' : '▶ Lecture';
+        if (explore.play) explore.timer = setTimeout(function () { goStep(explore.i + 1); }, 5500);
+    }
+
+    function stopSteps() {
+        explore.play = false;
+        clearTimeout(explore.timer);
+        var b = $('htp-step-play');
+        if (b) b.textContent = '▶ Lecture';
+    }
+
+    function nextStep() {
+        if (explore.i < STEPS[explore.g].length - 1) return goStep(explore.i + 1);
+        selectGroup(GROUP_ORDER[(GROUP_ORDER.indexOf(explore.g) + 1) % GROUP_ORDER.length]);
+    }
+
+    // Encadré orange autour de la structure en jeu sur le schéma 2D
+    function placeFocus() {
+        var sel = FOCUS_2D[state.focus];
+        if (!sel) { el.focus.style.display = 'none'; return; }
+        try {
+            var x1 = Infinity, y1 = Infinity, x2 = -Infinity, y2 = -Infinity;
+            el.svg.querySelectorAll(sel).forEach(function (n) {
+                var b = n.getBBox();
+                x1 = Math.min(x1, b.x); y1 = Math.min(y1, b.y);
+                x2 = Math.max(x2, b.x + b.width); y2 = Math.max(y2, b.y + b.height);
+            });
+            if (!isFinite(x1) || x2 - x1 === 0) throw 0;
+            el.focus.setAttribute('x', x1 - 7); el.focus.setAttribute('y', y1 - 7);
+            el.focus.setAttribute('width', x2 - x1 + 14); el.focus.setAttribute('height', y2 - y1 + 14);
+            el.focus.style.display = '';
+        } catch (e) { el.focus.style.display = 'none'; }
     }
 
     /* ---------- Depuis le calculateur DETECT ---------- */
@@ -477,10 +542,10 @@
         loading3d = true;
         msg.hidden = false;
         msg.textContent = 'Chargement de la 3D…';
-        import('./htp3d.js?v=8').then(function (m) {
+        import('./htp3d.js?v=9').then(function (m) {
+            // Le module affiche lui-même la progression du chargement du modèle
             view3d = m.mount(el.d3);
             if (last) view3d.update(last);
-            msg.hidden = true;
         }).catch(function (err) {
             console.error(err);
             msg.textContent = 'Impossible de charger la vue 3D.';
@@ -542,22 +607,6 @@
     /* ---------- Mécanismes ---------- */
 
     function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
-
-    function renderGroup(g) {
-        var d = GROUPS[g];
-        var html = '<h3 class="htp-h3">' + esc(d.title) + '</h3>' +
-            '<p class="htp-site">' + esc(d.site) + '</p>' +
-            '<ol class="htp-chain">' + d.chain.map(function (c) { return '<li>' + esc(c) + '</li>'; }).join('') + '</ol>' +
-            '<dl class="htp-facts">' +
-            '<div><dt>Causes</dt><dd>' + esc(d.ex) + '</dd></div>' +
-            '<div><dt>Examen clé</dt><dd>' + esc(d.exam) + '</dd></div>' +
-            '<div><dt>Principe du traitement</dt><dd>' + esc(d.ttt) + '</dd></div></dl>' +
-            '<div class="htp-actions">' + d.presets.map(function (p) {
-                return '<button type="button" class="btn-secondary" data-go="' + p[0] + '">' + esc(p[1]) + '</button>';
-            }).join('') + '</div>';
-        el.groupBody.innerHTML = html;
-        glossify(el.groupBody);
-    }
 
     /* ---------- DETECT ---------- */
 
@@ -719,28 +768,42 @@
         el.tPap = $('htp-t-pap'); el.tPod = $('htp-t-pod'); el.tPapo = $('htp-t-papo');
         el.tRvp = $('htp-t-rvp'); el.tDc = $('htp-t-dc');
         el.saLv = $('htp-sa-lv'); el.saRv = $('htp-sa-rv'); el.saCap = $('htp-sa-cap');
-        el.groupBody = $('htp-group-body'); el.detect = $('htp-detect-list');
+        el.detect = $('htp-detect-list');
         el.quizBody = $('htp-quiz-body'); el.quizScore = $('htp-quiz-score');
 
         [el.pvr, el.pawp, el.co].forEach(function (s) {
-            s.addEventListener('input', function () { stopTour(); el.patient.hidden = true; applyValues({ pvr: +el.pvr.value, pawp: +el.pawp.value, co: +el.co.value }, null); });
+            s.addEventListener('input', function () { stopSteps(); state.focus = null; el.patient.hidden = true; applyValues({ pvr: +el.pvr.value, pawp: +el.pawp.value, co: +el.co.value }, null); });
         });
         document.querySelectorAll('.htp-chip[data-preset]').forEach(function (c) {
-            c.addEventListener('click', function () { stopTour(); tweenTo(PRESETS[c.dataset.preset], c.dataset.preset); });
+            c.addEventListener('click', function () { stopSteps(); state.focus = null; tweenTo(PRESETS[c.dataset.preset], c.dataset.preset); });
         });
-        el.tour = $('htp-tour');
         el.patient = $('htp-patient');
         el.d2 = $('htp-2d');
         el.d3 = $('htp-3d');
-        $('htp-tour-btn').addEventListener('click', startTour);
-        el.tour.addEventListener('click', function (e) {
-            var b = e.target.closest('[data-tour]');
+        el.steps = $('htp-steps');
+        el.stepList = $('htp-step-list');
+        el.focus = $('htp-focus');
+        el.mpapMini = $('htp-mpap-mini');
+        el.profMini = $('htp-profile-mini');
+        document.querySelectorAll('.htp-gbtn').forEach(function (b) {
+            b.addEventListener('click', function () { stopSteps(); selectGroup(b.dataset.group); });
+        });
+        el.steps.addEventListener('click', function (e) {
+            var li = e.target.closest('li[data-i]');
+            if (li && !e.target.closest('.htp-term')) { stopSteps(); goStep(+li.dataset.i); return; }
+            var b = e.target.closest('[data-step]');
             if (!b) return;
-            var a = b.dataset.tour;
-            if (a === 'stop') stopTour();
-            else if (a === 'prev') tourGo(tour.i - 1);
-            else if (a === 'next') { if (tour.i === TOUR.length - 1) stopTour(); else tourGo(tour.i + 1); }
-            else if (a === 'play') { tour.play = !tour.play; scheduleTour(); }
+            var a = b.dataset.step;
+            if (a === 'prev') { stopSteps(); goStep(explore.i - 1); }
+            else if (a === 'next') { stopSteps(); nextStep(); }
+            else if (a === 'play') {
+                explore.play = !explore.play;
+                if (explore.play && explore.i === STEPS[explore.g].length - 1) goStep(0); else scheduleStep();
+            }
+        });
+        el.stepList.addEventListener('keydown', function (e) {
+            var li = e.target.closest('li[data-i]');
+            if (li && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); stopSteps(); goStep(+li.dataset.i); }
         });
         el.patient.addEventListener('click', function (e) {
             if (e.target.closest('.htp-tour-x')) el.patient.hidden = true;
@@ -783,13 +846,6 @@
             if (view3d) view3d.setView(cutBox.checked ? 'coupe' : 'face');
         });
         cutLvl.addEventListener('input', syncCut);
-        document.querySelectorAll('input[name="htp-group"]').forEach(function (r) {
-            r.addEventListener('change', function () { renderGroup(r.value); });
-        });
-        el.groupBody.addEventListener('click', function (e) {
-            var b = e.target.closest('[data-go]');
-            if (b) goSim(PRESETS[b.dataset.go], b.dataset.go);
-        });
         el.quizBody.addEventListener('click', function (e) {
             var o = e.target.closest('[data-opt]');
             if (o) return answer(+o.dataset.opt);
@@ -805,8 +861,8 @@
         });
 
         renderDetect();
-        renderGroup('1');
-        applyValues(PRESETS.normal, 'normal');
+        applyValues(N, null);
+        selectGroup('normal');
         shuffle();
         renderQuiz();
         ['.htp-intro', '.htp-controls', '.htp-echo-txt', '#htp-detect'].forEach(function (sel) {

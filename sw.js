@@ -1,9 +1,9 @@
 /* Service worker : l'app fonctionne hors ligne une fois ouverte.
+   La 3D (Three.js, modèle anatomique) n'est mise en cache qu'à sa première ouverture.
    Page HTML : réseau d'abord ; autres fichiers : cache d'abord, mis à jour en arrière-plan. */
-const CACHE = 'detect-v5';
+const CACHE = 'detect-v6';
 const CORE = [
-    './', 'index.html', 'style.css', 'htp.css', 'logic.js', 'app.js', 'fx.js', 'htp.js', 'htp3d.js',
-    'vendor/three.module.min.js', 'vendor/OrbitControls.js',
+    './', 'index.html', 'style.css', 'htp.css', 'logic.js', 'app.js', 'fx.js', 'htp.js',
     'icon.svg', 'icon-192.png', 'nomogramme.png', 'manifest.webmanifest'
 ];
 

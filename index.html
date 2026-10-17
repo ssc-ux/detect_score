@@ -8,7 +8,7 @@
     <script>try{var t=localStorage.getItem("theme");if(t==="sombre")document.documentElement.dataset.theme="dark";else if(t==="auto")delete document.documentElement.dataset.theme}catch(e){}</script>
     <link rel="icon" href="icon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="style.css?v=23">
-    <link rel="stylesheet" href="htp.css?v=8">
+    <link rel="stylesheet" href="htp.css?v=9">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="apple-touch-icon" href="icon-180.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -302,8 +302,8 @@
                 <section class="card htp-intro">
                     <p class="htp-kicker">Laboratoire d'hémodynamique <span class="beta-tag">bêta</span></p>
                     <h2 class="htp-title">Comprendre l'hypertension pulmonaire</h2>
-                    <p class="htp-lead">Bougez les curseurs ou choisissez un cas : le schéma, les pressions et l'échographie
-                        se mettent à jour. Une seule équation résume tout :</p>
+                    <p class="htp-lead">Choisissez un groupe et suivez son mécanisme étape par étape : le cœur, les pressions
+                        et le schéma évoluent à chaque étape. Tout repose sur une seule équation :</p>
                     <p class="htp-eq">PAPm = PAPO + RVP × DC</p>
                     <p class="htp-beta-note">Version bêta, à visée pédagogique : contenu en cours de relecture,
                         ne pas utiliser pour une décision clinique.</p>
@@ -315,19 +315,17 @@
                     <div class="card-header">
                         <div class="step-heading">
                             <span class="step-index">A</span>
-                            <h2>Simulateur</h2>
+                            <h2>Explorer le mécanisme</h2>
                         </div>
                     </div>
 
-                    <div class="htp-presets" role="group" aria-label="Cas cliniques">
-                        <button type="button" class="htp-chip" data-preset="normal">Normal</button>
-                        <button type="button" class="htp-chip" data-preset="g1">G1 · HTAP (ScS)</button>
-                        <button type="button" class="htp-chip" data-preset="g2i">G2 · post-cap. isolée</button>
-                        <button type="button" class="htp-chip" data-preset="g2c">G2 · post-cap. combinée</button>
-                        <button type="button" class="htp-chip" data-preset="g3">G3 · poumon / hypoxie</button>
-                        <button type="button" class="htp-chip" data-preset="g4">G4 · HTP-TEC</button>
-                        <button type="button" class="htp-chip" data-preset="g5">G5 · multifactorielle</button>
-                        <button type="button" class="htp-chip" data-preset="hd">Hyperdébit</button>
+                    <div class="htp-groups" role="tablist" aria-label="Choisir un groupe">
+                        <button type="button" class="htp-gbtn" role="tab" data-group="normal">Normal</button>
+                        <button type="button" class="htp-gbtn" role="tab" data-group="1">G1 · HTAP</button>
+                        <button type="button" class="htp-gbtn" role="tab" data-group="2">G2 · Cœur gauche</button>
+                        <button type="button" class="htp-gbtn" role="tab" data-group="3">G3 · Poumon / hypoxie</button>
+                        <button type="button" class="htp-gbtn" role="tab" data-group="4">G4 · HTP-TEC</button>
+                        <button type="button" class="htp-gbtn" role="tab" data-group="5">G5 · Multifactorielle</button>
                     </div>
 
                     <div class="htp-toolbar">
@@ -335,7 +333,6 @@
                             <label><input type="radio" name="htp-view" value="2d" checked><span>Schéma 2D</span></label>
                             <label><input type="radio" name="htp-view" value="3d"><span>Vue 3D</span></label>
                         </div>
-                        <button type="button" id="htp-tour-btn" class="btn-secondary htp-tour-btn">▶ Visite guidée</button>
                     </div>
 
                     <div id="htp-patient" class="htp-patient" hidden></div>
@@ -359,6 +356,13 @@
                                 <button type="button" class="htp-chip" data-view="oblique">Oblique</button>
                                 <button type="button" class="htp-chip" data-view="coupe">Coupe</button>
                             </div>
+                            <div class="htp3d-row">
+                                <label class="htp3d-check htp3d-cap-check"><input type="checkbox" id="htp3d-cut"> Coupe petit axe</label>
+                                <input type="range" id="htp3d-cut-level" min="-0.7" max="0.6" step="0.05" value="0"
+                                    aria-label="Niveau de coupe, de l'apex à la base" disabled>
+                            </div>
+                            <details class="htp3d-more">
+                                <summary>Réglages 3D</summary>
                             <div class="htp3d-row" role="group" aria-label="Calques">
                                 <span class="htp3d-cap">Calques</span>
                                 <label class="htp3d-check"><input type="checkbox" data-layer="heart" checked> Cœur</label>
@@ -369,14 +373,11 @@
                             </div>
                             <div class="htp3d-row">
                                 <label class="htp3d-cap" for="htp3d-opacity">Opacité du cœur</label>
-                                <input type="range" id="htp3d-opacity" min="0.15" max="1" step="0.05" value="0.85">
+                                <input type="range" id="htp3d-opacity" min="0.15" max="1" step="0.05" value="1">
                             </div>
-                            <div class="htp3d-row">
-                                <label class="htp3d-check htp3d-cap-check"><input type="checkbox" id="htp3d-cut"> Coupe petit axe</label>
-                                <input type="range" id="htp3d-cut-level" min="-0.7" max="0.6" step="0.05" value="0"
-                                    aria-label="Niveau de coupe, de l'apex à la base" disabled>
-                            </div>
-                            <p class="htp3d-help">Glisser pour tourner · molette ou pincement pour zoomer</p>
+                            </details>
+                            <p class="htp3d-help">Glisser pour tourner · molette ou pincement pour zoomer ·
+                                modèle anatomique : <a href="https://humanatlas.io/3d-reference-library" target="_blank" rel="noopener">Human Reference Atlas</a> (HuBMAP), CC BY 4.0</p>
                         </div>
                     </div>
 
@@ -458,6 +459,9 @@
                             <text id="htp-t-rvp" class="htp-tag" x="284" y="166" text-anchor="middle">RVP</text>
                             <text id="htp-t-papo" class="htp-tag" x="548" y="56" text-anchor="middle">PAPO</text>
 
+                            <!-- Structure en jeu dans le mode pas à pas -->
+                            <rect id="htp-focus" class="htp-focus" rx="12" x="0" y="0" width="0" height="0" />
+
                             <!-- Calques des mécanismes -->
                             <g id="htp-ov-1" class="htp-ov">
                                 <rect class="htp-hl" x="244" y="108" width="80" height="44" rx="10" />
@@ -495,21 +499,40 @@
                         </figcaption>
                     </figure>
 
-                    <p id="htp-hint" class="htp-hint" hidden></p>
+                    <aside id="htp-steps" class="htp-steps" aria-live="polite">
+                        <p class="htp-steps-kicker">Ce qui se passe</p>
+                        <h3 id="htp-g-title" class="htp-h3"></h3>
+                        <p id="htp-g-site" class="htp-site"></p>
+                        <div class="htp-now">
+                            <span>PAPm <b id="htp-mpap-mini">--</b> mmHg</span>
+                            <span id="htp-profile-mini" class="htp-badge">--</span>
+                        </div>
+                        <ol id="htp-step-list" class="htp-chain htp-steplist"></ol>
+                        <div class="htp-step-nav">
+                            <button type="button" class="btn-secondary" data-step="prev" aria-label="Étape précédente">◀</button>
+                            <button type="button" class="btn-secondary" data-step="play" id="htp-step-play">▶ Lecture</button>
+                            <button type="button" class="btn-primary" data-step="next">Étape suivante ▶</button>
+                        </div>
+                        <details class="htp-more">
+                            <summary>Causes, examen clé, traitement</summary>
+                            <dl id="htp-g-facts" class="htp-facts"></dl>
+                        </details>
+                    </aside>
 
-                    <div id="htp-tour" class="htp-tour" hidden aria-live="polite">
-                        <div class="htp-tour-head">
-                            <span id="htp-tour-step" class="htp-tour-step"></span>
-                            <button type="button" class="htp-tour-x" data-tour="stop" aria-label="Quitter la visite">✕</button>
-                        </div>
-                        <h3 id="htp-tour-title" class="htp-h3"></h3>
-                        <p id="htp-tour-text" class="htp-tour-text"></p>
-                        <div class="htp-tour-nav">
-                            <button type="button" class="btn-secondary" data-tour="prev">◀ Précédent</button>
-                            <button type="button" class="btn-secondary" data-tour="play" id="htp-tour-play">⏸ Pause</button>
-                            <button type="button" class="btn-primary" data-tour="next">Suivant ▶</button>
-                        </div>
+                    <details id="htp-adv" class="htp-adv">
+                        <summary>Mode avancé : curseurs, échographie, autres cas</summary>
+                    <div class="htp-presets" role="group" aria-label="Cas cliniques">
+                        <button type="button" class="htp-chip" data-preset="normal">Normal</button>
+                        <button type="button" class="htp-chip" data-preset="g1">G1 · HTAP (ScS)</button>
+                        <button type="button" class="htp-chip" data-preset="g2i">G2 · post-cap. isolée</button>
+                        <button type="button" class="htp-chip" data-preset="g2c">G2 · post-cap. combinée</button>
+                        <button type="button" class="htp-chip" data-preset="g3">G3 · poumon / hypoxie</button>
+                        <button type="button" class="htp-chip" data-preset="g4">G4 · HTP-TEC</button>
+                        <button type="button" class="htp-chip" data-preset="g5">G5 · multifactorielle</button>
+                        <button type="button" class="htp-chip" data-preset="hd">Hyperdébit</button>
                     </div>
+
+                    <p id="htp-hint" class="htp-hint" hidden></p>
 
                     <div class="htp-grid">
                         <div class="htp-controls">
@@ -567,29 +590,13 @@
                             <figcaption id="htp-sa-cap">Coupe petit axe</figcaption>
                         </figure>
                     </div>
-                </section>
-
-                <section class="card" id="htp-mech">
-                    <div class="card-header">
-                        <div class="step-heading">
-                            <span class="step-index">B</span>
-                            <h2>Mécanismes des 5 groupes</h2>
-                        </div>
-                    </div>
-                    <div class="seg htp-seg" role="tablist" aria-label="Groupes d'HTP">
-                        <label><input type="radio" name="htp-group" value="1" checked><span>G1</span></label>
-                        <label><input type="radio" name="htp-group" value="2"><span>G2</span></label>
-                        <label><input type="radio" name="htp-group" value="3"><span>G3</span></label>
-                        <label><input type="radio" name="htp-group" value="4"><span>G4</span></label>
-                        <label><input type="radio" name="htp-group" value="5"><span>G5</span></label>
-                    </div>
-                    <div id="htp-group-body" class="htp-group-body" aria-live="polite"></div>
+                    </details>
                 </section>
 
                 <section class="card" id="htp-detect">
                     <div class="card-header">
                         <div class="step-heading">
-                            <span class="step-index">C</span>
+                            <span class="step-index">B</span>
                             <h2>Du mécanisme au score DETECT</h2>
                         </div>
                     </div>
@@ -601,7 +608,7 @@
                 <section class="card" id="htp-quiz">
                     <div class="card-header">
                         <div class="step-heading">
-                            <span class="step-index">D</span>
+                            <span class="step-index">C</span>
                             <h2>Quiz : quel groupe, quel profil ?</h2>
                         </div>
                         <span id="htp-quiz-score" class="htp-quiz-score"></span>
@@ -620,6 +627,10 @@
                         <span class="reference-label">Définitions et classification</span>
                         <p>Humbert M, Kovacs G, Hoeper MM, et&nbsp;al. <em>2022 ESC/ERS Guidelines for the diagnosis
                                 and treatment of pulmonary hypertension.</em> Eur Heart J 2022;43:3618–3731.</p>
+                        <span class="reference-label htp-ref-gap">Modèle anatomique 3D</span>
+                        <p>Human Reference Atlas, HuBMAP Consortium. <em>3D Reference Object Library</em>
+                            (homme de référence, cœur, vascularisation cardiaque et poumons, v1.2). Licence CC BY 4.0.
+                            Modèle simplifié et compressé pour cette application.</p>
                         <span class="reference-label htp-ref-gap">PAPs → PAPm</span>
                         <p>Chemla D, Castelain V, Humbert M, et&nbsp;al. <em>New formula for predicting mean
                                 pulmonary artery pressure using systolic pulmonary artery pressure.</em> Chest
@@ -700,7 +711,7 @@
     <script src="logic.js?v=25"></script>
     <script src="app.js?v=26"></script>
     <script src="fx.js?v=25" defer></script>
-    <script src="htp.js?v=11" defer></script>
+    <script src="htp.js?v=12" defer></script>
     <script>
         if ('serviceWorker' in navigator && location.protocol === 'https:') {
             window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });

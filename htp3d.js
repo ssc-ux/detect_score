@@ -1,221 +1,262 @@
-/* Vue 3D stylisée du cœur et de la circulation pulmonaire (chargée à la demande).
-   Repère patient : x = gauche du patient, y = haut, z = avant. */
+/* Vue 3D anatomique (chargée à la demande).
+   Modèle : Human Reference Atlas (HuBMAP), homme de référence, CC BY 4.0.
+   Repère : x = gauche du patient, y = haut, z = avant. */
 import * as THREE from './vendor/three.module.min.js';
 import { OrbitControls } from './vendor/OrbitControls.js';
+import { GLTFLoader } from './vendor/GLTFLoader.js';
+import { MeshoptDecoder } from './vendor/meshopt_decoder.module.js';
+import { RoomEnvironment } from './vendor/RoomEnvironment.js';
 
+const MODEL = './models/thorax.glb?v=1';
+const MODEL_BYTES = 1598204;
+const SCALE = 25;                                   // mètres → unités de scène
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
-const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim() || '#888';
 
-const VIEWS = {
-    face: V(0, 0.5, 7.6),
-    gauche: V(7.6, 0.5, 0.4),
-    dos: V(0, 0.5, -7.6),
-    oblique: V(5.1, 2.7, 5.1)
+// Couleurs fixes : la scène est toujours sombre
+const COL = {
+    v: '#4f6ad8', a: '#cf463f', rh: '#5d74d6', lh: '#cc4f48', muscle: '#a85a50',
+    cava: '#3a52bd', cor: '#ef4a37', cvein: '#4a5fb8', lung: '#f7b3ae', air: '#e9dccb',
+    alert: '#f08a4b', clot: '#4a1612', hypoxic: '#8a909c'
 };
 
-// Géométrie de repos
-const CH = {
-    ra: { c: V(-1.0, 0.15, 0.15), s: V(0.55, 0.6, 0.55), col: 'v' },
-    rv: { c: V(-0.15, -0.55, 0.55), s: V(0.9, 0.75, 0.5), col: 'v' },
-    la: { c: V(0.35, 0.45, -0.75), s: V(0.6, 0.42, 0.5), col: 'a' },
-    lv: { c: V(0.65, -0.55, -0.15), s: V(0.72, 1.0, 0.72), col: 'a', rz: 0.45 }
+// Rattache chaque pièce du modèle à une structure
+function partOf(name) {
+    if (/cardiac_vein|coronary_sinus|vein_of_left/.test(name)) return 'cvein';
+    if (/coronary|descending_artery|marginal|diagonal/.test(name)) return 'cor';
+    if (/pulmonary_trunk|pulmonary_artery/.test(name)) return 'pa';
+    if (/pulmonary_vein/.test(name)) return 'pv';
+    if (/aort|brachiocephalic_artery|carotid|subclavian/.test(name)) return 'ao';
+    if (/vena_cava|brachiocephalic_vein/.test(name)) return 'cava';
+    if (/right_cardiac_atrium/.test(name)) return 'ra';
+    if (/right_ventricle/.test(name)) return 'rv';
+    if (/left_cardiac_atrium/.test(name)) return 'la';
+    if (/left_ventricle/.test(name)) return 'lv';
+    if (/septum/.test(name)) return 'septum';
+    if (/trachea|bronch/.test(name)) return 'air';
+    if (/segment|hilum/.test(name)) return /left|_L$/.test(name) ? 'lungL' : 'lungR';
+    return null;
+}
+const LAYER = {
+    ra: 'heart', rv: 'heart', la: 'heart', lv: 'heart', septum: 'heart', cor: 'heart', cvein: 'heart',
+    pa: 'vessels', pv: 'vessels', ao: 'vessels', cava: 'vessels', air: 'lungs', lungL: 'lungs', lungR: 'lungs'
 };
-const BIF = V(0.3, 1.15, 0.15);
-const PA_PTS = {
-    trunk: [V(0.05, -0.1, 0.75), V(0.2, 0.6, 0.55), BIF],
-    right: [BIF, V(-0.6, 1.25, -0.05), V(-1.55, 1.05, -0.25)],
-    left: [BIF, V(1.0, 1.35, -0.05), V(1.6, 1.15, -0.3)]
-};
-// Trajets du sang : cœur droit → poumons, puis poumons → cœur gauche → aorte
-const RVOT = [V(-0.15, -0.55, 0.55), V(0.05, -0.1, 0.75), V(0.2, 0.6, 0.55), BIF];
-const ROUTES_V = [
-    [V(-1.0, 2.2, 0), V(-1.0, 0.15, 0.15), ...RVOT, V(-0.6, 1.25, -0.05), V(-1.55, 1.05, -0.25), V(-2.3, 1.0, -0.3)],
-    [V(-1.0, -2.2, -0.2), V(-1.0, 0.15, 0.15), ...RVOT, V(1.0, 1.35, -0.05), V(1.6, 1.15, -0.3), V(2.3, 1.1, -0.35)]
-];
-const AORTA = [V(0.35, 0.45, -0.75), V(0.65, -0.55, -0.15), V(0.45, 0.05, -0.1), V(0.2, 0.9, 0.0), V(0.1, 1.7, -0.2),
-    V(0.5, 1.95, -0.6), V(0.8, 1.4, -1.0), V(0.85, 0, -1.05), V(0.85, -2.2, -1.0)];
-const ROUTES_A = [
-    [V(-2.3, 0.3, -0.5), V(-1.6, 0.2, -0.6), V(-0.6, 0.35, -0.8), ...AORTA],
-    [V(2.3, 0.3, -0.5), V(1.6, 0.25, -0.6), V(1.0, 0.4, -0.85), ...AORTA]
-];
-// Grand axe du VG (pour la coupe petit axe)
-const LV_AXIS = V(-Math.sin(0.45), Math.cos(0.45), 0).normalize();
-
-const LABELS = [
-    ['OD', V(-1.25, 0.3, 0.55)], ['VD', V(-0.2, -0.6, 1.0)], ['OG', V(0.95, 0.65, -1.1)],
-    ['VG', V(1.0, -0.9, 0.3)], ['AP', V(-0.25, 0.55, 0.95)], ['Aorte', V(0.1, 1.95, -0.2)],
-    ['Poumon D', V(-2.6, 2.1, 0.2)], ['Poumon G', V(2.6, 2.0, 0.2)]
-];
+const CHAMBERS = ['ra', 'rv', 'la', 'lv', 'septum'];
+// Cible du mode pas à pas → structures à faire briller
+const FOCUS = { rv: ['rv'], ra: ['ra'], la: ['la'], lv: ['lv'], pa: ['pa'], vp: ['pv'], endo: ['tree'], alv: ['lungL', 'lungR'] };
 
 export function mount(root) {
     const wrap = root.querySelector('.htp3d-canvas');
     const labelLayer = root.querySelector('.htp3d-labels');
+    const msg = root.querySelector('.htp3d-msg');
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.localClippingEnabled = true;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.05;
     wrap.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
-    camera.position.copy(VIEWS.face);
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+
+    const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 200);
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.enablePan = false;
-    controls.minDistance = 4.5;
-    controls.maxDistance = 16;
-    controls.target.set(0, 0.3, 0);
+    controls.minDistance = 3.5;
+    controls.maxDistance = 22;
 
-    scene.add(new THREE.HemisphereLight(0xffffff, 0x8888aa, 1.6));
-    const sun = new THREE.DirectionalLight(0xffffff, 1.6);
-    sun.position.set(3, 5, 6);
-    scene.add(sun);
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x223355, 0.7));
+    const key = new THREE.DirectionalLight(0xffffff, 1.8);
+    key.position.set(3, 5, 7);
+    scene.add(key);
+    const rim = new THREE.DirectionalLight(0x9fb6ff, 1.4);
+    rim.position.set(-5, 2, -7);
+    scene.add(rim);
 
-    // Matériaux (couleurs reprises du thème)
+    // Coupe petit axe
+    const clipList = [];
+    const cut = { on: false, level: 0, plane: new THREE.Plane(), axis: V(0, 1, 0), center: V(), half: 1 };
+
+    const tissue = (color, extra = {}) => new THREE.MeshPhysicalMaterial({
+        color, roughness: 0.48, metalness: 0, clearcoat: 0.5, clearcoatRoughness: 0.3, envMapIntensity: 0.45,
+        transparent: true, clippingPlanes: clipList, ...extra
+    });
     const mat = {
-        v: new THREE.MeshStandardMaterial({ roughness: 0.55, transparent: true }),
-        a: new THREE.MeshStandardMaterial({ roughness: 0.55, transparent: true }),
-        vVessel: new THREE.MeshStandardMaterial({ roughness: 0.45, transparent: true }),
-        aVessel: new THREE.MeshStandardMaterial({ roughness: 0.45 }),
-        distal: new THREE.MeshStandardMaterial({ roughness: 0.45 }),
-        lung: new THREE.MeshStandardMaterial({ roughness: 0.9, transparent: true, opacity: 0.16, depthWrite: false, side: THREE.DoubleSide }),
-        clot: new THREE.MeshStandardMaterial({ color: 0x5a1f1a, roughness: 0.8 }),
-        alert: new THREE.MeshStandardMaterial({ roughness: 0.4, transparent: true, opacity: 0.85 })
+        ra: tissue(COL.rh), rv: tissue(COL.rh), la: tissue(COL.lh), lv: tissue(COL.lh), septum: tissue(COL.muscle),
+        pa: tissue(COL.v), pv: tissue(COL.a), ao: tissue(COL.a), cava: tissue(COL.cava),
+        cor: tissue(COL.cor, { clearcoat: 0.8 }), cvein: tissue(COL.cvein),
+        lungL: tissue(COL.lung, { opacity: 0.14, depthWrite: false, roughness: 0.85, clearcoat: 0.15, envMapIntensity: 0.2 }),
+        lungR: tissue(COL.lung, { opacity: 0.14, depthWrite: false, roughness: 0.85, clearcoat: 0.15, envMapIntensity: 0.2 }),
+        air: tissue(COL.air, { opacity: 0.45, depthWrite: false }),
+        tree: tissue(COL.v), treeProx: tissue(COL.v),
+        clot: tissue(COL.clot, { transparent: false, roughness: 0.8 }),
+        alert: new THREE.MeshBasicMaterial({ color: COL.alert, transparent: true, opacity: 0.85, clippingPlanes: clipList })
+    };
+    // Section pleine lors de la coupe ; le VG est dessiné par-dessus le VD (croissant du VD)
+    const innerMat = {
+        ra: new THREE.MeshBasicMaterial({ color: '#5465b8', side: THREE.BackSide, clippingPlanes: clipList }),
+        rv: new THREE.MeshBasicMaterial({ color: '#5465b8', side: THREE.BackSide, clippingPlanes: clipList }),
+        la: new THREE.MeshBasicMaterial({ color: '#b2433d', side: THREE.BackSide, clippingPlanes: clipList }),
+        lv: new THREE.MeshBasicMaterial({ color: '#b2433d', side: THREE.BackSide, clippingPlanes: clipList, depthTest: false }),
+        septum: new THREE.MeshBasicMaterial({ color: '#8c4a42', side: THREE.BackSide, clippingPlanes: clipList })
     };
 
-    // Coupe petit axe : on garde la partie apicale, perpendiculaire au grand axe du VG
-    const cut = { on: false, level: 0, plane: new THREE.Plane(LV_AXIS.clone().negate(), 0) };
-    const clipList = [];
-    Object.values(mat).forEach((m) => { m.clippingPlanes = clipList; });
-    const ringMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.55, side: THREE.DoubleSide, depthWrite: false });
-    const ring = new THREE.Mesh(new THREE.RingGeometry(1.45, 1.52, 64), ringMat);
-    ring.quaternion.setFromUnitVectors(V(0, 0, 1), LV_AXIS);
+    const groups = { heart: new THREE.Group(), vessels: new THREE.Group(), lungs: new THREE.Group(), flow: new THREE.Group(), ov: new THREE.Group() };
+    Object.values(groups).forEach((g) => scene.add(g));
+    const ring = new THREE.Mesh(new THREE.RingGeometry(1.7, 1.78, 72),
+        new THREE.MeshBasicMaterial({ color: COL.alert, transparent: true, opacity: 0.6, side: THREE.DoubleSide, depthWrite: false }));
     ring.visible = false;
     scene.add(ring);
-    function applyCut() {
-        const c = CH.lv.c.clone().addScaledVector(LV_AXIS, cut.level);
-        cut.plane.setFromNormalAndCoplanarPoint(LV_AXIS.clone().negate(), c);
-        clipList.length = 0;
-        if (cut.on) clipList.push(cut.plane);
-        ring.position.copy(c).addScaledVector(LV_AXIS, -0.01);
-        ring.visible = cut.on;
-        Object.values(chambers).forEach((m) => { m.children[0].visible = cut.on; });
+
+    const parts = {};           // structure → { pivots, center, box }
+    const centerOf = {};        // nom de pièce → centre
+    const labels = [];
+    let ready = false;
+    let st = { pvr: 1.2, pawp: 9, co: 5.5, mpap: 15, pod: 4, ov: null, focus: null };
+    let heartOpacity = 1;
+    const layerOn = { heart: true, vessels: true, lungs: true, flow: true, ov: true, labels: true };
+    const branches = [];
+    const flow = {};
+    const ov = {};
+
+    // ---------- Chargement du modèle ----------
+    msg.hidden = false;
+    msg.textContent = 'Chargement du modèle anatomique… 0 %';
+    const loader = new GLTFLoader();
+    loader.setMeshoptDecoder(MeshoptDecoder);
+    loader.load(MODEL, (gltf) => {
+        build(gltf.scene);
+        ready = true;
+        msg.hidden = true;
         applyVisibility();
         applyState();
-    }
-
-    const groups = { heart: new THREE.Group(), lungs: new THREE.Group(), vessels: new THREE.Group(), ov: new THREE.Group() };
-    Object.values(groups).forEach((g) => scene.add(g));
-
-    // Cavités ; la face interne, unie, dessine la section quand on coupe
-    const innerMat = {
-        v: new THREE.MeshBasicMaterial({ side: THREE.BackSide, clippingPlanes: clipList }),
-        // Le VG est dessiné par-dessus le VD : le VD apparaît en croissant, comme en échographie
-        a: new THREE.MeshBasicMaterial({ side: THREE.BackSide, clippingPlanes: clipList, depthTest: false })
-    };
-    const sphere = new THREE.SphereGeometry(1, 40, 28);
-    const chambers = {};
-    for (const [k, d] of Object.entries(CH)) {
-        const m = new THREE.Mesh(sphere, d.col === 'v' ? mat.v : mat.a);
-        m.position.copy(d.c);
-        m.scale.copy(d.s);
-        if (d.rz) m.rotation.z = d.rz;
-        m.renderOrder = 2;
-        const inner = new THREE.Mesh(sphere, d.col === 'v' ? innerMat.v : innerMat.a);
-        inner.visible = false;
-        inner.renderOrder = d.col === 'a' ? 10 : 6;
-        m.add(inner);
-        groups.heart.add(m);
-        chambers[k] = m;
-    }
-
-    // Poumons
-    const lungs = [
-        [V(-2.35, 0.5, -0.35), V(1.15, 2.0, 1.15)],
-        [V(2.35, 0.45, -0.35), V(1.0, 1.9, 1.05)]
-    ].map(([c, s]) => {
-        const m = new THREE.Mesh(sphere, mat.lung);
-        m.position.copy(c);
-        m.scale.copy(s);
-        m.renderOrder = 3;
-        groups.lungs.add(m);
-        return m;
+        setView('face', true);
+    }, (e) => {
+        msg.textContent = 'Chargement du modèle anatomique… ' + Math.min(99, Math.round(100 * e.loaded / (e.total || MODEL_BYTES))) + ' %';
+    }, () => {
+        msg.hidden = false;
+        msg.textContent = 'Impossible de charger le modèle anatomique.';
     });
 
-    // Vaisseaux fixes
-    const tube = (pts, r, material, parent = groups.vessels) => {
-        const m = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 48, r, 14), material);
-        parent.add(m);
-        return m;
-    };
-    tube([V(0.45, 0.05, -0.1), V(0.2, 0.9, 0.0), V(0.1, 1.7, -0.2), V(0.5, 1.95, -0.6), V(0.8, 1.4, -1.0), V(0.85, 0, -1.05), V(0.85, -2.2, -1.0)], 0.17, mat.aVessel);
-    tube([V(-1.0, 2.2, 0), V(-1.0, 0.6, 0.1)], 0.13, mat.vVessel);
-    tube([V(-1.0, -2.2, -0.2), V(-1.0, -0.35, 0.1)], 0.14, mat.vVessel);
-    tube([V(-1.6, 0.2, -0.6), V(-0.6, 0.35, -0.8), V(0.05, 0.42, -0.8)], 0.09, mat.aVessel);
-    tube([V(-1.5, -0.3, -0.5), V(-0.6, 0.15, -0.8), V(0.05, 0.38, -0.78)], 0.08, mat.aVessel);
-    tube([V(1.6, 0.25, -0.6), V(1.0, 0.4, -0.85), V(0.6, 0.45, -0.8)], 0.09, mat.aVessel);
-    tube([V(1.5, -0.25, -0.5), V(1.0, 0.2, -0.85), V(0.62, 0.4, -0.78)], 0.08, mat.aVessel);
+    function build(model) {
+        // Centrage sur le cœur, mise à l'échelle
+        model.updateMatrixWorld(true);
+        const heartBox = new THREE.Box3();
+        model.traverse((o) => { if (o.isMesh && CHAMBERS.includes(partOf(o.name))) heartBox.expandByObject(o); });
+        const c = heartBox.getCenter(V());
+        const holder = new THREE.Group();
+        holder.scale.setScalar(SCALE);
+        holder.position.copy(c).multiplyScalar(-SCALE);
+        holder.add(model);
+        scene.add(holder);
+        holder.updateMatrixWorld(true);
 
-    // Artère pulmonaire (rayon variable)
-    let paMeshes = [];
-    let paRadius = 0;
-    function buildPA(r) {
-        if (Math.abs(r - paRadius) < 0.004) return;
-        paRadius = r;
-        paMeshes.forEach((m) => { groups.vessels.remove(m); m.geometry.dispose(); });
-        paMeshes = [tube(PA_PTS.trunk, r, mat.vVessel), tube(PA_PTS.right, r * 0.72, mat.vVessel), tube(PA_PTS.left, r * 0.72, mat.vVessel)];
-    }
-
-    // Arbre artériel intrapulmonaire
-    const branches = [];
-    const cyl = new THREE.CylinderGeometry(1, 1, 1, 10, 1);
-    const up = V(0, 1, 0);
-    function grow(start, dir, len, r, depth, side) {
-        const end = start.clone().addScaledVector(dir, len);
-        const m = new THREE.Mesh(cyl, depth >= 2 ? mat.distal : mat.vVessel);
-        m.position.copy(start).lerp(end, 0.5);
-        m.quaternion.setFromUnitVectors(up, dir);
-        m.userData = { r, len, depth };
-        groups.vessels.add(m);
-        branches.push(m);
-        if (depth === 4) return;
-        const axis = depth % 2 === 0 ? V(0, 0, 1) : dir.clone().cross(V(0, 1, 0)).normalize().cross(dir).normalize();
-        if (axis.lengthSq() < 0.01) axis.set(1, 0, 0);
-        [-1, 1].forEach((sgn) => {
-            const a = (depth === 0 ? 0.95 : 0.55) * sgn;
-            const d = dir.clone().applyAxisAngle(axis, a).normalize();
-            grow(end, d, len * 0.74, r * 0.7, depth + 1, side);
+        const meshes = [];
+        model.traverse((o) => { if (o.isMesh) meshes.push(o); });
+        meshes.forEach((m) => {
+            const name = m.name || m.parent.name;
+            const p = partOf(name) || partOf(m.parent.name);
+            if (!p) { m.visible = false; return; }
+            m.material = mat[p];
+            m.renderOrder = p.startsWith('lung') || p === 'air' ? 3 : 1;
+            const box = new THREE.Box3().setFromObject(m);
+            const center = box.getCenter(V());
+            centerOf[name] = { center, box };
+            // Pivot au centre de la pièce : permet de la dilater sur place
+            const pivot = new THREE.Group();
+            pivot.position.copy(center);
+            groups[LAYER[p]].add(pivot);
+            pivot.updateMatrixWorld(true);
+            pivot.attach(m);
+            if (innerMat[p]) {
+                const inner = new THREE.Mesh(m.geometry, innerMat[p]);
+                inner.visible = false;
+                inner.renderOrder = p === 'lv' ? 10 : 6;
+                m.add(inner);
+            }
+            const P = parts[p] || (parts[p] = { pivots: [], box: new THREE.Box3() });
+            P.pivots.push(pivot);
+            P.box.union(box);
         });
-    }
-    grow(PA_PTS.right[2], V(-1, 0, 0), 0.6, 0.085, 0, -1);
-    grow(PA_PTS.left[2], V(1, 0, 0), 0.6, 0.085, 0, 1);
+        scene.remove(holder);
+        Object.values(parts).forEach((P) => { P.center = P.box.getCenter(V()); });
 
-    // Flux sanguin : particules instanciées le long des trajets
-    const flow = { v: [], a: [] };
-    const dotGeo = new THREE.SphereGeometry(0.06, 8, 6);
-    const flowGroup = new THREE.Group();
-    scene.add(flowGroup);
-    groups.flow = flowGroup;
-    [['v', ROUTES_V, mat.vVessel], ['a', ROUTES_A, mat.aVessel]].forEach(([k, routes, m]) => {
-        const curves = routes.map((pts) => new THREE.CatmullRomCurve3(pts));
-        const n = 36;
-        const dm = new THREE.MeshBasicMaterial({ clippingPlanes: clipList });
-        const inst = new THREE.InstancedMesh(dotGeo, dm, n);
-        inst.renderOrder = 5;
-        flowGroup.add(inst);
-        flow[k] = { inst, curves, dm, base: m, t: Array.from({ length: n }, (_, i) => (i / n + (i % 2) * 0.013) % 1) };
-    });
+        buildTree();
+        buildFlow();
+        buildOverlays();
+        computeLvAxis();
+        buildLabels();
+    }
+
+    const at = (name, fallback) => (centerOf[name] ? centerOf[name].center.clone() : fallback.clone());
+
+    // ---------- Arbre artériel intrapulmonaire (lumière variable avec la RVP) ----------
+    function buildTree() {
+        const cyl = new THREE.CylinderGeometry(1, 1, 1, 10, 1);
+        const up = V(0, 1, 0);
+        function grow(start, dir, len, r, depth) {
+            const end = start.clone().addScaledVector(dir, len);
+            const m = new THREE.Mesh(cyl, depth >= 2 ? mat.tree : mat.treeProx);
+            m.position.copy(start).lerp(end, 0.5);
+            m.quaternion.setFromUnitVectors(up, dir);
+            m.userData = { r, len, depth, mid: m.position.clone() };
+            m.renderOrder = 2;
+            groups.lungs.add(m);
+            branches.push(m);
+            if (depth === 4) return;
+            const axis = depth % 2 === 0 ? V(0, 0, 1) : dir.clone().cross(V(0, 1, 0)).normalize().cross(dir).normalize();
+            if (axis.lengthSq() < 0.01) axis.set(1, 0, 0);
+            [-1, 1].forEach((s) => {
+                const d = dir.clone().applyAxisAngle(axis, (depth === 0 ? 0.95 : 0.55) * s).normalize();
+                grow(end, d, len * 0.74, r * 0.7, depth + 1);
+            });
+        }
+        const hR = parts.lungR ? at('VH_M_hilum_R', parts.lungR.center) : V(-1.6, 0.6, 0);
+        const hL = parts.lungL ? at('VH_M_hilum_L', parts.lungL.center) : V(1.6, 0.6, 0);
+        grow(hR, V(-1, 0.05, 0).normalize(), 0.62, 0.11, 0);
+        grow(hL, V(1, 0.05, 0).normalize(), 0.62, 0.11, 0);
+    }
+
+    // ---------- Flux sanguin ----------
+    function buildFlow() {
+        const ra = parts.ra.center, rv = parts.rv.center, la = parts.la.center, lv = parts.lv.center;
+        const trunk = at('VH_M_pulmonary_trunk', parts.pa.center);
+        const svc = centerOf.VH_M_superior_vena_cava, ivc = centerOf.VH_M_inferior_vena_cava_b || centerOf.VH_M_inferior_vena_cava_a;
+        const svcTop = svc ? V(svc.center.x, svc.box.max.y, svc.center.z) : ra.clone().add(V(0, 2, 0));
+        const ivcBot = ivc ? V(ivc.center.x, ivc.box.min.y, ivc.center.z) : ra.clone().add(V(0, -2, 0));
+        const hR = at('VH_M_hilum_R', V(-2, 0.5, 0)), hL = at('VH_M_hilum_L', V(2, 0.5, 0));
+        const asc = at('VH_M_ascending_aorta', lv), arch = at('VH_M_aortic_arch', asc);
+        const dA = at('VH_M_descending_aorta_a', arch), dB = centerOf.VH_M_descending_aorta_b;
+        const dBot = dB ? V(dB.center.x, dB.box.min.y, dB.center.z) : dA.clone().add(V(0, -3, 0));
+        const routes = {
+            v: [[svcTop, ra, rv, trunk, at('VH_M_pulmonary_artery_R', hR), hR],
+                [ivcBot, ra, rv, trunk, at('VH_M_pulmonary_artery_L', hL), hL]],
+            a: [[hR, at('VH_M_pulmonary_vein_R_sup', la), la, lv, asc, arch, dA, dBot],
+                [hL, at('VH_M_pulmonary_vein_L_sup', la), la, lv, asc, arch, dA, dBot]]
+        };
+        const geo = new THREE.SphereGeometry(0.055, 8, 6);
+        [['v', '#9fb2ff'], ['a', '#ff9b93']].forEach(([k, color]) => {
+            const n = 40;
+            const inst = new THREE.InstancedMesh(geo, new THREE.MeshBasicMaterial({ color, clippingPlanes: clipList }), n);
+            inst.renderOrder = 5;
+            groups.flow.add(inst);
+            flow[k] = { inst, curves: routes[k].map((pts) => new THREE.CatmullRomCurve3(pts)), t: Array.from({ length: n }, (_, i) => i / n) };
+        });
+        stepFlow(0);
+    }
     const dummy = new THREE.Object3D();
     function stepFlow(dt) {
-        const speed = (st.co / 5) * 0.07;                       // fraction de trajet par seconde
+        if (!flow.v) return;
+        const speed = (st.co / 5) * 0.07;
         ['v', 'a'].forEach((k) => {
             const f = flow[k];
             f.t.forEach((t, i) => {
-                const nt = (t + speed * dt) % 1;
-                f.t[i] = nt;
-                f.curves[i % f.curves.length].getPointAt(nt, dummy.position);
+                f.t[i] = (t + speed * dt) % 1;
+                f.curves[i % f.curves.length].getPointAt(f.t[i], dummy.position);
                 dummy.updateMatrix();
                 f.inst.setMatrixAt(i, dummy.matrix);
             });
@@ -223,66 +264,104 @@ export function mount(root) {
         });
     }
 
-    // Calques des mécanismes
-    const ov = {};
-    ov['4'] = new THREE.Group();
-    [V(-0.9, 1.2, -0.1), V(1.15, 1.3, -0.12), V(-1.95, 1.0, -0.25), V(2.0, 1.05, -0.3)].forEach((p, i) => {
-        const c = new THREE.Mesh(new THREE.SphereGeometry(i < 2 ? 0.13 : 0.09, 16, 12), mat.clot);
-        c.position.copy(p);
-        c.scale.set(1.3, 0.8, 0.9);
-        ov['4'].add(c);
-    });
-    ov['5'] = new THREE.Group();
-    [V(-0.4, 1.6, 0.3), V(0.9, 1.6, -0.4), V(-2.3, 0.4, 0.6)].forEach((p) => {
-        const s = new THREE.Mesh(new THREE.TorusGeometry(0.22, 0.04, 10, 32), mat.alert);
-        s.position.copy(p);
-        ov['5'].add(s);
-    });
-    Object.values(ov).forEach((g) => { g.visible = false; groups.ov.add(g); });
+    // ---------- Calques des mécanismes ----------
+    function buildOverlays() {
+        ov['4'] = new THREE.Group();
+        const pR = at('VH_M_pulmonary_artery_R', V(-1, 1, 0)), pL = at('VH_M_pulmonary_artery_L', V(1, 1, 0));
+        [pR, pL, ...branches.filter((b) => b.userData.depth === 1).map((b) => b.userData.mid)].forEach((p, i) => {
+            const clot = new THREE.Mesh(new THREE.SphereGeometry(i < 2 ? 0.17 : 0.1, 16, 12), mat.clot);
+            clot.position.copy(p);
+            clot.scale.set(1.3, 0.8, 0.9);
+            ov['4'].add(clot);
+        });
+        ov['5'] = new THREE.Group();
+        [at('VH_M_pulmonary_trunk', V(0, 1, 0)).add(V(0, 0.5, 0.4)), at('VH_M_hilum_R', V(-2, 0, 0)), parts.lv.center.clone()].forEach((p) => {
+            const t = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.05, 10, 36), mat.alert);
+            t.position.copy(p);
+            ov['5'].add(t);
+        });
+        Object.values(ov).forEach((g) => { g.visible = false; groups.ov.add(g); });
+    }
 
-    // Étiquettes HTML projetées
-    const labels = LABELS.map(([txt, p]) => {
-        const el = document.createElement('span');
-        el.className = 'htp3d-label';
-        el.textContent = txt;
-        labelLayer.appendChild(el);
-        return { el, p, txt };
-    });
+    // ---------- Grand axe du VG (coupe petit axe) ----------
+    function computeLvAxis() {
+        const pts = [];
+        parts.lv.pivots.forEach((pv) => pv.traverse((o) => {
+            if (!o.isMesh || o.material === innerMat.lv) return;
+            o.updateMatrixWorld(true);
+            const pos = o.geometry.attributes.position;
+            for (let i = 0; i < pos.count; i += 3) pts.push(V(pos.getX(i), pos.getY(i), pos.getZ(i)).applyMatrix4(o.matrixWorld));
+        }));
+        const mean = pts.reduce((s, p) => s.add(p), V()).divideScalar(pts.length);
+        const C = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+        pts.forEach((p) => {
+            const d = [p.x - mean.x, p.y - mean.y, p.z - mean.z];
+            for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) C[r * 3 + c] += d[r] * d[c];
+        });
+        let v = V(0, 1, 0);
+        for (let it = 0; it < 30; it++) {
+            v = V(C[0] * v.x + C[1] * v.y + C[2] * v.z, C[3] * v.x + C[4] * v.y + C[5] * v.z, C[6] * v.x + C[7] * v.y + C[8] * v.z).normalize();
+        }
+        if (v.dot(parts.la.center.clone().sub(mean)) < 0) v.negate();   // orienté vers la base
+        let lo = Infinity, hi = -Infinity;
+        pts.forEach((p) => { const t = p.clone().sub(mean).dot(v); lo = Math.min(lo, t); hi = Math.max(hi, t); });
+        cut.axis = v;
+        cut.center = mean;
+        cut.half = (hi - lo) / 2;
+        ring.quaternion.setFromUnitVectors(V(0, 0, 1), v);
+    }
 
-    let st = { pvr: 1.2, pawp: 9, co: 5.5, mpap: 15, pod: 4, ov: null };
-    let heartOpacity = 0.85;
-    stepFlow(0);
-
-    function applyColors() {
-        const v = new THREE.Color(css('--htp-veineux'));
-        const a = new THREE.Color(css('--htp-arteriel'));
-        mat.v.color.copy(v);
-        mat.a.color.copy(a);
-        mat.vVessel.color.copy(v);
-        mat.aVessel.color.copy(a);
-        mat.alert.color.set(css('--htp-alerte'));
-        ringMat.color.set(css('--htp-alerte'));
-        innerMat.v.color.copy(v).offsetHSL(0, 0, -0.08);
-        innerMat.a.color.copy(a).offsetHSL(0, 0, -0.08);
-        flow.v.dm.color.copy(v).offsetHSL(0, 0.1, 0.18);
-        flow.a.dm.color.copy(a).offsetHSL(0, 0.1, 0.18);
+    function applyCut() {
+        if (!ready) return;
+        const c = cut.center.clone().addScaledVector(cut.axis, cut.level * cut.half);
+        cut.plane.setFromNormalAndCoplanarPoint(cut.axis.clone().negate(), c);
+        clipList.length = 0;
+        if (cut.on) clipList.push(cut.plane);
+        ring.position.copy(c).addScaledVector(cut.axis, -0.01);
+        ring.visible = cut.on;
+        CHAMBERS.forEach((k) => parts[k] && parts[k].pivots.forEach((pv) => pv.traverse((o) => {
+            if (o.isMesh && Object.values(innerMat).includes(o.material)) o.visible = cut.on;
+        })));
+        applyVisibility();
         applyState();
     }
 
-    function applyState() {
-        const k = clamp((st.mpap - 20) / 30, 0, 1);
-        const rvF = 1 + 0.5 * k;
-        chambers.rv.scale.set(CH.rv.s.x * rvF, CH.rv.s.y * (1 + 0.25 * k), CH.rv.s.z * rvF);
-        chambers.rv.position.set(CH.rv.c.x - 0.25 * k, CH.rv.c.y, CH.rv.c.z + 0.1 * k);
-        const raF = 1 + 0.6 * clamp((st.pod - 4) / 12, 0, 1);
-        chambers.ra.scale.copy(CH.ra.s).multiplyScalar(raF);
-        const laF = 1 + 0.6 * clamp((st.pawp - 8) / 20, 0, 1);
-        chambers.la.scale.copy(CH.la.s).multiplyScalar(laF);
-        // Le VG est comprimé quand le VD se dilate
-        const lvF = 1 - 0.18 * k;
-        chambers.lv.scale.set(CH.lv.s.x * lvF, CH.lv.s.y, CH.lv.s.z * lvF);
+    // ---------- Étiquettes ----------
+    function buildLabels() {
+        const lat = (P, s) => V(P.center.x + s * (P.box.max.x - P.box.min.x) * 0.3, P.center.y + 1.1, P.center.z + 0.8);
+        const L = [
+            ['OD', parts.ra.center], ['VD', parts.rv.center], ['OG', parts.la.center], ['VG', parts.lv.center],
+            ['AP', at('VH_M_pulmonary_trunk', parts.pa.center)], ['Aorte', at('VH_M_aortic_arch', parts.ao.center)],
+            ['VCS', at('VH_M_superior_vena_cava', parts.cava.center)],
+            ['Poumon D', lat(parts.lungR, -1)], ['Poumon G', lat(parts.lungL, 1)]
+        ];
+        L.forEach(([txt, p]) => {
+            const el = document.createElement('span');
+            el.className = 'htp3d-label';
+            el.textContent = txt;
+            labelLayer.appendChild(el);
+            labels.push({ el, p, txt });
+        });
+    }
 
-        buildPA(0.17 + clamp((st.mpap - 15) / 35, 0, 1) * 0.13);
+    // ---------- Visibilité et état ----------
+    function applyVisibility() {
+        for (const k of Object.keys(groups)) groups[k].visible = layerOn[k] && (!cut.on || k === 'heart');
+        labelLayer.hidden = !layerOn.labels;
+        labels.forEach((l) => { l.el.hidden = cut.on && l.txt !== 'VD' && l.txt !== 'VG'; });
+    }
+
+    const scaleParts = (k, sx, sy = sx, sz = sx) => parts[k] && parts[k].pivots.forEach((pv) => pv.scale.set(sx, sy, sz));
+
+    function applyState() {
+        if (!ready) return;
+        const k = clamp((st.mpap - 20) / 30, 0, 1);              // post-charge du VD
+        scaleParts('rv', 1 + 0.32 * k, 1 + 0.12 * k, 1 + 0.32 * k);
+        scaleParts('ra', 1 + 0.35 * clamp((st.pod - 4) / 12, 0, 1));
+        scaleParts('la', 1 + 0.32 * clamp((st.pawp - 8) / 20, 0, 1));
+        scaleParts('lv', 1 - 0.1 * k, 1, 1 - 0.1 * k);
+        scaleParts('pa', 1 + 0.28 * clamp((st.mpap - 15) / 35, 0, 1));
+
         const lumen = clamp(1 - (st.pvr - 1) / 15, 0.3, 1);
         branches.forEach((b) => {
             const { r, len, depth } = b.userData;
@@ -290,41 +369,49 @@ export function mount(root) {
             b.scale.set(r * f, len, r * f);
         });
 
-        mat.distal.color.set(st.ov === '1' ? css('--htp-alerte') : css('--htp-veineux'));
-        mat.lung.color.set(st.ov === '3' ? '#8a8f99' : '#e89b9b');
-        mat.lung.opacity = st.ov === '3' ? 0.3 : 0.16;
-        mat.a.emissive.set(st.ov === '2' ? css('--htp-alerte') : '#000000');
-        mat.a.emissiveIntensity = st.ov === '2' ? 0.35 : 0;
+        mat.tree.color.set(st.ov === '1' ? COL.alert : COL.v);
+        ['lungL', 'lungR'].forEach((l) => {
+            mat[l].color.set(st.ov === '3' ? COL.hypoxic : COL.lung);
+            mat[l].opacity = st.ov === '3' ? 0.3 : 0.14;
+        });
         // Groupe 4 : artères translucides pour voir les caillots
-        mat.vVessel.opacity = st.ov === '4' ? 0.35 : 1;
-        mat.vVessel.depthWrite = st.ov !== '4';
+        mat.pa.opacity = st.ov === '4' ? 0.35 : 1;
+        mat.pa.depthWrite = st.ov !== '4';
         const op = cut.on ? 1 : heartOpacity;
-        mat.v.opacity = mat.a.opacity = op;
-        mat.v.depthWrite = mat.a.depthWrite = op > 0.95;
+        ['ra', 'rv', 'la', 'lv', 'septum', 'cor', 'cvein'].forEach((m) => {
+            mat[m].opacity = op;
+            mat[m].depthWrite = op > 0.95;
+        });
         Object.entries(ov).forEach(([key, g]) => { g.visible = st.ov === key; });
+        // Base émissive (G2 : OG en surpression) ; la brillance du focus s'ajoute dans la boucle
+        Object.keys(mat).forEach((m) => { if (mat[m].emissive) mat[m].emissive.set(0x000000); });
+        if (st.ov === '2') {
+            mat.la.emissive.set(COL.alert);
+            mat.la.emissiveIntensity = 0.35;
+        }
     }
 
-    const layerOn = { heart: true, lungs: true, vessels: true, flow: true, ov: true, labels: true };
-    function applyVisibility() {
-        for (const k of Object.keys(groups)) groups[k].visible = layerOn[k] && (!cut.on || k === 'heart');
-        labelLayer.hidden = !layerOn.labels;
-        labels.forEach((l) => { l.el.hidden = cut.on && l.txt !== 'VD' && l.txt !== 'VG'; });
-    }
-
-    // Vues animées
+    // ---------- Vues animées ----------
     let camAnim = null;
-    function setView(name) {
-        const lvc = CH.lv.c.clone().addScaledVector(LV_AXIS, cut.level);
-        const to = name === 'coupe' ? lvc.clone().addScaledVector(LV_AXIS, 6.5) : VIEWS[name];
+    const TARGET = V(0, 0.45, 0);
+    const D = 9.6;
+    function viewPos(name) {
+        if (name === 'coupe') return cut.center.clone().addScaledVector(cut.axis, 7);
+        return { face: V(0, 0.8, D), gauche: V(D, 0.8, 0.4), dos: V(0, 0.8, -D), oblique: V(D * 0.68, D * 0.36, D * 0.68) }[name];
+    }
+    function setView(name, instant) {
+        const to = viewPos(name);
         if (!to) return;
-        const target = name === 'coupe' ? lvc : V(0, 0.3, 0);
-        if (reduce.matches) { camera.position.copy(to); controls.target.copy(target); controls.update(); return; }
+        const target = name === 'coupe' ? cut.center.clone() : TARGET.clone();
+        if (instant || reduce.matches) { camera.position.copy(to); controls.target.copy(target); controls.update(); return; }
         camAnim = { from: camera.position.clone(), to, tFrom: controls.target.clone(), tTo: target, t0: performance.now() };
     }
+    camera.position.set(0, 0.8, D);
+    controls.target.copy(TARGET);
 
     function resize() {
         const w = wrap.clientWidth || 600;
-        const h = Math.max(280, Math.min(640, w * 0.72));
+        const h = Math.max(300, Math.min(660, w * 0.74));
         renderer.setSize(w, h, false);
         renderer.domElement.style.width = '100%';
         renderer.domElement.style.height = h + 'px';
@@ -335,60 +422,64 @@ export function mount(root) {
     ro.observe(wrap);
     resize();
 
+    // Rendu seulement quand la scène est à l'écran
+    let onScreen = true;
+    const io = new IntersectionObserver((e) => { onScreen = e[0].isIntersecting; });
+    io.observe(wrap);
+
     const tmp = new THREE.Vector3();
-    const onPlane = { VD: 'rv', VG: 'lv' };
-    let raf = 0;
-    let prev = 0;
+    let raf = 0, prev = 0;
     function loop(now) {
+        raf = requestAnimationFrame(loop);
         const dt = prev ? Math.min(0.05, (now - prev) / 1000) : 0;
         prev = now;
-        raf = requestAnimationFrame(loop);
-        if (!wrap.offsetParent || document.hidden) return;
+        if (!onScreen || !wrap.offsetParent || document.hidden) return;
         if (camAnim) {
-            const t = clamp((now - camAnim.t0) / 800, 0, 1);
+            const t = clamp((now - camAnim.t0) / 900, 0, 1);
             const e = 1 - Math.pow(1 - t, 3);
             camera.position.lerpVectors(camAnim.from, camAnim.to, e);
             controls.target.lerpVectors(camAnim.tFrom, camAnim.tTo, e);
             if (t === 1) camAnim = null;
         }
         controls.update();
-        // Battement discret (≈ 70/min)
-        if (!reduce.matches) {
-            const beat = 1 + 0.025 * Math.max(0, Math.sin(now / 1000 * 2 * Math.PI * 70 / 60));
+        if (ready && !reduce.matches) {
+            const beat = 1 + 0.02 * Math.max(0, Math.sin(now / 1000 * 2 * Math.PI * 70 / 60));
             groups.heart.scale.setScalar(beat);
-            if (flowGroup.visible) stepFlow(dt);
+            if (groups.flow.visible) stepFlow(dt);
             ov['5'].children.forEach((m, i) => { m.rotation.x = now / 900 + i; m.rotation.y = now / 1300; });
+        }
+        // Structure mise en avant par le mode pas à pas
+        if (ready && st.focus && FOCUS[st.focus]) {
+            const glow = reduce.matches ? 0.45 : 0.25 + 0.25 * (1 + Math.sin(now / 260));
+            FOCUS[st.focus].forEach((m) => { mat[m].emissive.set(COL.alert); mat[m].emissiveIntensity = glow; });
         }
         renderer.render(scene, camera);
         const w = renderer.domElement.clientWidth, h = renderer.domElement.clientHeight;
         labels.forEach((l) => {
-            if (cut.on && onPlane[l.txt]) cut.plane.projectPoint(chambers[onPlane[l.txt]].position, tmp).project(camera);
-            else tmp.copy(l.p).project(camera);
+            if (cut.on && (l.txt === 'VD' || l.txt === 'VG')) {
+                cut.plane.projectPoint(parts[l.txt === 'VD' ? 'rv' : 'lv'].center, tmp).project(camera);
+            } else tmp.copy(l.p).project(camera);
             l.el.style.transform = `translate(-50%,-50%) translate(${((tmp.x + 1) / 2) * w}px,${((1 - tmp.y) / 2) * h}px)`;
             l.el.style.opacity = tmp.z < 1 ? '' : 0;
         });
     }
     raf = requestAnimationFrame(loop);
 
-    // Changement de thème
-    const mo = new MutationObserver(applyColors);
-    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyColors);
-    applyColors();
-
     return {
-        update(s) { st = s; applyState(); },
-        setView,
-        setLayer(name, on) {
-            layerOn[name] = on;
-            applyVisibility();
+        update(s) {
+            const focusChanged = s.focus !== st.focus;
+            st = s;
+            applyState();
+            if (focusChanged && ready) applyState();
         },
+        setView,
+        setLayer(name, on) { layerOn[name] = on; if (ready) applyVisibility(); },
         setHeartOpacity(o) { heartOpacity = o; applyState(); },
         setCut(on, level) {
             cut.on = on;
             if (level !== undefined) cut.level = level;
             applyCut();
         },
-        dispose() { cancelAnimationFrame(raf); ro.disconnect(); mo.disconnect(); renderer.dispose(); }
+        dispose() { cancelAnimationFrame(raf); ro.disconnect(); io.disconnect(); renderer.dispose(); pmrem.dispose(); }
     };
 }
