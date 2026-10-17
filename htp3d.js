@@ -52,11 +52,21 @@ export function mount(root) {
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    // Netteté plafonnée (PC hospitaliers) ; rendu logiciel détecté → résolution native
+    const gl = renderer.getContext();
+    const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+    const soft = dbg && /swiftshader|llvmpipe|software/i.test(gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL));
+    renderer.setPixelRatio(soft ? 1 : Math.min(window.devicePixelRatio || 1, 1.5));
     renderer.localClippingEnabled = true;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.05;
     wrap.appendChild(renderer.domElement);
+    renderer.domElement.addEventListener('webglcontextlost', (e) => {
+        e.preventDefault();
+        cancelAnimationFrame(raf);
+        msg.hidden = false;
+        msg.textContent = 'Vue 3D interrompue par le navigateur : rechargez la page ou utilisez le schéma 2D.';
+    });
 
     const scene = new THREE.Scene();
     const pmrem = new THREE.PMREMGenerator(renderer);

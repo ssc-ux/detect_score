@@ -628,9 +628,18 @@
                         <p>Humbert M, Kovacs G, Hoeper MM, et&nbsp;al. <em>2022 ESC/ERS Guidelines for the diagnosis
                                 and treatment of pulmonary hypertension.</em> Eur Heart J 2022;43:3618–3731.</p>
                         <span class="reference-label htp-ref-gap">Modèle anatomique 3D</span>
-                        <p>Human Reference Atlas, HuBMAP Consortium. <em>3D Reference Object Library</em>
-                            (homme de référence, cœur, vascularisation cardiaque et poumons, v1.2). Licence CC BY 4.0.
-                            Modèle simplifié et compressé pour cette application.</p>
+                        <p>Human Reference Atlas, HuBMAP Consortium. <em>3D Reference Object Library</em> :
+                            cœur, vascularisation cardiaque et poumons de l'homme de référence (v1.2), d'après le
+                            Visible Human Project (National Library of Medicine). Licence
+                            <a href="https://creativecommons.org/licenses/by/4.0/deed.fr" target="_blank" rel="noopener">CC BY 4.0</a>.
+                            Modifications : fusion des trois modèles, retrait des valves, piliers et cartilages,
+                            simplification et compression, couleurs conventionnelles, déformations simulées.</p>
+                        <span class="reference-label htp-ref-gap">Modèle et limites</span>
+                        <p>La 3D provient d'un seul sujet, à partir de données post-mortem : sa forme n'est pas celle
+                            d'un cœur « type » en diastole. Le bleu et le rouge sont une convention (sang désoxygéné /
+                            oxygéné). L'arbre artériel pulmonaire est schématique : le remodelage de l'HTAP touche des
+                            artérioles invisibles à cette échelle. Les dilatations, les pressions et le flux sont
+                            simulés à visée pédagogique.</p>
                         <span class="reference-label htp-ref-gap">PAPs → PAPm</span>
                         <p>Chemla D, Castelain V, Humbert M, et&nbsp;al. <em>New formula for predicting mean
                                 pulmonary artery pressure using systolic pulmonary artery pressure.</em> Chest
@@ -711,7 +720,7 @@
     <script src="logic.js?v=25"></script>
     <script src="app.js?v=26"></script>
     <script src="fx.js?v=25" defer></script>
-    <script src="htp.js?v=12" defer></script>
+    <script src="htp.js?v=13" defer></script>
     <script>
         if ('serviceWorker' in navigator && location.protocol === 'https:') {
             window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });

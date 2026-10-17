@@ -542,7 +542,7 @@
         loading3d = true;
         msg.hidden = false;
         msg.textContent = 'Chargement de la 3D…';
-        import('./htp3d.js?v=9').then(function (m) {
+        import('./htp3d.js?v=10').then(function (m) {
             // Le module affiche lui-même la progression du chargement du modèle
             view3d = m.mount(el.d3);
             if (last) view3d.update(last);
