@@ -109,6 +109,8 @@ try {
                 if (window.HTP) window.HTP.onTab(targetId);
             };
         });
+        // Lien direct vers l'onglet pédagogique : …/detect_score/#htp
+        if (location.hash === '#htp') document.querySelector('.tab-btn[data-tab="tab-htp"]').click();
     }
     // Lien « Comprendre ce résultat » : visible dès qu'une Vmax IT est saisie
     function initHtpLink() {
