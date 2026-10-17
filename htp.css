@@ -202,10 +202,12 @@
 }
 
 .htp-cv {
+    fill: #c7d0f4;
     fill: color-mix(in srgb, var(--htp-veineux) 30%, var(--surface));
 }
 
 .htp-ca {
+    fill: #f3c6c3;
     fill: color-mix(in srgb, var(--htp-arteriel) 28%, var(--surface));
 }
 
@@ -549,12 +551,14 @@
 }
 
 .htp-sa-rv {
+    fill: #c7d0f4;
     fill: color-mix(in srgb, var(--htp-veineux) 30%, var(--surface));
     stroke: var(--htp-muscle);
     stroke-linejoin: round;
 }
 
 .htp-sa-lv {
+    fill: #f3c6c3;
     fill: color-mix(in srgb, var(--htp-arteriel) 28%, var(--surface));
     stroke: var(--htp-muscle);
     stroke-width: 8;
@@ -965,6 +969,7 @@
     top: 0;
     padding: 2px 7px;
     border-radius: 999px;
+    background: var(--surface);
     background: color-mix(in srgb, var(--surface) 82%, transparent);
     border: 1px solid var(--line);
     font-size: 0.72rem;
@@ -1770,4 +1775,88 @@
 .htp-steplist li.is-done,
 .htp-steplist li:hover {
     opacity: 1;
+}
+
+/* ---------- Pédagogie : à retenir, termes de l'étape, comparaison ---------- */
+
+.htp-key {
+    margin: 4px 0 10px;
+    padding: 8px 12px;
+    border-left: 3px solid var(--accent);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    background: var(--accent-soft);
+    font-size: 0.86rem;
+    line-height: 1.5;
+    color: var(--ink);
+}
+
+.htp-step-terms {
+    display: grid;
+    gap: 4px;
+    margin: 0 0 10px;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    background: var(--chip);
+    font-size: 0.8rem;
+    line-height: 1.45;
+    color: var(--ink-2);
+}
+
+.htp-table-wrap {
+    overflow-x: auto;
+    margin: 4px 0 8px;
+}
+
+.htp-table {
+    width: 100%;
+    min-width: 520px;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+    line-height: 1.4;
+}
+
+.htp-table th,
+.htp-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--line);
+    text-align: left;
+    vertical-align: top;
+}
+
+.htp-table thead th {
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+}
+
+/* Mobile : le schéma reste visible pendant la lecture des étapes */
+@media (max-width: 1099px) {
+    #htp-2d {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+    }
+}
+
+/* Grand écran : les étapes en haut de la colonne de droite, visibles sans défiler */
+@media (min-width: 1100px) {
+    #htp-sim {
+        grid-template-areas:
+            "head head"
+            "groups tools"
+            "patient patient"
+            "v3d steps"
+            "v3d v2d"
+            "v3d ."
+            "adv adv";
+    }
+
+    #htp-sim > #htp-steps {
+        margin-top: 0;
+    }
+
+    #htp-sim > #htp-2d {
+        margin-top: 1rem;
+    }
 }

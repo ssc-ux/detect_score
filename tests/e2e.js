@@ -30,9 +30,9 @@ const EXP={normal:[16,"Pas d'HTP"],g1:[42,'HTP précapillaire'],g2i:[30,'HTP pos
   ok(await p.locator('.htp-gbtn.is-on[data-group="normal"]').count()===1, `${n} bouclage après G5`);
   // Quiz complet
   let expected=0;
-  for (let i=0;i<12;i++){ await p.click('.htp-opt[data-opt="0"]'); if (await p.locator('.htp-opt[data-opt="0"].is-right').count()) expected++;
+  const NQ=+(await p.textContent('.htp-quiz-n')).split('/')[1]; for (let i=0;i<NQ;i++){ await p.click('.htp-opt[data-opt="0"]'); if (await p.locator('.htp-opt[data-opt="0"].is-right').count()) expected++;
    ok(await p.locator('.htp-opt.is-right').count()===1, `${n} quiz q${i+1} correction`); await p.click('[data-quiz="next"]'); }
-  const end=await p.textContent('.htp-quiz-end'); ok(end.includes(`${expected} / 12`), `${n} score final ${end} attendu ${expected}`);
+  const end=await p.textContent('.htp-quiz-end'); ok(end.includes(`${expected} / ${NQ}`), `${n} score final ${end} attendu ${expected}`);
   // Lexique
   ok(await p.locator('.htp-term').count()>20, `${n} lexique`);
   // Lien patient depuis le calculateur

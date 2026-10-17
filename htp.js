@@ -145,21 +145,32 @@
             "Résultat : PAPm ≈ 15 mmHg ; un VD à paroi fine suffit"
         ]
     };
-    var N = { pvr: 1.2, pawp: 9, co: 5.5 };
+    var N = { pvr: 1.2, pawp: 9, co: 5.4 };
     var STEPS = {
         normal: [[N, 'rv'], [N, 'endo'], [N, 'alv'], [N, 'la'], [N, 'pa']],
         '1': [[N, 'endo'], [{ pvr: 2, pawp: 9, co: 5.4 }, 'endo'], [{ pvr: 3.5, pawp: 9, co: 5.2 }, 'endo'],
-            [{ pvr: 8, pawp: 10, co: 4 }, 'pa'], [{ pvr: 11, pawp: 10, co: 3.2 }, 'rv']],
+            [{ pvr: 8, pawp: 10, co: 4 }, 'pa'], [{ pvr: 13, pawp: 10, co: 2.4 }, 'rv']],
         '2': [[{ pvr: 1.2, pawp: 12, co: 5.2 }, 'lv'], [{ pvr: 1.4, pawp: 20, co: 5 }, 'la'], [{ pvr: 1.5, pawp: 22, co: 5 }, 'pa'],
             [{ pvr: 4, pawp: 24, co: 4.5 }, 'endo'], [{ pvr: 4.5, pawp: 25, co: 4 }, 'rv']],
         '3': [[{ pvr: 1.5, pawp: 9, co: 5.3 }, 'alv'], [{ pvr: 2.5, pawp: 9, co: 5.2 }, 'endo'], [{ pvr: 3, pawp: 9, co: 5.1 }, 'cap'],
             [{ pvr: 3.5, pawp: 9, co: 5 }, 'endo'], [{ pvr: 6, pawp: 9, co: 4.5 }, 'rv']],
         '4': [[N, 'pa'], [{ pvr: 3, pawp: 9, co: 5.2 }, 'pa'], [{ pvr: 6, pawp: 10, co: 4.5 }, 'pa'],
-            [{ pvr: 9, pawp: 10, co: 3.8 }, 'endo'], [{ pvr: 11, pawp: 10, co: 3.3 }, 'rv']],
+            [{ pvr: 9, pawp: 10, co: 3.8 }, 'endo'], [{ pvr: 14, pawp: 10, co: 2.4 }, 'rv']],
         '5': [[{ pvr: 3, pawp: 10, co: 5 }, 'pa'], [{ pvr: 4, pawp: 11, co: 5 }, 'endo'], [{ pvr: 3.5, pawp: 10, co: 6 }, 'endo'],
             [{ pvr: 2, pawp: 12, co: 8 }, 'pa'], [{ pvr: 3.5, pawp: 18, co: 4.8 }, 'lv']]
     };
     var GROUP_ORDER = ['normal', '1', '2', '3', '4', '5'];
+    // Étape à partir de laquelle le calque du mécanisme apparaît (avant, il donnerait la réponse)
+    var OV_FROM = { '1': 2, '2': 1 };
+    // Message à retenir pour chaque groupe, rattaché à l'équation
+    var KEYS = {
+        normal: "PAPm ≈ 15 mmHg : le lit pulmonaire absorbe tout le débit à basse pression (RVP ≈ 1 UW).",
+        '1': "PAPm ↑ par la RVP, PAPO normale. En fin d'évolution le DC chute : une PAPm qui baisse peut signer une aggravation.",
+        '2': "PAPm ↑ par la PAPO (> 15). RVP ≤ 2 UW : isolée ; RVP > 2 UW : combinée, de moins bon pronostic.",
+        '3': "PAPm ↑ par la RVP (hypoxie, perte de vaisseaux), le plus souvent modérée ; sévère si RVP > 5 UW.",
+        '4': "PAPm ↑ par la RVP (obstruction mécanique) : scintigraphie V/Q devant toute HTP, car c'est potentiellement curable.",
+        '5': "Plusieurs termes de l'équation à la fois (RVP, PAPO, DC) selon la maladie : analyser chaque composante."
+    };
     // Structure mise en évidence sur le schéma 2D
     var FOCUS_2D = { rv: '#htp-rv', ra: '#htp-ra', la: '#htp-la', lv: '#htp-lv', pa: '#htp-pa', vp: '#htp-vp',
         endo: '.htp-wall', alv: '.htp-alv circle', cap: '.htp-cap path' };
@@ -180,6 +191,15 @@
         'DLCO': "Capacité de diffusion du monoxyde de carbone : explore la surface d'échange alvéolo-capillaire.",
         'CVF': "Capacité vitale forcée.",
         'PID': "Pneumopathie interstitielle diffuse.",
+        'post-charge': "Résistance que le ventricule doit vaincre pour éjecter ; pour le VD, surtout la pression et la résistance artérielles pulmonaires.",
+        'BMPR2': "Gène muté dans la plupart des HTAP héritables ; sa perte favorise la prolifération des cellules vasculaires.",
+        'lésions plexiformes': "Lésions caractéristiques de l'HTAP : prolifération désorganisée de cellules endothéliales qui obstrue les petites artères.",
+        'Euler-Liljestrand': "Vasoconstriction des artérioles pulmonaires en réponse à l'hypoxie alvéolaire, propre au muscle lisse vasculaire.",
+        'microvasculopathie': "Atteinte des tout petits vaisseaux (artérioles, capillaires).",
+        'MVO/HCP': "Maladie veino-occlusive / hémangiomatose capillaire pulmonaire : forme d'HTAP touchant les veinules et les capillaires.",
+        'endothéline-1': "Vasoconstricteur et facteur de prolifération produit par l'endothélium ; cible des antagonistes de l'endothéline.",
+        'prostacycline': "Vasodilatateur et antiprolifératif produit par l'endothélium ; cible des prostanoïdes.",
+        'NO': "Monoxyde d'azote : vasodilatateur produit par l'endothélium ; voie ciblée par les iPDE5 et le riociguat.",
         'TAPSE': "Excursion systolique de l'anneau tricuspide (mode TM) : reflet de la fonction longitudinale du VD. Anormale si < 17 mm.",
         'NT-proBNP': "Fragment N-terminal inactif du pro-BNP, libéré avec le BNP par les cardiomyocytes étirés."
     };
@@ -226,7 +246,20 @@
             e: "L'hypoxie alvéolaire entraîne une vasoconstriction et un remodelage artériolaires : groupe 3." },
         { t: 'p', a: 4, vis: 'hd',
             q: "Observez le schéma (DC, RVP, PAPO). Quel profil hémodynamique ?",
-            e: "DC 9 L/min, RVP 1,5 UW, PAPO 10 mmHg : la PAPm monte par le seul débit. HTP non classée." }
+            e: "DC 9 L/min, RVP 1,5 UW, PAPO 10 mmHg : la PAPm monte par le seul débit. HTP non classée." },
+        // Questions de prédiction sur l'équation
+        { t: 'x', a: 1, h: { pawp: 10, pvr: 1.5, co: 9 },
+            o: ['Elle ne change pas', 'Elle monte de 17,5 à 23,5 mmHg', 'Elle baisse'],
+            q: "RVP 1,5 UW, PAPO 10 mmHg : le débit passe de 5 à 9 L/min (fistule artérioveineuse, anémie). Que devient la PAPm ?",
+            e: "PAPm = PAPO + RVP × DC : 10 + 1,5 × 5 = 17,5 puis 10 + 1,5 × 9 = 23,5 mmHg. Le débit seul peut faire franchir le seuil de 20 mmHg, sans maladie vasculaire (HTP non classée)." },
+        { t: 'x', a: 1, h: { pawp: 10, pvr: 13, co: 2.4 },
+            o: ['Elle monte nettement', 'Elle baisse légèrement (42 → 41 mmHg)', 'Elle double'],
+            q: "HTAP évoluée : la RVP passe de 8 à 13 UW mais le DC chute de 4 à 2,4 L/min (PAPO 10 mmHg). Que fait la PAPm ?",
+            e: "10 + 8 × 4 = 42 puis 10 + 13 × 2,4 ≈ 41 mmHg. La PAPm baisse alors que la maladie s'aggrave : c'est le VD qui défaille. Il faut suivre la RVP et le débit, pas la PAPm seule." },
+        { t: 'x', a: 1, h: { pawp: 22, pvr: 1.5, co: 5.3 },
+            o: ['La RVP', 'La PAPO (pression du cœur gauche)', 'Le débit cardiaque'],
+            q: "PAPm 30 mmHg, PAPO 22 mmHg. Quel terme de l'équation explique l'essentiel de la PAPm ?",
+            e: "La PAPO compte pour 22 des 30 mmHg : la pression remonte du cœur gauche (groupe 2). Le gradient transpulmonaire n'est que de 8 mmHg." }
     ];
 
     /* ---------- Modèle ---------- */
@@ -386,6 +419,7 @@
         if (reducedMotion.matches) return applyValues(v, presetKey, ov);
         cancelAnimationFrame(tweenId);
         setPresetUI(presetKey, ov);
+        state.target = v;
         var from = { pvr: +el.pvr.value, pawp: +el.pawp.value, co: +el.co.value };
         var t0 = performance.now();
         (function step(now) {
@@ -395,7 +429,7 @@
             el.pawp.value = Math.round(from.pawp + (v.pawp - from.pawp) * e);
             el.co.value = from.co + (v.co - from.co) * e;
             render();
-            if (t < 1) tweenId = requestAnimationFrame(step);
+            if (t < 1) tweenId = requestAnimationFrame(step); else state.target = null;
         })(t0);
     }
 
@@ -421,6 +455,8 @@
             b.setAttribute('aria-pressed', on);
         });
         var d = GROUPS[g];
+        $('htp-g-key').innerHTML = '<strong>À retenir :</strong> ' + esc(KEYS[g]);
+        glossify($('htp-g-key'));
         $('htp-g-title').textContent = d.title;
         $('htp-g-site').textContent = d.site;
         el.stepList.innerHTML = d.chain.map(function (c, k) {
@@ -443,7 +479,9 @@
         var st = steps[explore.i];
         state.focus = st[1];
         el.patient.hidden = true;
-        tweenTo(st[0], null, explore.g === 'normal' ? null : explore.g);
+        var ov = explore.g === 'normal' || explore.i < (OV_FROM[explore.g] || 0) ? null : explore.g;
+        tweenTo(st[0], null, ov);
+        renderStepTerms(GROUPS[explore.g].chain[explore.i]);
         el.stepList.querySelectorAll('li').forEach(function (li, n) {
             li.classList.toggle('is-current', n === explore.i);
             li.classList.toggle('is-done', n < explore.i);
@@ -471,6 +509,16 @@
         $('htp-step-play').innerHTML = explore.play ? '<span aria-hidden="true">⏸</span> Pause' : '<span aria-hidden="true">▶</span> Lecture';
         $('htp-step-play').setAttribute('aria-pressed', explore.play);
         if (explore.play) explore.timer = setTimeout(function () { goStep(explore.i + 1); }, 8000);
+    }
+
+    function renderStepTerms(text) {
+        var low = text.toLowerCase();
+        var found = Object.keys(GLOSSARY).filter(function (k) {
+            return new RegExp('(^|[^\\wÀ-ÿ-])' + k.toLowerCase().replace(/[-/]/g, '\\$&') + '(?![\\wÀ-ÿ-])').test(low);
+        });
+        var box = $('htp-step-terms');
+        box.hidden = !found.length;
+        box.innerHTML = found.map(function (k) { return '<span><b>' + esc(k) + '</b> : ' + esc(GLOSSARY[k]) + '</span>'; }).join('');
     }
 
     function stopSteps() {
@@ -554,7 +602,10 @@
         if (view3d || loading3d) return;
         var msg = el.d3.querySelector('.htp3d-msg');
         var c = document.createElement('canvas');
-        if (!(c.getContext('webgl2') || c.getContext('webgl'))) {
+        var gl = c.getContext('webgl2') || c.getContext('webgl');
+        var lose = gl && gl.getExtension('WEBGL_lose_context');
+        if (lose) lose.loseContext();
+        if (!gl) {
             msg.hidden = false;
             msg.textContent = 'Vue 3D indisponible sur cet appareil (WebGL désactivé).';
             return;
@@ -562,10 +613,14 @@
         loading3d = true;
         msg.hidden = false;
         msg.textContent = 'Chargement de la 3D…';
-        import('./htp3d.js?v=16').then(function (m) {
+        import('./htp3d.js?v=17').then(function (m) {
             // Le module affiche lui-même la progression du chargement du modèle
             view3d = m.mount(el.d3);
             if (last) view3d.update(last);
+            el.d3.querySelectorAll('[data-layer]').forEach(function (cb) { if (!cb.checked) view3d.setLayer(cb.dataset.layer, false); });
+            view3d.setHeartOpacity(+$('htp3d-opacity').value);
+            var cutOn = el.d3.querySelector('[data-cut].is-on');
+            if (cutOn && cutOn.dataset.cut !== 'none') view3d.setCut(cutOn.dataset.cut, +$('htp3d-cut-level').value);
         }).catch(function (err) {
             console.error(err);
             msg.textContent = 'Impossible de charger la vue 3D.';
@@ -620,7 +675,7 @@
     function tick(now) {
         var dt = flow.last ? Math.min(0.05, (now - flow.last) / 1000) : 0;
         flow.last = now;
-        if (!reducedMotion.matches && !document.body.classList.contains('htp-still') &&
+        if (document.body.classList.contains('is-htp') && !reducedMotion.matches && !document.body.classList.contains('htp-still') &&
             el.svg.getBoundingClientRect().width > 0 && !document.hidden) placeDots(dt);
         flow.t = requestAnimationFrame(tick);
     }
@@ -635,7 +690,7 @@
         el.detect.innerHTML = DETECT.map(function (d) {
             return '<li><div class="htp-detect-head"><strong>' + esc(d[0]) + '</strong><span class="htp-dir">' +
                 d[1] + '</span></div><p>' + esc(d[2]) +
-                (d[3] ? ' <span class="htp-live">Simulateur : <b id="htp-live-' + d[3] + '">--</b></span>' : '') +
+                (d[3] ? ' <span class="htp-live">Cas affiché : <b id="htp-live-' + d[3] + '">--</b></span>' : '') +
                 '</p></li>';
         }).join('');
     }
@@ -669,7 +724,8 @@
 
     // Photographie du schéma 2D dans l'état d'un cas, sans les textes qui donnent la réponse
     function snapshot(key) {
-        var cur = { pvr: +el.pvr.value, pawp: +el.pawp.value, co: +el.co.value };
+        var cur = state.target || { pvr: +el.pvr.value, pawp: +el.pawp.value, co: +el.co.value };
+        state.target = null;
         var curPreset = state.preset, curOv = state.ov;
         applyValues(PRESETS[key], key);
         var c = el.svg.cloneNode(true);
@@ -704,7 +760,7 @@
             return;
         }
         var it = item();
-        var opts = it.t === 'g' ? GROUP_OPTS : PROFILE_OPTS;
+        var opts = it.o || (it.t === 'g' ? GROUP_OPTS : PROFILE_OPTS);
         quiz.done = false;
         el.quizBody.innerHTML = '<p class="htp-quiz-n" tabindex="-1">Question ' + (quiz.i + 1) + ' / ' + QUIZ.length + '</p>' +
             '<p class="htp-quiz-q">' + esc(it.q) + '</p>' +
@@ -868,10 +924,12 @@
         document.querySelectorAll('.tab-btn').forEach(function (b) {
             b.addEventListener('click', function () {
                 document.body.classList.toggle('is-htp', b.dataset.tab === 'tab-htp');
+                if (b.dataset.tab !== 'tab-htp') stopSteps();
                 layoutView();
             });
         });
         wideMQ.addEventListener('change', layoutView);
+        document.addEventListener('visibilitychange', function () { if (document.hidden) stopSteps(); });
         document.querySelectorAll('input[name="htp-view"]').forEach(function (r) {
             r.addEventListener('change', function () { setViewMode(r.value); });
         });

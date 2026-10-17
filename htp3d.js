@@ -239,9 +239,8 @@ export function mount(root) {
         build(gltf.scene);
         ready = true;
         msg.hidden = true;
-        applyVisibility();
-        applyState();
-        setView('face', true);
+        applyCut();                                   // coupe choisie pendant le chargement
+        setView(cut.mode !== 'none' ? cut.mode : 'face', true);
     }, (e) => {
         msg.textContent = 'Chargement du modèle anatomique… ' + Math.min(99, Math.round(100 * e.loaded / (e.total || MODEL_BYTES))) + ' %';
     }, () => {
@@ -450,7 +449,7 @@ export function mount(root) {
         ring.quaternion.setFromUnitVectors(V(0, 0, 1), n);
         ring.position.copy(c).addScaledVector(n, 0.01);
         ring.visible = cut.on;
-        info.hidden = cut.mode !== 'a4c';
+        info.hidden = !cut.on;
         CHAMBERS.forEach((k) => parts[k] && parts[k].pivots.forEach((pv) => pv.traverse((o) => {
             if (o.isMesh && Object.values(innerMat).includes(o.material)) o.visible = cut.on;
         })));
@@ -495,8 +494,10 @@ export function mount(root) {
         deform.uLA.value = clamp((st.pawp - 8) / 20, 0, 1);
         scaleParts('pa', 1 + 0.28 * clamp((st.mpap - 15) / 35, 0, 1));
         // Rapport VD/VG en 4 cavités (simulé) : ≈ 0,65 normal, > 1 en HTP sévère
-        info.textContent = 'Coupe 4 cavités · diamètres basaux VD/VG ≈ ' +
-            (0.65 + 0.75 * k).toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' (simulé ; signe ESC si > 1,0)';
+        info.textContent = cut.mode === 'sax'
+            ? 'Petit axe vu depuis l\'apex · ' + (k < 0.3 ? 'septum normal, VG circulaire' : k < 0.75 ? 'septum aplati, VG en « D »' : 'septum bombant vers le VG, VG comprimé') + ' · anneau orange = plan de coupe'
+            : 'Coupe 4 cavités (vue anatomique, apex en bas) · diamètres basaux VD/VG ≈ ' +
+              (0.65 + 0.75 * k).toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' (simulé ; signe ESC si > 1,0)';
 
         const lumen = clamp(1 - (st.pvr - 1) / 15, 0.3, 1);
         branches.forEach((b) => {
@@ -548,20 +549,22 @@ export function mount(root) {
 
     function resize() {
         const w = wrap.clientWidth || 600;
-        const h = Math.max(300, Math.min(660, w * 0.74));
+        const h = Math.max(300, Math.min(660, w * 0.74, window.innerHeight * 0.62));
         renderer.setSize(w, h, false);
         renderer.domElement.style.width = '100%';
         renderer.domElement.style.height = h + 'px';
         camera.aspect = w / h;
         camera.updateProjectionMatrix();
     }
-    const ro = new ResizeObserver(resize);
+    // On ne réagit qu'aux changements de largeur (la hauteur dépend de la largeur)
+    let lastW = 0;
+    const ro = new ResizeObserver(() => { if (wrap.clientWidth !== lastW) { lastW = wrap.clientWidth; resize(); } });
     ro.observe(wrap);
     resize();
 
     // Rendu seulement quand la scène est à l'écran
     let onScreen = true;
-    const io = new IntersectionObserver((e) => { onScreen = e[0].isIntersecting; });
+    const io = new IntersectionObserver((e) => { onScreen = e[e.length - 1].isIntersecting; });
     io.observe(wrap);
 
     const tmp = new THREE.Vector3();
@@ -597,7 +600,7 @@ export function mount(root) {
             ov['5'].children.forEach((m, i) => { m.rotation.x = now / 900 + i; m.rotation.y = now / 1300; });
         }
         // Structure mise en avant par le mode pas à pas
-        if (ready && st.focus && FOCUS[st.focus]) {
+        if (ready && st.focus && FOCUS[st.focus] && !(cut.on && !CHAMBERS.includes(st.focus))) {
             const glow = reduce.matches ? 0.45 : 0.25 + 0.25 * (1 + Math.sin(now / 260));
             FOCUS[st.focus].forEach((m) => { mat[m].emissive.set(COL.alert); mat[m].emissiveIntensity = glow; });
         }

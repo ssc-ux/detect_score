@@ -8,7 +8,7 @@
     <script>try{var t=localStorage.getItem("theme");if(t==="sombre")document.documentElement.dataset.theme="dark";else if(t==="auto")delete document.documentElement.dataset.theme}catch(e){}</script>
     <link rel="icon" href="icon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="style.css?v=23">
-    <link rel="stylesheet" href="htp.css?v=11">
+    <link rel="stylesheet" href="htp.css?v=12">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="apple-touch-icon" href="icon-180.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -305,14 +305,14 @@
                     <p class="htp-lead">Choisissez un groupe et suivez son mécanisme étape par étape : le cœur, les pressions
                         et le schéma évoluent à chaque étape. Tout repose sur une seule équation :</p>
                     <p class="htp-eq">PAPm = PAPO + RVP × DC</p>
-                    <p class="htp-beta-note">Version bêta, à visée pédagogique : contenu en cours de relecture,
-                        ne pas utiliser pour une décision clinique.</p>
                     <p class="htp-lead-small">La pression dans l'artère pulmonaire (PAPm) monte si la pression gauche
                         remonte (PAPO), si les artérioles résistent (RVP) ou si le débit augmente (DC).</p>
                     <details class="htp-more htp-lexique-box">
                         <summary>Lexique des sigles</summary>
                         <dl id="htp-lexique" class="htp-facts"></dl>
                     </details>
+                    <p class="htp-beta-note">Version bêta, à visée pédagogique : contenu en cours de relecture,
+                        ne pas utiliser pour une décision clinique.</p>
                 </section>
 
                 <section class="card" id="htp-sim">
@@ -347,7 +347,7 @@
                             <div class="htp3d-canvas"></div>
                             <div class="htp3d-labels" aria-hidden="true"></div>
                             <div class="htp3d-hud" aria-live="off">
-                                <span class="htp3d-live" aria-hidden="true">EN DIRECT</span>
+                                <span class="htp3d-live" aria-hidden="true">SIMULATION</span>
                                 <span id="htp3d-hud-txt"></span>
                             </div>
                             <p class="htp3d-msg" hidden></p>
@@ -521,11 +521,30 @@
                             <span id="htp-profile-mini" class="htp-badge">--</span>
                         </div>
                         <ol id="htp-step-list" class="htp-chain htp-steplist"></ol>
+                        <p id="htp-step-terms" class="htp-step-terms" hidden></p>
+                        <p id="htp-g-key" class="htp-key"></p>
                         <div class="htp-step-nav">
                             <button type="button" class="btn-secondary" data-step="prev" aria-label="Étape précédente"><span aria-hidden="true">◀</span></button>
                             <button type="button" class="btn-secondary" data-step="play" id="htp-step-play" aria-pressed="false"><span aria-hidden="true">▶</span> Lecture</button>
                             <button type="button" class="btn-primary" data-step="next">Étape suivante <span aria-hidden="true">▶</span></button>
                         </div>
+                        <details class="htp-more htp-compare">
+                            <summary>Comparer les groupes</summary>
+                            <div class="htp-table-wrap">
+                                <table class="htp-table">
+                                    <thead><tr><th scope="col">Situation</th><th scope="col">PAPO</th><th scope="col">RVP</th><th scope="col">Ce qui fait monter la PAPm</th><th scope="col">Examen clé</th></tr></thead>
+                                    <tbody>
+                                        <tr><th scope="row">Normal</th><td>≤ 15</td><td>≈ 1 UW</td><td>—</td><td>—</td></tr>
+                                        <tr><th scope="row">G1 · HTAP</th><td>≤ 15</td><td>&gt; 2 UW</td><td>RVP (artérioles remodelées)</td><td>Cathétérisme droit, après exclusion des G2-3-4 ; DETECT dans la ScS</td></tr>
+                                        <tr><th scope="row">G2 · Cœur gauche</th><td>&gt; 15</td><td>≤ 2 (isolée) / &gt; 2 (combinée)</td><td>PAPO (rétro-transmission)</td><td>Échocardiographie</td></tr>
+                                        <tr><th scope="row">G3 · Poumon</th><td>≤ 15</td><td>&gt; 2 UW (&gt; 5 : sévère)</td><td>RVP (hypoxie, perte de vaisseaux)</td><td>EFR, gazométrie, scanner</td></tr>
+                                        <tr><th scope="row">G4 · HTP-TEC</th><td>≤ 15</td><td>&gt; 2 UW</td><td>RVP (obstruction)</td><td>Scintigraphie V/Q</td></tr>
+                                        <tr><th scope="row">G5</th><td>variable</td><td>variable</td><td>plusieurs termes à la fois</td><td>selon la maladie</td></tr>
+                                        <tr><th scope="row">Hyperdébit</th><td>≤ 15</td><td>≤ 2 UW</td><td>DC (HTP non classée)</td><td>—</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </details>
                         <details class="htp-more">
                             <summary>Causes, examen clé, traitement</summary>
                             <dl id="htp-g-facts" class="htp-facts"></dl>
@@ -679,7 +698,7 @@
                         <p class="nomogram-intro">L'algorithme DETECT est basé sur le nomogramme validé dans l'étude
                             princeps.</p>
                         <figure class="nomogram-figure">
-                            <img src="nomogramme.png" alt="Nomogramme DETECT — Figure 3" class="nomogram-image">
+                            <img src="nomogramme.png" loading="lazy" alt="Nomogramme DETECT — Figure 3" class="nomogram-image">
                             <figcaption>
                                 <a href="nomogramme.png" target="_blank" rel="noopener" class="btn-secondary">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
@@ -737,7 +756,7 @@
     <script src="logic.js?v=25"></script>
     <script src="app.js?v=27"></script>
     <script src="fx.js?v=25" defer></script>
-    <script src="htp.js?v=18" defer></script>
+    <script src="htp.js?v=19" defer></script>
     <script>
         if ('serviceWorker' in navigator && location.protocol === 'https:') {
             window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
