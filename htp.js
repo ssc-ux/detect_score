@@ -259,6 +259,9 @@
         state.co = co;
 
         el.pvrOut.textContent = fr(pvr, 1) + ' UW';
+        el.pvr.setAttribute('aria-valuetext', fr(pvr, 1) + ' unités Wood');
+        el.pawp.setAttribute('aria-valuetext', pawp + ' millimètres de mercure');
+        el.co.setAttribute('aria-valuetext', fr(co, 1) + ' litres par minute');
         el.pawpOut.textContent = pawp + ' mmHg';
         el.coOut.textContent = fr(co, 1) + ' L/min';
         el.formula.innerHTML = 'PAPm = ' + pawp + ' + ' + fr(pvr, 1) + ' × ' + fr(co, 1) +
@@ -323,7 +326,7 @@
         last = { pvr: pvr, pawp: pawp, co: co, mpap: r.mpap, pod: r.pod, rvk: r.rvk, ov: state.ov, focus: state.focus };
         if (el.hud) {
             el.hud.innerHTML = '<b>PAPm ' + Math.round(r.mpap) + '</b> mmHg · RVP ' + fr(pvr, 1) + ' UW · PAPO ' + pawp +
-                ' · DC ' + fr(co, 1) + '<span class="htp3d-hud-prof ' + p.cls + '">' + p.label + '</span>';
+                ' · DC ' + fr(co, 1) + ' · <span class="htp3d-hud-prof ' + p.cls + '">' + p.label + '</span>';
         }
         if (view3d) view3d.update(last);
     }
@@ -396,12 +399,14 @@
         })(t0);
     }
 
-    function goSim(v, presetKey, ov) {
+    function goSim(v, presetKey, ov, fromQuiz) {
         stopSteps();
         state.focus = null;
         $('htp-adv').open = true;
+        $('htp-back-quiz').hidden = !fromQuiz;
         tweenTo(v, presetKey, ov);
         $('htp-sim').scrollIntoView({ behavior: reducedMotion.matches ? 'auto' : 'smooth', block: 'start' });
+        el.pvr.focus({ preventScroll: true });
     }
 
     /* ---------- Explorer le mécanisme, étape par étape ---------- */
@@ -413,15 +418,14 @@
         document.querySelectorAll('.htp-gbtn').forEach(function (b) {
             var on = b.dataset.group === g;
             b.classList.toggle('is-on', on);
-            b.setAttribute('aria-selected', on);
+            b.setAttribute('aria-pressed', on);
         });
         var d = GROUPS[g];
         $('htp-g-title').textContent = d.title;
         $('htp-g-site').textContent = d.site;
         el.stepList.innerHTML = d.chain.map(function (c, k) {
-            return '<li data-i="' + k + '" tabindex="0" role="button">' + esc(c) + '</li>';
+            return '<li><button type="button" class="htp-step-btn" data-i="' + k + '">' + esc(c) + '</button></li>';
         }).join('');
-        glossify(el.stepList);
         var facts = $('htp-g-facts');
         facts.closest('details').hidden = !d.ex;
         if (d.ex) {
@@ -443,27 +447,37 @@
         el.stepList.querySelectorAll('li').forEach(function (li, n) {
             li.classList.toggle('is-current', n === explore.i);
             li.classList.toggle('is-done', n < explore.i);
+            var b = li.firstElementChild;
+            if (n === explore.i) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
         });
         var isLast = explore.i === steps.length - 1;
-        el.steps.querySelector('[data-step="prev"]').disabled = explore.i === 0;
+        var prevBtn = el.steps.querySelector('[data-step="prev"]');
+        if (explore.i === 0 && document.activeElement === prevBtn) el.steps.querySelector('[data-step="next"]').focus();
+        prevBtn.disabled = explore.i === 0;
+        $('htp-step-count').textContent = 'Étape ' + (explore.i + 1) + ' / ' + steps.length;
+        // Une seule annonce pour les lecteurs d'écran, avec l'état d'arrivée
+        var target = compute(st[0].pvr, st[0].pawp, st[0].co);
+        $('htp-step-status').textContent = GROUPS[explore.g].title + ', étape ' + (explore.i + 1) + ' sur ' + steps.length +
+            ' : ' + GROUPS[explore.g].chain[explore.i] + '. PAPm ' + Math.round(target.mpap) + ' mmHg, ' + PROFILES[target.prof].label + '.';
         var nextG = GROUP_ORDER[(GROUP_ORDER.indexOf(explore.g) + 1) % GROUP_ORDER.length];
-        el.steps.querySelector('[data-step="next"]').textContent = isLast ?
-            (nextG === 'normal' ? 'Recommencer ▶' : 'Groupe suivant ▶') : 'Étape suivante ▶';
+        el.steps.querySelector('[data-step="next"]').innerHTML = (isLast ?
+            (nextG === 'normal' ? 'Recommencer' : 'Groupe suivant') : 'Étape suivante') + ' <span aria-hidden="true">▶</span>';
         scheduleStep();
     }
 
     function scheduleStep() {
         clearTimeout(explore.timer);
         if (explore.play && explore.i === STEPS[explore.g].length - 1) explore.play = false;
-        $('htp-step-play').textContent = explore.play ? '⏸ Pause' : '▶ Lecture';
-        if (explore.play) explore.timer = setTimeout(function () { goStep(explore.i + 1); }, 5500);
+        $('htp-step-play').innerHTML = explore.play ? '<span aria-hidden="true">⏸</span> Pause' : '<span aria-hidden="true">▶</span> Lecture';
+        $('htp-step-play').setAttribute('aria-pressed', explore.play);
+        if (explore.play) explore.timer = setTimeout(function () { goStep(explore.i + 1); }, 8000);
     }
 
     function stopSteps() {
         explore.play = false;
         clearTimeout(explore.timer);
         var b = $('htp-step-play');
-        if (b) b.textContent = '▶ Lecture';
+        if (b) { b.innerHTML = '<span aria-hidden="true">▶</span> Lecture'; b.setAttribute('aria-pressed', 'false'); }
     }
 
     function nextStep() {
@@ -548,7 +562,7 @@
         loading3d = true;
         msg.hidden = false;
         msg.textContent = 'Chargement de la 3D…';
-        import('./htp3d.js?v=14').then(function (m) {
+        import('./htp3d.js?v=16').then(function (m) {
             // Le module affiche lui-même la progression du chargement du modèle
             view3d = m.mount(el.d3);
             if (last) view3d.update(last);
@@ -606,7 +620,8 @@
     function tick(now) {
         var dt = flow.last ? Math.min(0.05, (now - flow.last) / 1000) : 0;
         flow.last = now;
-        if (!reducedMotion.matches && el.svg.getBoundingClientRect().width > 0 && !document.hidden) placeDots(dt);
+        if (!reducedMotion.matches && !document.body.classList.contains('htp-still') &&
+            el.svg.getBoundingClientRect().width > 0 && !document.hidden) placeDots(dt);
         flow.t = requestAnimationFrame(tick);
     }
 
@@ -669,7 +684,10 @@
         c.querySelectorAll(':not(defs) [id]:not(defs *)').forEach(function (n) { n.removeAttribute('id'); });
         c.removeAttribute('id');
         c.removeAttribute('aria-labelledby');
-        c.setAttribute('aria-label', 'Schéma du cas à identifier');
+        var pr = PRESETS[key];
+        var OV_TXT = { '2': ', oreillette gauche dilatée', '3': ', alvéoles mal ventilées', '4': ', lésions dans l\'artère pulmonaire' };
+        c.setAttribute('aria-label', 'Schéma du cas : PAPO ' + pr.pawp + ' mmHg, RVP ' + fr(pr.pvr, 1) + ' UW, DC ' +
+            fr(pr.co, 1) + ' L/min' + (OV_TXT[pr.ov] || ''));
         c.classList.add('htp-quiz-svg');
         applyValues(cur, curPreset, curOv);
         return c;
@@ -688,7 +706,7 @@
         var it = item();
         var opts = it.t === 'g' ? GROUP_OPTS : PROFILE_OPTS;
         quiz.done = false;
-        el.quizBody.innerHTML = '<p class="htp-quiz-n">Question ' + (quiz.i + 1) + ' / ' + QUIZ.length + '</p>' +
+        el.quizBody.innerHTML = '<p class="htp-quiz-n" tabindex="-1">Question ' + (quiz.i + 1) + ' / ' + QUIZ.length + '</p>' +
             '<p class="htp-quiz-q">' + esc(it.q) + '</p>' +
             '<div class="htp-opts">' + opts.map(function (o, j) {
                 return '<button type="button" class="htp-opt" data-opt="' + j + '">' + esc(o) + '</button>';
@@ -700,6 +718,8 @@
             el.quizBody.querySelector('.htp-quiz-q').after(fig);
         }
         glossify(el.quizBody.querySelector('.htp-quiz-q'));
+        if (quiz.started) el.quizBody.querySelector('.htp-quiz-n').focus({ preventScroll: true });
+        quiz.started = true;
     }
 
     function answer(j) {
@@ -710,8 +730,8 @@
         el.quizBody.querySelectorAll('.htp-opt').forEach(function (b) {
             var k = +b.dataset.opt;
             b.disabled = true;
-            if (k === it.a) b.classList.add('is-right');
-            else if (k === j) b.classList.add('is-wrong');
+            if (k === it.a) { b.classList.add('is-right'); b.insertAdjacentHTML('afterbegin', '<span aria-hidden="true">✓ </span>'); b.setAttribute('aria-label', b.textContent.slice(2) + ' (bonne réponse)'); }
+            else if (k === j) { b.classList.add('is-wrong'); b.insertAdjacentHTML('afterbegin', '<span aria-hidden="true">✗ </span>'); b.setAttribute('aria-label', b.textContent.slice(2) + ' (votre réponse, incorrecte)'); }
         });
         $('htp-quiz-fb').innerHTML = '<p><strong>' + (ok ? 'Exact.' : 'Non.') + '</strong> ' + esc(it.e) + '</p>' +
             '<div class="htp-actions"><button type="button" class="btn-secondary" data-quiz="sim">Voir dans le simulateur</button>' +
@@ -719,24 +739,26 @@
             (quiz.i + 1 < QUIZ.length ? 'Question suivante' : 'Voir le score') + '</button></div>';
         el.quizScore.textContent = 'Score ' + quiz.score + ' / ' + QUIZ.length;
         glossify($('htp-quiz-fb'));
+        el.quizBody.querySelector('.htp-next').focus({ preventScroll: true });
     }
 
     /* ---------- Lexique : sigles expliqués au survol ou au toucher ---------- */
 
     // Chaque sigle n'est souligné qu'une fois par paragraphe pour ne pas surcharger la lecture
+    var glossId = 0;
     function glossify(root) {
         if (!root) return;
         var seen = new Map();
         var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
             acceptNode: function (n) {
-                return n.parentElement.closest('button, svg, .htp-term, .htp-tag, output, script') ?
+                return n.parentElement.closest('button, svg, .htp-term, .htp-tag, output, script, .sr-only, .htp-eq') ?
                     NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
             }
         });
         var nodes = [];
         while (walker.nextNode()) nodes.push(walker.currentNode);
         nodes.forEach(function (node) {
-            var block = node.parentElement.closest('p, li, dd, dt, label, h3, figcaption') || root;
+            var block = root;
             if (!seen.has(block)) seen.set(block, {});
             var used = seen.get(block);
             var m;
@@ -756,9 +778,14 @@
                 span.className = 'htp-term';
                 span.tabIndex = 0;
                 span.dataset.tip = GLOSSARY[term];
-                span.setAttribute('aria-label', term + ' : ' + GLOSSARY[term]);
+                var def = document.createElement('span');
+                def.className = 'sr-only';
+                def.id = 'htp-gl-' + (++glossId);
+                def.textContent = GLOSSARY[term];
+                span.setAttribute('aria-describedby', def.id);
                 after.parentNode.replaceChild(span, after);
                 span.textContent = term;
+                span.after(def);
             }
         });
     }
@@ -795,8 +822,8 @@
             b.addEventListener('click', function () { stopSteps(); selectGroup(b.dataset.group); });
         });
         el.steps.addEventListener('click', function (e) {
-            var li = e.target.closest('li[data-i]');
-            if (li && !e.target.closest('.htp-term')) { stopSteps(); goStep(+li.dataset.i); return; }
+            var sb = e.target.closest('.htp-step-btn');
+            if (sb) { stopSteps(); goStep(+sb.dataset.i); return; }
             var b = e.target.closest('[data-step]');
             if (!b) return;
             var a = b.dataset.step;
@@ -807,9 +834,25 @@
                 if (explore.play && explore.i === STEPS[explore.g].length - 1) goStep(0); else scheduleStep();
             }
         });
-        el.stepList.addEventListener('keydown', function (e) {
-            var li = e.target.closest('li[data-i]');
-            if (li && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); stopSteps(); goStep(+li.dataset.i); }
+        // Flèches gauche / droite : étape précédente / suivante
+        el.steps.addEventListener('keydown', function (e) {
+            if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+            e.preventDefault();
+            stopSteps();
+            if (e.key === 'ArrowLeft') goStep(explore.i - 1); else nextStep();
+        });
+        $('htp-back-quiz').addEventListener('click', function () {
+            $('htp-back-quiz').hidden = true;
+            $('htp-quiz').scrollIntoView({ behavior: reducedMotion.matches ? 'auto' : 'smooth', block: 'start' });
+            var n = el.quizBody.querySelector('.htp-next, .htp-quiz-n');
+            if (n) n.focus({ preventScroll: true });
+        });
+        // Pause de toutes les animations (WCAG 2.2.2)
+        $('htp-anim').addEventListener('click', function () {
+            var still = document.body.classList.toggle('htp-still');
+            this.setAttribute('aria-pressed', still);
+            this.innerHTML = still ? '<span aria-hidden="true">▶</span> Reprendre les animations' : '<span aria-hidden="true">⏸</span> Animations';
+            if (still) stopSteps();
         });
         el.patient.addEventListener('click', function (e) {
             if (e.target.closest('.htp-tour-x')) el.patient.hidden = true;
@@ -833,6 +876,8 @@
             r.addEventListener('change', function () { setViewMode(r.value); });
         });
         el.d3.addEventListener('click', function (e) {
+            var z = e.target.closest('[data-zoom]');
+            if (z && view3d) return view3d.zoom(+z.dataset.zoom);
             var b = e.target.closest('[data-view]');
             if (b && view3d) view3d.setView(b.dataset.view);
         });
@@ -866,8 +911,8 @@
             else if (a.dataset.quiz === 'restart') { quiz.i = 0; quiz.score = 0; shuffle(); renderQuiz(); }
             else if (a.dataset.quiz === 'sim') {
                 var it = item();
-                if (it.vis) goSim(PRESETS[it.vis], it.vis);
-                else goSim(it.h, null);
+                if (it.vis) goSim(PRESETS[it.vis], it.vis, undefined, true);
+                else goSim(it.h, null, undefined, true);
             }
         });
 
@@ -876,6 +921,9 @@
         selectGroup('normal');
         shuffle();
         renderQuiz();
+        $('htp-lexique').innerHTML = Object.keys(GLOSSARY).sort(function (a, b) { return a.localeCompare(b, 'fr'); }).map(function (k) {
+            return '<div><dt>' + esc(k) + '</dt><dd>' + esc(GLOSSARY[k]) + '</dd></div>';
+        }).join('');
         ['.htp-intro', '.htp-controls', '.htp-echo-txt', '#htp-detect'].forEach(function (sel) {
             glossify(document.querySelector('#tab-htp ' + sel));
         });
@@ -889,6 +937,20 @@
         };
         document.addEventListener('pointerover', placeTip);
         document.addEventListener('focusin', placeTip);
+        document.addEventListener('keydown', function (e) {
+            if (e.key !== 'Escape') return;
+            document.querySelectorAll('.htp-term.tip-open, .htp-term:focus, .htp-term:hover').forEach(function (t) {
+                t.classList.remove('tip-open');
+                t.classList.add('tip-off');
+            });
+        });
+        document.addEventListener('focusout', function (e) {
+            if (e.target.classList && e.target.classList.contains('htp-term')) e.target.classList.remove('tip-off');
+        });
+        document.addEventListener('pointerout', function (e) {
+            var t = e.target.closest && e.target.closest('.htp-term');
+            if (t) t.classList.remove('tip-off');
+        });
         // Toucher : ouvre ou ferme la définition
         document.addEventListener('click', function (e) {
             placeTip(e);

@@ -1607,3 +1607,167 @@
     font-weight: 600;
     pointer-events: none;
 }
+
+/* ---------- Accessibilité ---------- */
+
+.sr-only {
+    position: absolute !important;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+:root {
+    --htp-alerte-texte: #b4501a;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+        --htp-alerte-texte: #f08a4b;
+    }
+}
+
+:root[data-theme='dark'] {
+    --htp-alerte-texte: #f08a4b;
+}
+
+.htp-steps-kicker,
+.htp-ov-txt {
+    color: var(--htp-alerte-texte);
+    fill: var(--htp-alerte-texte);
+}
+
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible,
+.htp-step-btn:focus-visible,
+.htp-chip:focus-visible,
+.htp-gbtn:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.htp-term:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 2px;
+}
+
+.htp-term.tip-off::after {
+    display: none !important;
+}
+
+.beta-tag,
+.htp-beta-note,
+.htp-view-seg span {
+    color: var(--ink-2);
+}
+
+/* Étapes : vrais boutons, contraste suffisant pour les étapes à venir */
+.htp-steplist li {
+    opacity: 1;
+    cursor: default;
+}
+
+.htp-step-btn {
+    display: block;
+    width: 100%;
+    min-height: 24px;
+    padding: 2px 4px;
+    border: 0;
+    border-radius: 6px;
+    background: none;
+    color: var(--ink-3);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.htp-step-btn:hover {
+    color: var(--ink);
+    background: color-mix(in srgb, var(--accent) 6%, transparent);
+}
+
+.htp-steplist li.is-done .htp-step-btn {
+    color: var(--ink-2);
+}
+
+.htp-steplist li.is-current .htp-step-btn {
+    color: var(--ink);
+    font-weight: 600;
+}
+
+.htp-step-count {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--ink-2);
+}
+
+/* Bandeau des constantes lisible sur le modèle */
+.htp3d-hud {
+    right: auto;
+    padding: 4px 10px;
+    border-radius: 10px;
+    background: rgb(12 17 32 / 0.78);
+}
+
+.htp3d-hud-prof {
+    white-space: nowrap;
+}
+
+/* Cibles tactiles ≥ 24 px */
+.htp3d-check {
+    min-height: 24px;
+}
+
+.htp3d-check input {
+    width: 20px;
+    height: 20px;
+}
+
+.htp-slider input[type="range"] {
+    min-height: 24px;
+}
+
+.htp-zoom {
+    min-width: 34px;
+    font-weight: 700;
+}
+
+.htp-anim,
+.htp-back-quiz {
+    min-height: 36px;
+    padding: 0 12px;
+    font-size: 0.82rem;
+}
+
+.htp-back-quiz {
+    margin-bottom: 0.8rem;
+}
+
+/* Pause de toutes les animations */
+.htp-still *,
+.htp-still *::before,
+.htp-still *::after {
+    animation-play-state: paused !important;
+}
+
+.htp-lexique-box {
+    margin-top: 8px;
+}
+
+@media (min-width: 1100px) {
+    .htp-intro .htp-lexique-box {
+        grid-column: 1 / -1;
+    }
+}
+
+.htp-steplist li.is-done,
+.htp-steplist li:hover {
+    opacity: 1;
+}

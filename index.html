@@ -8,7 +8,7 @@
     <script>try{var t=localStorage.getItem("theme");if(t==="sombre")document.documentElement.dataset.theme="dark";else if(t==="auto")delete document.documentElement.dataset.theme}catch(e){}</script>
     <link rel="icon" href="icon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="style.css?v=23">
-    <link rel="stylesheet" href="htp.css?v=10">
+    <link rel="stylesheet" href="htp.css?v=11">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="apple-touch-icon" href="icon-180.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -21,7 +21,7 @@
     <div class="app-container">
         <header class="top">
             <nav class="tab-nav" aria-label="Sections">
-                <button class="tab-btn active" data-tab="tab-calculator">Calculateur</button>
+                <button class="tab-btn active" data-tab="tab-calculator" aria-current="page">Calculateur</button>
                 <button class="tab-btn tab-beta" data-tab="tab-htp">Comprendre l'HTP <span class="beta-tag">bêta</span></button>
                 <button class="tab-btn" data-tab="tab-nomogram">Source</button>
             </nav>
@@ -309,6 +309,10 @@
                         ne pas utiliser pour une décision clinique.</p>
                     <p class="htp-lead-small">La pression dans l'artère pulmonaire (PAPm) monte si la pression gauche
                         remonte (PAPO), si les artérioles résistent (RVP) ou si le débit augmente (DC).</p>
+                    <details class="htp-more htp-lexique-box">
+                        <summary>Lexique des sigles</summary>
+                        <dl id="htp-lexique" class="htp-facts"></dl>
+                    </details>
                 </section>
 
                 <section class="card" id="htp-sim">
@@ -319,13 +323,13 @@
                         </div>
                     </div>
 
-                    <div class="htp-groups" role="tablist" aria-label="Choisir un groupe">
-                        <button type="button" class="htp-gbtn" role="tab" data-group="normal">Normal</button>
-                        <button type="button" class="htp-gbtn" role="tab" data-group="1">G1 · HTAP</button>
-                        <button type="button" class="htp-gbtn" role="tab" data-group="2">G2 · Cœur gauche</button>
-                        <button type="button" class="htp-gbtn" role="tab" data-group="3">G3 · Poumon / hypoxie</button>
-                        <button type="button" class="htp-gbtn" role="tab" data-group="4">G4 · HTP-TEC</button>
-                        <button type="button" class="htp-gbtn" role="tab" data-group="5">G5 · Multifactorielle</button>
+                    <div class="htp-groups" role="group" aria-label="Choisir un groupe">
+                        <button type="button" class="htp-gbtn" aria-pressed="false" data-group="normal">Normal</button>
+                        <button type="button" class="htp-gbtn" aria-pressed="false" data-group="1">G1 · HTAP</button>
+                        <button type="button" class="htp-gbtn" aria-pressed="false" data-group="2">G2 · Cœur gauche</button>
+                        <button type="button" class="htp-gbtn" aria-pressed="false" data-group="3">G3 · Poumon / hypoxie</button>
+                        <button type="button" class="htp-gbtn" aria-pressed="false" data-group="4">G4 · HTP-TEC</button>
+                        <button type="button" class="htp-gbtn" aria-pressed="false" data-group="5">G5 · Multifactorielle</button>
                     </div>
 
                     <div class="htp-toolbar">
@@ -333,6 +337,7 @@
                             <label><input type="radio" name="htp-view" value="2d" checked><span>Schéma 2D</span></label>
                             <label><input type="radio" name="htp-view" value="3d"><span>Vue 3D</span></label>
                         </div>
+                        <button type="button" id="htp-anim" class="btn-secondary htp-anim" aria-pressed="false"><span aria-hidden="true">⏸</span> Animations</button>
                     </div>
 
                     <div id="htp-patient" class="htp-patient" hidden></div>
@@ -340,9 +345,9 @@
                     <div id="htp-3d" class="htp3d" hidden>
                         <div class="htp3d-stage">
                             <div class="htp3d-canvas"></div>
-                            <div class="htp3d-labels"></div>
+                            <div class="htp3d-labels" aria-hidden="true"></div>
                             <div class="htp3d-hud" aria-live="off">
-                                <span class="htp3d-live">EN DIRECT</span>
+                                <span class="htp3d-live" aria-hidden="true">EN DIRECT</span>
                                 <span id="htp3d-hud-txt"></span>
                             </div>
                             <p class="htp3d-msg" hidden></p>
@@ -354,6 +359,8 @@
                                 <button type="button" class="htp-chip" data-view="gauche">Profil G</button>
                                 <button type="button" class="htp-chip" data-view="dos">Dos</button>
                                 <button type="button" class="htp-chip" data-view="oblique">Oblique</button>
+                                <button type="button" class="htp-chip htp-zoom" data-zoom="0.8" aria-label="Zoomer">+</button>
+                                <button type="button" class="htp-chip htp-zoom" data-zoom="1.25" aria-label="Dézoomer">−</button>
                             </div>
                             <div class="htp3d-row">
                                 <span class="htp3d-cap">Coupe écho</span>
@@ -386,7 +393,7 @@
                     </div>
 
                     <figure class="htp-stage" id="htp-2d">
-                        <svg id="htp-svg" viewBox="0 0 640 282" role="img" aria-labelledby="htp-svg-title">
+                        <svg id="htp-svg" viewBox="0 0 640 282" role="img" aria-labelledby="htp-svg-title" aria-describedby="htp-step-status">
                             <title id="htp-svg-title">Schéma de la circulation pulmonaire : cœur droit, artère
                                 pulmonaire, poumon, cœur gauche</title>
                             <defs>
@@ -503,19 +510,21 @@
                         </figcaption>
                     </figure>
 
-                    <aside id="htp-steps" class="htp-steps" aria-live="polite">
+                    <aside id="htp-steps" class="htp-steps" aria-labelledby="htp-g-title">
                         <p class="htp-steps-kicker">Ce qui se passe</p>
                         <h3 id="htp-g-title" class="htp-h3"></h3>
                         <p id="htp-g-site" class="htp-site"></p>
+                        <p id="htp-step-status" class="sr-only" role="status"></p>
                         <div class="htp-now">
+                            <span id="htp-step-count" class="htp-step-count"></span>
                             <span>PAPm <b id="htp-mpap-mini">--</b> mmHg</span>
                             <span id="htp-profile-mini" class="htp-badge">--</span>
                         </div>
                         <ol id="htp-step-list" class="htp-chain htp-steplist"></ol>
                         <div class="htp-step-nav">
-                            <button type="button" class="btn-secondary" data-step="prev" aria-label="Étape précédente">◀</button>
-                            <button type="button" class="btn-secondary" data-step="play" id="htp-step-play">▶ Lecture</button>
-                            <button type="button" class="btn-primary" data-step="next">Étape suivante ▶</button>
+                            <button type="button" class="btn-secondary" data-step="prev" aria-label="Étape précédente"><span aria-hidden="true">◀</span></button>
+                            <button type="button" class="btn-secondary" data-step="play" id="htp-step-play" aria-pressed="false"><span aria-hidden="true">▶</span> Lecture</button>
+                            <button type="button" class="btn-primary" data-step="next">Étape suivante <span aria-hidden="true">▶</span></button>
                         </div>
                         <details class="htp-more">
                             <summary>Causes, examen clé, traitement</summary>
@@ -525,6 +534,7 @@
 
                     <details id="htp-adv" class="htp-adv">
                         <summary>Mode avancé : curseurs, échographie, autres cas</summary>
+                        <button type="button" id="htp-back-quiz" class="btn-secondary htp-back-quiz" hidden><span aria-hidden="true">↩</span> Retour au quiz</button>
                     <div class="htp-presets" role="group" aria-label="Cas cliniques">
                         <button type="button" class="htp-chip" data-preset="normal">Normal</button>
                         <button type="button" class="htp-chip" data-preset="g1">G1 · HTAP (ScS)</button>
@@ -542,17 +552,17 @@
                         <div class="htp-controls">
                             <div class="htp-slider">
                                 <label for="htp-pvr">RVP <small>résistance artériolaire</small></label>
-                                <output id="htp-pvr-out" for="htp-pvr">1,2 UW</output>
+                                <output aria-live="off" id="htp-pvr-out" for="htp-pvr">1,2 UW</output>
                                 <input type="range" id="htp-pvr" min="0.5" max="15" step="0.1" value="1.2">
                             </div>
                             <div class="htp-slider">
                                 <label for="htp-pawp">PAPO <small>pression du cœur gauche</small></label>
-                                <output id="htp-pawp-out" for="htp-pawp">9 mmHg</output>
+                                <output aria-live="off" id="htp-pawp-out" for="htp-pawp">9 mmHg</output>
                                 <input type="range" id="htp-pawp" min="4" max="35" step="1" value="9">
                             </div>
                             <div class="htp-slider">
                                 <label for="htp-co">DC <small>débit cardiaque</small></label>
-                                <output id="htp-co-out" for="htp-co">5,5 L/min</output>
+                                <output aria-live="off" id="htp-co-out" for="htp-co">5,5 L/min</output>
                                 <input type="range" id="htp-co" min="2" max="10" step="0.1" value="5.5">
                             </div>
                             <p id="htp-formula" class="htp-formula"></p>
@@ -725,9 +735,9 @@
     </div>
 
     <script src="logic.js?v=25"></script>
-    <script src="app.js?v=26"></script>
+    <script src="app.js?v=27"></script>
     <script src="fx.js?v=25" defer></script>
-    <script src="htp.js?v=17" defer></script>
+    <script src="htp.js?v=18" defer></script>
     <script>
         if ('serviceWorker' in navigator && location.protocol === 'https:') {
             window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });

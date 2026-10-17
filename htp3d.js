@@ -51,6 +51,7 @@ export function mount(root) {
     const msg = root.querySelector('.htp3d-msg');
     const info = document.createElement('p');
     info.className = 'htp3d-cutinfo';
+    info.setAttribute('role', 'status');
     info.hidden = true;
     root.querySelector('.htp3d-stage').appendChild(info);
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -76,6 +77,8 @@ export function mount(root) {
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.05;
     wrap.appendChild(renderer.domElement);
+    renderer.domElement.setAttribute('role', 'img');
+    renderer.domElement.setAttribute('aria-label', 'Modèle 3D du cœur et des poumons ; l\'état est décrit dans « Ce qui se passe »');
     renderer.domElement.addEventListener('webglcontextlost', (e) => {
         e.preventDefault();
         cancelAnimationFrame(raf);
@@ -582,7 +585,9 @@ export function mount(root) {
             if (t === 1) camAnim = null;
         }
         controls.update();
-        if (ready && !reduce.matches) {
+        const paused = document.body.classList.contains('htp-still');
+        if (paused) deform.uBeat.value = 0;
+        if (ready && !reduce.matches && !paused) {
             // Cycle cardiaque à 70/min ; le flux accélère pendant l'éjection
             const phase = (now / 1000 * 70 / 60) % 1;
             deform.uPhase.value = phase;
@@ -615,6 +620,13 @@ export function mount(root) {
             if (focusChanged && ready) applyState();
         },
         setView,
+        zoom(f) {
+            const d = camera.position.clone().sub(controls.target).multiplyScalar(f);
+            d.setLength(clamp(d.length(), controls.minDistance, controls.maxDistance));
+            camAnim = null;
+            camera.position.copy(controls.target).add(d);
+            controls.update();
+        },
         setLayer(name, on) { layerOn[name] = on; if (ready) applyVisibility(); },
         setHeartOpacity(o) { heartOpacity = o; applyState(); },
         setCut(mode, level) {

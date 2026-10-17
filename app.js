@@ -73,6 +73,7 @@ try {
                 tabs.forEach(t => t.classList.remove('active'));
                 contents.forEach(c => c.classList.remove('active'));
                 this.classList.add('active');
+                tabs.forEach(t => t.setAttribute('aria-current', t === this ? 'page' : 'false'));
                 const targetId = this.getAttribute('data-tab');
                 const targetEl = document.getElementById(targetId);
                 if (targetEl) targetEl.classList.add('active');
