@@ -15,24 +15,23 @@ VD qui gagne l'apex · G5 étapes 4-5 · mises en évidence G2/G3 · TAPSE/PAPs 
 ## Audit des sites 3D de cœur
 ✅ Direction confirmée (même architecture que learncoronary.com) · déformation anatomique du VD ·
 coupes petit axe / 4 cavités · battement · aspect tissu · qualité adaptative · crédits de licence.
-⏳ Occlusion ambiante cuite dans le modèle · courbe pression-volume du VD.
+✅ Occlusion ambiante précalculée dans le modèle · boucle pression-volume du VD.
 
 ## Accessibilité (WCAG 2.2 AA)
 ✅ Annonce unique par étape · quiz sur schéma décrit en texte · groupes et
 étapes en vrais boutons · onglet actif exposé · focus conservé et visible · contrastes · lexique
 (aria-describedby, Échap) · pause des animations · zoom 3D · compteur d'étape, flèches, retour au quiz.
-⏳ Ordre de tabulation à ≥ 1100 px (étapes après les commandes 3D) · aria-pressed sur les vues 3D ·
-texte SVG petit sur mobile.
+✅ Étapes avant la 3D dans l'ordre de tabulation · aria-pressed sur les vues 3D · schéma agrandissable sur mobile.
 
 ## Pédagogie (interne de 3e année)
 ✅ PAPm qui baisse vraiment en fin de G1/G4 · calque à l'étape citée · termes de l'étape définis ·
 « À retenir » · tableau comparatif · questions de prédiction · étapes visibles sans défiler (ordinateur)
 et schéma collant (mobile) · légendes des coupes.
-⏳ Une question « Et ensuite ? » avant chaque étape · explication par mauvaise réponse du quiz ·
-G5 présenté en cartes · coupe 4 cavités apex en haut (convention écho) · vues 3D liées aux étapes.
+✅ Question « Et ensuite ? » par groupe · explication de la mauvaise réponse · G5 en cartes ·
+coupe 4 cavités apex en haut (convention écho) · vues 3D liées aux étapes.
 
 ## Technique
 ✅ Coupe et calques pendant le chargement · lecture auto au changement d'onglet · service worker
 (clé = URL complète, caches des autres applis préservés) · color-mix avec secours · observateurs.
-⏳ Arbre artériel en InstancedMesh (141 → ~30 draw calls) · chargement de htp.js/htp.css à la demande ·
-package.json + intégration continue pour les tests.
+✅ Arbre artériel en InstancedMesh et pièces fusionnées (141 → ~30 appels de dessin) · onglet HTP chargé
+à la demande · `npm test` + intégration continue (GitHub Actions).
