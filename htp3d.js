@@ -6,9 +6,10 @@ import { OrbitControls } from './vendor/OrbitControls.js';
 import { GLTFLoader } from './vendor/GLTFLoader.js';
 import { MeshoptDecoder } from './vendor/meshopt_decoder.module.js';
 import { RoomEnvironment } from './vendor/RoomEnvironment.js';
+import { mergeGeometries } from './vendor/BufferGeometryUtils.js';
 
-const MODEL = './models/thorax.glb?v=1';
-const MODEL_BYTES = 1598204;
+const MODEL = './models/thorax.glb?v=2';
+const MODEL_BYTES = 1824992;
 const SCALE = 25;                                   // mètres → unités de scène
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -42,6 +43,8 @@ const LAYER = {
     pa: 'vessels', pv: 'vessels', ao: 'vessels', cava: 'vessels', air: 'lungs', lungL: 'lungs', lungR: 'lungs'
 };
 const CHAMBERS = ['ra', 'rv', 'la', 'lv', 'septum'];
+// Pièces fixes fusionnées en un seul maillage par matériau
+const MERGED = ['air', 'ao', 'cava', 'pv', 'lungL', 'lungR', 'cor', 'cvein'];
 // Cible du mode pas à pas → structures à faire briller
 const FOCUS = { rv: ['rv'], ra: ['ra'], la: ['la'], lv: ['lv'], pa: ['pa'], vp: ['pv'], endo: ['tree'], alv: ['lungL', 'lungR'], cap: ['lungL', 'lungR'] };
 
@@ -107,7 +110,7 @@ export function mount(root) {
 
     // Coupes échographiques : petit axe (« sax ») ou 4 cavités (« a4c »)
     const clipList = [];
-    const cut = { on: false, mode: 'none', level: 0, plane: new THREE.Plane(), axis: V(0, 1, 0), center: V(), half: 1,
+    const cut = { on: false, mode: 'none', level: 0, plane: new THREE.Plane(), local: new THREE.Plane(), axis: V(0, 1, 0), center: V(), half: 1,
         n4: V(0, 0, 1), rvDir: V(-1, 0, 0), lvR: 0.7 };
 
     // Déformation du cœur en HTP, calculée dans le shader pour toutes les pièces cardiaques
@@ -117,12 +120,15 @@ export function mount(root) {
         uK: { value: 0 }, uRA: { value: 0 }, uLA: { value: 0 },
         uLvC: { value: V() }, uAxis: { value: V(0, 1, 0) }, uRvDir: { value: V(-1, 0, 0) },
         uLvR: { value: 0.7 }, uHalf: { value: 1 }, uRaC: { value: V() }, uLaC: { value: V() }, uAtR: { value: 0.6 },
-        uPhase: { value: 0.6 }, uBeat: { value: 0 }
+        uPhase: { value: 0.6 }, uBeat: { value: 0 },
+        uWorld: { value: new THREE.Matrix4() }, uWorldInv: { value: new THREE.Matrix4() }
     };
     const DEFORM_GLSL = `
         uniform float uK, uRA, uLA, uLvR, uHalf, uAtR, uPhase, uBeat;
         uniform vec3 uLvC, uAxis, uRvDir, uRaC, uLaC;
-        vec3 htpDeform(vec3 p) {
+        uniform mat4 uWorld, uWorldInv;
+        vec3 htpDeform(vec3 pw) {
+            vec3 p = (uWorldInv * vec4(pw, 1.0)).xyz;     // repère du modèle
             vec3 d = p - uLvC;
             float h = dot(d, uAxis);
             vec3 r = d - uAxis * h;
@@ -165,7 +171,7 @@ export function mount(root) {
             disp -= uRvDir * (uK * 0.12 * uLvR * wSep * (1.0 - vS) * anchor);
             // Contraction des oreillettes en fin de diastole
             disp -= a * (aS * 0.1 * wRa) + l * (aS * 0.1 * wLa);
-            return p + disp;
+            return (uWorld * vec4(p + disp, 1.0)).xyz;
         }
     `;
     function deformable(m) {
@@ -209,15 +215,29 @@ export function mount(root) {
         septum: new THREE.MeshBasicMaterial({ color: '#8c4a42', side: THREE.BackSide, clippingPlanes: clipList })
     };
     ['ra', 'rv', 'la', 'lv', 'septum', 'cor', 'cvein'].forEach((k) => deformable(mat[k]));
+    // Ombrage des sillons précalculé dans le modèle (couleur de sommet)
+    ['ra', 'rv', 'la', 'lv', 'septum', 'pa', 'pv', 'ao', 'cava', 'cor', 'cvein', 'lungL', 'lungR', 'air']
+        .forEach((k) => { mat[k].vertexColors = true; });
     if (soft) queueMicrotask(setLowQuality);
     Object.values(innerMat).forEach(deformable);
 
+    // Tout le modèle est dans « world », que l'on fait pivoter pour présenter la coupe 4 cavités
+    // comme en échographie (apex en haut, VG à droite) sans toucher à la caméra orbitale.
+    const world = new THREE.Group();
+    scene.add(world);
     const groups = { heart: new THREE.Group(), vessels: new THREE.Group(), lungs: new THREE.Group(), flow: new THREE.Group(), ov: new THREE.Group() };
-    Object.values(groups).forEach((g) => scene.add(g));
+    Object.values(groups).forEach((g) => world.add(g));
     const ring = new THREE.Mesh(new THREE.RingGeometry(1.7, 1.78, 72),
         new THREE.MeshBasicMaterial({ color: COL.alert, transparent: true, opacity: 0.6, side: THREE.DoubleSide, depthWrite: false }));
     ring.visible = false;
-    scene.add(ring);
+    world.add(ring);
+    function setWorld(q, pivot) {
+        world.quaternion.copy(q);
+        world.position.copy(pivot).sub(pivot.clone().applyQuaternion(q));
+        world.updateMatrixWorld(true);
+        deform.uWorld.value.copy(world.matrixWorld);
+        deform.uWorldInv.value.copy(world.matrixWorld).invert();
+    }
 
     const parts = {};           // structure → { pivots, center, box }
     const centerOf = {};        // nom de pièce → centre
@@ -263,10 +283,19 @@ export function mount(root) {
 
         const meshes = [];
         model.traverse((o) => { if (o.isMesh) meshes.push(o); });
+        const toMerge = {};
         meshes.forEach((m) => {
             const name = m.name || m.parent.name;
             const p = partOf(name) || partOf(m.parent.name);
             if (!p) { m.visible = false; return; }
+            if (MERGED.includes(p)) {
+                const box = new THREE.Box3().setFromObject(m);
+                centerOf[name] = { center: box.getCenter(V()), box };
+                const P = parts[p] || (parts[p] = { pivots: [], box: new THREE.Box3() });
+                P.box.union(box);
+                (toMerge[p] = toMerge[p] || []).push(worldGeometry(m));
+                return;
+            }
             m.material = mat[p];
             m.renderOrder = p.startsWith('lung') || p === 'air' ? 3 : 1;
             const box = new THREE.Box3().setFromObject(m);
@@ -289,6 +318,11 @@ export function mount(root) {
             P.box.union(box);
         });
         scene.remove(holder);
+        Object.entries(toMerge).forEach(([p, list]) => {
+            const mesh = new THREE.Mesh(mergeGeometries(list, false), mat[p]);
+            mesh.renderOrder = p.startsWith('lung') || p === 'air' ? 3 : 1;
+            groups[LAYER[p]].add(mesh);
+        });
         Object.values(parts).forEach((P) => { P.center = P.box.getCenter(V()); });
 
         buildTree();
@@ -296,6 +330,24 @@ export function mount(root) {
         buildOverlays();
         computeLvAxis();
         buildLabels();
+    }
+
+    // Géométrie recopiée en flottants dans le repère du modèle (pour la fusion)
+    function worldGeometry(m) {
+        const g = m.geometry, pos = g.attributes.position, nor = g.attributes.normal, col = g.attributes.color;
+        const n = pos.count, P = new Float32Array(n * 3), N = new Float32Array(n * 3), C = new Float32Array(n * 3);
+        const nm = new THREE.Matrix3().getNormalMatrix(m.matrixWorld), v = V();
+        for (let i = 0; i < n; i++) {
+            v.set(pos.getX(i), pos.getY(i), pos.getZ(i)).applyMatrix4(m.matrixWorld).toArray(P, i * 3);
+            if (nor) v.set(nor.getX(i), nor.getY(i), nor.getZ(i)).applyMatrix3(nm).normalize().toArray(N, i * 3);
+            if (col) { C[i * 3] = col.getX(i); C[i * 3 + 1] = col.getY(i); C[i * 3 + 2] = col.getZ(i); } else C.fill(1, i * 3, i * 3 + 3);
+        }
+        const out = new THREE.BufferGeometry();
+        out.setAttribute('position', new THREE.BufferAttribute(P, 3));
+        out.setAttribute('normal', new THREE.BufferAttribute(N, 3));
+        out.setAttribute('color', new THREE.BufferAttribute(C, 3));
+        if (g.index) out.setIndex(Array.from(g.index.array));
+        return out;
     }
 
     const at = (name, fallback) => (centerOf[name] ? centerOf[name].center.clone() : fallback.clone());
@@ -306,13 +358,8 @@ export function mount(root) {
         const up = V(0, 1, 0);
         function grow(start, dir, len, r, depth) {
             const end = start.clone().addScaledVector(dir, len);
-            const m = new THREE.Mesh(cyl, depth >= 2 ? mat.tree : mat.treeProx);
-            m.position.copy(start).lerp(end, 0.5);
-            m.quaternion.setFromUnitVectors(up, dir);
-            m.userData = { r, len, depth, mid: m.position.clone() };
-            m.renderOrder = 2;
-            groups.lungs.add(m);
-            branches.push(m);
+            const mid = start.clone().lerp(end, 0.5);
+            branches.push({ r, len, depth, mid, quat: new THREE.Quaternion().setFromUnitVectors(up, dir) });
             if (depth === 4) return;
             const axis = depth % 2 === 0 ? V(0, 0, 1) : dir.clone().cross(V(0, 1, 0)).normalize().cross(dir).normalize();
             if (axis.lengthSq() < 0.01) axis.set(1, 0, 0);
@@ -325,6 +372,13 @@ export function mount(root) {
         const hL = parts.lungL ? at('VH_M_hilum_L', parts.lungL.center) : V(1.6, 0.6, 0);
         grow(hR, V(-1, 0.05, 0).normalize(), 0.62, 0.11, 0);
         grow(hL, V(1, 0.05, 0).normalize(), 0.62, 0.11, 0);
+        const distal = branches.filter((b) => b.depth >= 2), prox = branches.filter((b) => b.depth < 2);
+        [[distal, mat.tree], [prox, mat.treeProx]].forEach(([list, m]) => {
+            const inst = new THREE.InstancedMesh(cyl, m, list.length);
+            inst.renderOrder = 2;
+            groups.lungs.add(inst);
+            list.forEach((b, i) => { b.inst = inst; b.idx = i; });
+        });
     }
 
     // ---------- Flux sanguin ----------
@@ -374,7 +428,7 @@ export function mount(root) {
     function buildOverlays() {
         ov['4'] = new THREE.Group();
         const pR = at('VH_M_pulmonary_artery_R', V(-1, 1, 0)), pL = at('VH_M_pulmonary_artery_L', V(1, 1, 0));
-        [pR, pL, ...branches.filter((b) => b.userData.depth === 1).map((b) => b.userData.mid)].forEach((p, i) => {
+        [pR, pL, ...branches.filter((b) => b.depth === 1).map((b) => b.mid)].forEach((p, i) => {
             const clot = new THREE.Mesh(new THREE.SphereGeometry(i < 2 ? 0.17 : 0.1, 16, 12), mat.clot);
             clot.position.copy(p);
             clot.scale.set(1.3, 0.8, 0.9);
@@ -435,15 +489,22 @@ export function mount(root) {
         cut.on = cut.mode !== 'none';
         let c, n;
         if (cut.mode === 'a4c') {
-            // On retire la moitié antérieure ; le curseur déplace le plan d'avant en arrière
-            c = cut.center.clone().addScaledVector(cut.n4, cut.level * cut.lvR);
-            n = cut.n4.clone().negate();
+            // Présentation échographique : apex en haut, VD à gauche, VG à droite ; on regarde depuis
+            // l'arrière et on garde la moitié antérieure ; le curseur déplace le plan d'avant en arrière
+            const xs = cut.rvDir.clone().negate(), ys = cut.axis.clone().negate();
+            const zs = xs.clone().cross(ys).normalize();
+            const R = new THREE.Matrix4().makeBasis(xs, ys, zs).transpose();
+            setWorld(new THREE.Quaternion().setFromRotationMatrix(R), cut.center);
+            c = cut.center.clone().addScaledVector(zs, -cut.level * cut.lvR);
+            n = zs.clone().negate();
         } else {
             // Petit axe : on garde la base et on regarde depuis l'apex, comme en échographie
             c = cut.center.clone().addScaledVector(cut.axis, cut.level * cut.half);
             n = cut.axis.clone();
         }
-        cut.plane.setFromNormalAndCoplanarPoint(n, c);
+        if (cut.mode !== 'a4c') setWorld(new THREE.Quaternion(), cut.center);
+        cut.local.setFromNormalAndCoplanarPoint(n, c);
+        cut.plane.copy(cut.local).applyMatrix4(world.matrixWorld);
         clipList.length = 0;
         if (cut.on) clipList.push(cut.plane);
         ring.quaternion.setFromUnitVectors(V(0, 0, 1), n);
@@ -496,15 +557,16 @@ export function mount(root) {
         // Rapport VD/VG en 4 cavités (simulé) : ≈ 0,65 normal, > 1 en HTP sévère
         info.textContent = cut.mode === 'sax'
             ? 'Petit axe vu depuis l\'apex · ' + (k < 0.3 ? 'septum normal, VG circulaire' : k < 0.75 ? 'septum aplati, VG en « D »' : 'septum bombant vers le VG, VG comprimé') + ' · anneau orange = plan de coupe'
-            : 'Coupe 4 cavités (vue anatomique, apex en bas) · diamètres basaux VD/VG ≈ ' +
+            : 'Coupe 4 cavités (apex en haut, comme en échographie) · diamètres basaux VD/VG ≈ ' +
               (0.65 + 0.75 * k).toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' (simulé ; signe ESC si > 1,0)';
 
         const lumen = clamp(1 - (st.pvr - 1) / 15, 0.3, 1);
+        const sc = V(), mx = new THREE.Matrix4();
         branches.forEach((b) => {
-            const { r, len, depth } = b.userData;
-            const f = depth >= 2 ? lumen : 0.5 + 0.5 * lumen;
-            b.scale.set(r * f, len, r * f);
+            const f = b.depth >= 2 ? lumen : 0.5 + 0.5 * lumen;
+            b.inst.setMatrixAt(b.idx, mx.compose(b.mid, b.quat, sc.set(b.r * f, b.len, b.r * f)));
         });
+        branches.forEach((b) => { b.inst.instanceMatrix.needsUpdate = true; });
 
         mat.tree.color.set(st.ov === '1' ? COL.alert : COL.v);
         ['lungL', 'lungR'].forEach((l) => {
@@ -534,7 +596,7 @@ export function mount(root) {
     const D = 9.6;
     function viewPos(name) {
         if (name === 'sax') return cut.center.clone().addScaledVector(cut.axis, -7);
-        if (name === 'a4c') return cut.center.clone().addScaledVector(cut.n4, 7.5);
+        if (name === 'a4c') return cut.center.clone().add(V(0, 0, 7.5));      // scène pivotée
         return { face: V(0, 0.8, D), gauche: V(D, 0.8, 0.4), dos: V(0, 0.8, -D), oblique: V(D * 0.68, D * 0.36, D * 0.68) }[name];
     }
     function setView(name, instant) {
@@ -607,8 +669,9 @@ export function mount(root) {
         renderer.render(scene, camera);
         const w = renderer.domElement.clientWidth, h = renderer.domElement.clientHeight;
         labels.forEach((l) => {
-            if (cut.on && ON_PLANE[l.txt]) cut.plane.projectPoint(parts[ON_PLANE[l.txt]].center, tmp).project(camera);
-            else tmp.copy(l.p).project(camera);
+            if (cut.on && ON_PLANE[l.txt]) cut.local.projectPoint(parts[ON_PLANE[l.txt]].center, tmp);
+            else tmp.copy(l.p);
+            tmp.applyMatrix4(world.matrixWorld).project(camera);
             l.el.style.transform = `translate(-50%,-50%) translate(${((tmp.x + 1) / 2) * w}px,${((1 - tmp.y) / 2) * h}px)`;
             l.el.style.opacity = tmp.z < 1 ? '' : 0;
         });

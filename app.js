@@ -1,4 +1,25 @@
 
+// Onglet « Comprendre l'HTP » chargé à la demande (versions à incrémenter ici)
+const HTP_ASSETS = { css: 'htp.css?v=13', js: 'htp.js?v=20' };
+let htpLoading = null;
+function loadHtp() {
+    if (htpLoading) return htpLoading;
+    htpLoading = new Promise((resolve, reject) => {
+        const css = document.createElement('link');
+        css.rel = 'stylesheet';
+        css.href = HTP_ASSETS.css;
+        const js = document.createElement('script');
+        js.src = HTP_ASSETS.js;
+        let n = 0;
+        const done = () => { if (++n === 2) resolve(); };
+        css.onload = done;
+        js.onload = done;
+        css.onerror = js.onerror = () => { htpLoading = null; reject(new Error('Chargement de l\'onglet HTP impossible')); };
+        document.head.append(css, js);
+    });
+    return htpLoading;
+}
+
 try {
     function getEls() {
         return {
@@ -61,6 +82,7 @@ try {
         console.log("App Init Started...");
         els = getEls();
         initTabs();
+        initHtpLink();
         resetUI();
         attachListeners();
     }
@@ -70,6 +92,12 @@ try {
         if (tabs.length === 0) console.warn("No tabs found!");
         tabs.forEach(tab => {
             tab.onclick = function () {
+                // L'onglet pédagogique (bêta) n'est chargé qu'à sa première ouverture
+                if (this.dataset.tab === 'tab-htp' && !window.HTP) {
+                    const self = this;
+                    loadHtp().then(() => self.onclick());
+                    return;
+                }
                 tabs.forEach(t => t.classList.remove('active'));
                 contents.forEach(c => c.classList.remove('active'));
                 this.classList.add('active');
@@ -77,8 +105,19 @@ try {
                 const targetId = this.getAttribute('data-tab');
                 const targetEl = document.getElementById(targetId);
                 if (targetEl) targetEl.classList.add('active');
+                document.body.classList.toggle('is-htp', targetId === 'tab-htp');
+                if (window.HTP) window.HTP.onTab(targetId);
             };
         });
+    }
+    // Lien « Comprendre ce résultat » : visible dès qu'une Vmax IT est saisie
+    function initHtpLink() {
+        const link = document.getElementById('btn-htp-link'), tr = document.getElementById('tr_vel');
+        if (!link || !tr) return;
+        const sync = () => { link.hidden = !tr.value; };
+        tr.addEventListener('input', sync);
+        sync();
+        link.addEventListener('click', () => loadHtp().then(() => window.HTP.fromPatient()));
     }
     function resetUI() {
         document.querySelectorAll('input[type="number"]').forEach(i => i.value = '');

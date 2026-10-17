@@ -1,4 +1,6 @@
-const { chromium } = require(require('child_process').execSync('npm root -g').toString().trim()+'/playwright');
+// Playwright local (npm install) sinon installation globale
+let pw; try { pw = require('playwright'); } catch (e) { pw = require(require('child_process').execSync('npm root -g').toString().trim() + '/playwright'); }
+const { chromium } = pw;
 const CASES=[
  {fvc:95,dlco:38,telang:'yes',aca:'yes',nt:450,urate:6.5,rad:'no',ra:20,tr:3.2},
  {fvc:110,dlco:80,telang:'no',aca:'no',nt:80,urate:4,rad:'no',ra:12,tr:2.3},
@@ -18,4 +20,5 @@ async function run(b,port){ const res=[]; const errs=[];
   res.push({s1,s2}); await p.close(); }
  return {res,errs}; }
 (async()=>{ const b=await chromium.launch(); const o=await run(b,8766), n=await run(b,8765);
- console.log('OLD',JSON.stringify(o.res));console.log('NEW',JSON.stringify(n.res)); console.log('identiques:', JSON.stringify(o.res)===JSON.stringify(n.res), 'erreurs old/new:', o.errs, n.errs); await b.close(); })();
+ console.log('OLD',JSON.stringify(o.res));console.log('NEW',JSON.stringify(n.res)); const same = JSON.stringify(o.res)===JSON.stringify(n.res); if (!same || o.errs.length || n.errs.length) process.exitCode = 1;
+ console.log('identiques:', same, 'erreurs old/new:', o.errs, n.errs); await b.close(); })();

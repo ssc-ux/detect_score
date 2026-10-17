@@ -15,13 +15,15 @@ la sclérodermie) + onglet pédagogique « Comprendre l'HTP » (bêta). Tout en 
 - `sw.js` : service worker (hors ligne). La 3D n'est jamais préchargée (seulement à l'ouverture).
 
 ## Conventions
-- À chaque modification d'un fichier JS/CSS : incrémenter son `?v=` dans `index.html`
-  (et `htp3d.js?v=` dans `htp.js`) **et** le nom du cache `detect-vN` dans `sw.js`.
+- À chaque modification d'un fichier JS/CSS : incrémenter son `?v=` — dans `index.html` (style, logic,
+  app, fx), dans `app.js` (`HTP_ASSETS` : htp.css et htp.js, chargés à la demande), dans `htp.js`
+  (`htp3d.js?v=`), dans `htp3d.js` (`models/thorax.glb?v=`) — **et** le nom du cache `detect-vN` dans `sw.js`.
 - Travailler sur la branche `claude/onglet-htp`, tester, puis fusion rapide (`--ff-only`) dans `main`.
 - Commits en français.
 
 ## Tests (Playwright global, Chromium préinstallé)
 - Serveur : `python3 -m http.server 8765` à la racine du dépôt.
+- `npm test` lance le serveur et les deux tests (voir `tests/run.js`) ; en CI : `.github/workflows/tests.yml`.
 - `node tests/e2e.js [dossier_captures]` : parcours complet de l'onglet HTP (1366 px + 320 px) → `TOUT OK`.
   Lent en rendu logiciel (~5 min) : le lancer en arrière-plan.
 - `node tests/regression-detect.js` : compare le calculateur à une version de référence servie sur le

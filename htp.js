@@ -163,6 +163,34 @@
     // Étape à partir de laquelle le calque du mécanisme apparaît (avant, il donnerait la réponse)
     var OV_FROM = { '1': 2, '2': 1 };
     // Message à retenir pour chaque groupe, rattaché à l'équation
+    // Une question de prédiction par groupe, posée avant l'étape « at » (apprentissage actif)
+    var PREDICT = {
+        normal: { at: 1, q: "Le VD éjecte tout le débit cardiaque. Pourquoi la PAPm reste-t-elle basse ?",
+            o: ['Le VD est peu puissant', 'La résistance du lit pulmonaire est très faible', 'La PAPO est élevée'], a: 1,
+            e: "Le lit vasculaire pulmonaire est immense et compliant : RVP ≈ 1 UW, donc peu de pression pour un grand débit." },
+        '1': { at: 3, q: "Les artérioles se rétrécissent. Quel terme de l'équation augmente ?",
+            o: ['La PAPO', 'La RVP', 'Le débit'], a: 1,
+            e: "Lumière artériolaire rétrécie = RVP ↑. La PAPO reste normale : c'est le profil précapillaire." },
+        '2': { at: 2, q: "L'OG est sous pression. Quel terme de l'équation augmente en premier ?",
+            o: ['La RVP', 'La PAPO', 'Le débit'], a: 1,
+            e: "La pression de l'OG remonte passivement : PAPO > 15 mmHg. Les artérioles sont d'abord saines (RVP ≤ 2 UW)." },
+        '3': { at: 1, q: "Que font les artérioles qui irriguent des alvéoles mal ventilées ?",
+            o: ['Elles se dilatent', 'Elles se contractent', 'Rien ne change'], a: 1,
+            e: "Vasoconstriction hypoxique (mécanisme d'Euler-Liljestrand) : utile si l'hypoxie est localisée, elle fait monter la RVP quand elle est diffuse." },
+        '4': { at: 2, q: "Des caillots organisés obstruent les artères pulmonaires. Quel terme augmente ?",
+            o: ['La PAPO', 'La RVP', 'Le débit'], a: 1,
+            e: "Obstruction mécanique = RVP ↑, avec un cœur gauche normal (PAPO ≤ 15)." }
+    };
+    // Vue 3D proposée selon la structure en jeu (OG postérieure, VD en coupe petit axe…)
+    var STEP_VIEW = { la: 'dos', vp: 'dos', lv: 'gauche', rv: 'sax' };
+    var GROUP_WHY = [
+        "il faudrait une HTP précapillaire sans maladie respiratoire, thromboembolique ou multifactorielle pour l'expliquer.",
+        "il faudrait une PAPO > 15 mmHg (cardiopathie gauche).",
+        "il faudrait une maladie respiratoire ou une hypoxie chronique au premier plan.",
+        "il faudrait des défects de perfusion non concordants à la scintigraphie V/Q.",
+        "il faudrait une maladie à mécanismes multiples (sarcoïdose, hémopathie, insuffisance rénale…)."
+    ];
+
     var KEYS = {
         normal: "PAPm ≈ 15 mmHg : le lit pulmonaire absorbe tout le débit à basse pression (RVP ≈ 1 UW).",
         '1': "PAPm ↑ par la RVP, PAPO normale. En fin d'évolution le DC chute : une PAPm qui baisse peut signer une aggravation.",
@@ -351,6 +379,7 @@
         el.jet.style.strokeWidth = (1.5 + jet * 4).toFixed(1);
 
         renderShortAxis(r.rvk);
+        renderPV(r, co);
         renderDetectLive(r);
         el.mpapMini.textContent = Math.round(r.mpap);
         el.profMini.textContent = p.label;
@@ -362,6 +391,42 @@
                 ' · DC ' + fr(co, 1) + ' · <span class="htp3d-hud-prof ' + p.cls + '">' + p.label + '</span>';
         }
         if (view3d) view3d.update(last);
+    }
+
+    // ---------- Boucle pression-volume du VD (simulée, synchronisée avec le battement 3D) ----------
+    // Cycle à 70/min : contraction isovolumique, éjection, relaxation isovolumique, remplissage
+    var PV_PHASES = [0.05, 0.35, 0.42, 1];
+    function pvPoints(r, co) {
+        var edv = 130 + 100 * r.rvk, sv = co * 1000 / 70, esv = Math.max(edv - sv, 40);
+        var edp = Math.max(3, r.pod), paps = r.paps, papd = Math.max(edp + 2, 0.6 * r.mpap), n = 16, pts = [];
+        var seg = function (f) { for (var i = 0; i <= n; i++) pts.push(f(i / n)); };
+        seg(function (t) { return [edv, edp + (papd - edp) * t]; });                                   // contraction isovolumique
+        seg(function (t) {                                                                            // éjection : pic puis décroissance
+            return [edv - (edv - esv) * t, t < 0.4 ? papd + (paps - papd) * Math.sin(Math.PI / 2 * t / 0.4) : paps * (1 - 0.15 * (t - 0.4) / 0.6)];
+        });
+        seg(function (t) { var p0 = pts[pts.length - 1][1]; return [esv, p0 + (2 - p0) * t]; });         // relaxation
+        seg(function (t) { return [esv + (edv - esv) * t, 2 + (edp - 2) * t * t]; });                    // remplissage
+        return pts;
+    }
+    function pvXY(p) { return [34 + p[0] / 280 * 198, 150 - Math.min(p[1], 100) / 100 * 142]; }
+    function pvPath(pts) { return pts.map(function (p, i) { var q = pvXY(p); return (i ? 'L' : 'M') + q[0].toFixed(1) + ',' + q[1].toFixed(1); }).join(' ') + 'Z'; }
+    var pvState = null;
+    function renderPV(r, co) {
+        var path = $('htp-pv-path');
+        if (!path) return;
+        pvState = pvPoints(r, co);
+        path.setAttribute('d', pvPath(pvState));
+        if (!$('htp-pv-ref').getAttribute('d')) $('htp-pv-ref').setAttribute('d', pvPath(pvPoints(compute(1.2, 9, 5.4), 5.4)));
+    }
+    function placePVDot(now) {
+        if (!pvState) return;
+        var phase = (now / 1000 * 70 / 60) % 1, n = 16, segI = 0, start = 0;
+        while (phase > PV_PHASES[segI]) { start = PV_PHASES[segI]; segI++; }
+        var t = (phase - start) / (PV_PHASES[segI] - start), k = segI * (n + 1) + Math.min(n, Math.round(t * n));
+        var q = pvXY(pvState[k]);
+        var dot = $('htp-pv-dot');
+        dot.setAttribute('cx', q[0].toFixed(1));
+        dot.setAttribute('cy', q[1].toFixed(1));
     }
 
     function renderShortAxis(rvk) {
@@ -445,7 +510,9 @@
 
     /* ---------- Explorer le mécanisme, étape par étape ---------- */
 
-    var explore = { g: 'normal', i: 0, play: false, timer: 0 };
+    var explore = { g: 'normal', i: 0, play: false, timer: 0, asked: {}, view: null };
+    var cutMode = 'none';
+    var isCards = function () { return explore.g === '5'; };   // G5 : mécanismes juxtaposés, pas une chronologie
 
     function selectGroup(g) {
         explore.g = g;
@@ -459,6 +526,7 @@
         glossify($('htp-g-key'));
         $('htp-g-title').textContent = d.title;
         $('htp-g-site').textContent = d.site;
+        el.stepList.classList.toggle('is-cards', g === '5');
         el.stepList.innerHTML = d.chain.map(function (c, k) {
             return '<li><button type="button" class="htp-step-btn" data-i="' + k + '">' + esc(c) + '</button></li>';
         }).join('');
@@ -492,14 +560,16 @@
         var prevBtn = el.steps.querySelector('[data-step="prev"]');
         if (explore.i === 0 && document.activeElement === prevBtn) el.steps.querySelector('[data-step="next"]').focus();
         prevBtn.disabled = explore.i === 0;
-        $('htp-step-count').textContent = 'Étape ' + (explore.i + 1) + ' / ' + steps.length;
+        $('htp-step-count').textContent = (isCards() ? 'Mécanisme ' : 'Étape ') + (explore.i + 1) + ' / ' + steps.length;
+        $('htp-predict').hidden = true;
+        autoView(st[1]);
         // Une seule annonce pour les lecteurs d'écran, avec l'état d'arrivée
         var target = compute(st[0].pvr, st[0].pawp, st[0].co);
         $('htp-step-status').textContent = GROUPS[explore.g].title + ', étape ' + (explore.i + 1) + ' sur ' + steps.length +
             ' : ' + GROUPS[explore.g].chain[explore.i] + '. PAPm ' + Math.round(target.mpap) + ' mmHg, ' + PROFILES[target.prof].label + '.';
         var nextG = GROUP_ORDER[(GROUP_ORDER.indexOf(explore.g) + 1) % GROUP_ORDER.length];
         el.steps.querySelector('[data-step="next"]').innerHTML = (isLast ?
-            (nextG === 'normal' ? 'Recommencer' : 'Groupe suivant') : 'Étape suivante') + ' <span aria-hidden="true">▶</span>';
+            (nextG === 'normal' ? 'Recommencer' : 'Groupe suivant') : (isCards() ? 'Mécanisme suivant' : 'Étape suivante')) + ' <span aria-hidden="true">▶</span>';
         scheduleStep();
     }
 
@@ -508,7 +578,7 @@
         if (explore.play && explore.i === STEPS[explore.g].length - 1) explore.play = false;
         $('htp-step-play').innerHTML = explore.play ? '<span aria-hidden="true">⏸</span> Pause' : '<span aria-hidden="true">▶</span> Lecture';
         $('htp-step-play').setAttribute('aria-pressed', explore.play);
-        if (explore.play) explore.timer = setTimeout(function () { goStep(explore.i + 1); }, 8000);
+        if (explore.play) explore.timer = setTimeout(function () { advance(explore.i + 1); }, 8000);
     }
 
     function renderStepTerms(text) {
@@ -528,8 +598,69 @@
         if (b) { b.innerHTML = '<span aria-hidden="true">▶</span> Lecture'; b.setAttribute('aria-pressed', 'false'); }
     }
 
+    // Avancer d'une étape, en posant d'abord la question de prédiction du groupe si elle arrive
+    function advance(k) {
+        var pq = PREDICT[explore.g];
+        if (pq && k === pq.at && !explore.asked[explore.g]) return askPredict(pq, k);
+        goStep(k);
+    }
+
+    function askPredict(pq, k) {
+        stopSteps();
+        var box = $('htp-predict');
+        box.hidden = false;
+        box.innerHTML = '<p class="htp-predict-q"><strong>Et ensuite ?</strong> ' + esc(pq.q) + '</p>' +
+            '<div class="htp-predict-opts">' + pq.o.map(function (o, j) {
+                return '<button type="button" class="htp-opt" data-pred="' + j + '">' + esc(o) + '</button>';
+            }).join('') + '</div><p class="htp-predict-fb" role="status"></p>';
+        box.dataset.k = k;
+        box.querySelector('.htp-opt').focus({ preventScroll: true });
+    }
+
+    function answerPredict(j) {
+        var pq = PREDICT[explore.g], box = $('htp-predict');
+        explore.asked[explore.g] = true;
+        box.querySelectorAll('.htp-opt').forEach(function (b, n) {
+            b.disabled = true;
+            if (n === pq.a) b.classList.add('is-right');
+            else if (n === j) b.classList.add('is-wrong');
+        });
+        box.querySelector('.htp-predict-fb').innerHTML = '<strong>' + (j === pq.a ? 'Exact.' : 'Non.') + '</strong> ' + esc(pq.e) +
+            ' <button type="button" class="btn-primary htp-predict-go">Voir l\'étape <span aria-hidden="true">▶</span></button>';
+        box.querySelector('.htp-predict-go').focus({ preventScroll: true });
+    }
+
+    // Vue 3D associée à la structure en jeu ; ne bouge la caméra que si la vue proposée change
+    function autoView(focus) {
+        var v = (explore.g !== 'normal' && STEP_VIEW[focus]) || (focus === 'la' || focus === 'vp' ? 'dos' : 'face');
+        if (!view3d || el.d3.hidden || v === explore.view) return;
+        explore.view = v;
+        if (v === 'sax') setCutMode('sax');
+        else { if (cutMode !== 'none') setCutMode('none'); view3d.setView(v); markView(v); }
+    }
+
+    function markView(v) {
+        el.d3.querySelectorAll('[data-view]').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.view === v); });
+    }
+
+    function setCutMode(mode) {
+        cutMode = mode;
+        el.d3.querySelectorAll('[data-cut]').forEach(function (x) {
+            var on = x.dataset.cut === mode;
+            x.classList.toggle('is-on', on);
+            x.setAttribute('aria-pressed', on);
+        });
+        var lvl = $('htp3d-cut-level');
+        lvl.disabled = mode === 'none';
+        lvl.value = 0;
+        markView(mode === 'none' ? 'face' : null);
+        if (!view3d) return;
+        view3d.setCut(mode, 0);
+        view3d.setView(mode === 'none' ? 'face' : mode);
+    }
+
     function nextStep() {
-        if (explore.i < STEPS[explore.g].length - 1) return goStep(explore.i + 1);
+        if (explore.i < STEPS[explore.g].length - 1) return advance(explore.i + 1);
         selectGroup(GROUP_ORDER[(GROUP_ORDER.indexOf(explore.g) + 1) % GROUP_ORDER.length]);
     }
 
@@ -613,7 +744,7 @@
         loading3d = true;
         msg.hidden = false;
         msg.textContent = 'Chargement de la 3D…';
-        import('./htp3d.js?v=17').then(function (m) {
+        import('./htp3d.js?v=19').then(function (m) {
             // Le module affiche lui-même la progression du chargement du modèle
             view3d = m.mount(el.d3);
             if (last) view3d.update(last);
@@ -675,6 +806,8 @@
     function tick(now) {
         var dt = flow.last ? Math.min(0.05, (now - flow.last) / 1000) : 0;
         flow.last = now;
+        if (document.body.classList.contains('is-htp') && !reducedMotion.matches && !document.body.classList.contains('htp-still') &&
+            $('htp-adv').open) placePVDot(now);
         if (document.body.classList.contains('is-htp') && !reducedMotion.matches && !document.body.classList.contains('htp-still') &&
             el.svg.getBoundingClientRect().width > 0 && !document.hidden) placeDots(dt);
         flow.t = requestAnimationFrame(tick);
@@ -789,13 +922,32 @@
             if (k === it.a) { b.classList.add('is-right'); b.insertAdjacentHTML('afterbegin', '<span aria-hidden="true">✓ </span>'); b.setAttribute('aria-label', b.textContent.slice(2) + ' (bonne réponse)'); }
             else if (k === j) { b.classList.add('is-wrong'); b.insertAdjacentHTML('afterbegin', '<span aria-hidden="true">✗ </span>'); b.setAttribute('aria-label', b.textContent.slice(2) + ' (votre réponse, incorrecte)'); }
         });
+        var why = ok ? '' : whyNot(it, j);
         $('htp-quiz-fb').innerHTML = '<p><strong>' + (ok ? 'Exact.' : 'Non.') + '</strong> ' + esc(it.e) + '</p>' +
+            (why ? '<p class="htp-why">' + esc(why) + '</p>' : '') +
             '<div class="htp-actions"><button type="button" class="btn-secondary" data-quiz="sim">Voir dans le simulateur</button>' +
             '<button type="button" class="btn-primary htp-next" data-quiz="next">' +
             (quiz.i + 1 < QUIZ.length ? 'Question suivante' : 'Voir le score') + '</button></div>';
         el.quizScore.textContent = 'Score ' + quiz.score + ' / ' + QUIZ.length;
         glossify($('htp-quiz-fb'));
         el.quizBody.querySelector('.htp-next').focus({ preventScroll: true });
+    }
+
+    // Explication de la mauvaise réponse choisie
+    function whyNot(it, j) {
+        if (it.t === 'g') return 'Pourquoi pas le groupe ' + (j + 1) + ' ? ' + GROUP_WHY[j].charAt(0).toUpperCase() + GROUP_WHY[j].slice(1);
+        if (it.t !== 'p') return '';
+        var v = it.vis ? PRESETS[it.vis] : it.h, r = compute(v.pvr, v.pawp, v.co), m = Math.round(r.mpap);
+        var opt = PROFILE_OPTS[j], papo = 'PAPO ' + v.pawp + ' mmHg', rvp = 'RVP ' + fr(v.pvr, 1) + ' UW';
+        if (j !== 0 && m <= 20) return 'Pourquoi pas « ' + opt + ' » ? La PAPm (' + m + ' mmHg) ne dépasse pas 20 mmHg : il n\'y a pas d\'HTP.';
+        var reason = [
+            'la PAPm vaut ' + m + ' mmHg, donc > 20 : il y a bien une HTP.',
+            v.pawp > 15 ? 'il faudrait une PAPO ≤ 15 mmHg (ici ' + papo + ').' : 'il faudrait une RVP > 2 UW (ici ' + rvp + ').',
+            v.pawp <= 15 ? 'il faudrait une PAPO > 15 mmHg (ici ' + papo + ').' : 'la ' + rvp + ' dépasse 2 UW : la forme est combinée.',
+            v.pawp <= 15 ? 'il faudrait une PAPO > 15 mmHg (ici ' + papo + ').' : 'il faudrait une RVP > 2 UW (ici ' + rvp + ').',
+            v.pawp > 15 ? 'la PAPO dépasse 15 mmHg (' + papo + ').' : 'la ' + rvp + ' dépasse 2 UW : le profil est précapillaire.'
+        ][j];
+        return 'Pourquoi pas « ' + opt + ' » ? ' + reason.charAt(0).toUpperCase() + reason.slice(1);
     }
 
     /* ---------- Lexique : sigles expliqués au survol ou au toucher ---------- */
@@ -878,6 +1030,9 @@
             b.addEventListener('click', function () { stopSteps(); selectGroup(b.dataset.group); });
         });
         el.steps.addEventListener('click', function (e) {
+            var pb = e.target.closest('[data-pred]');
+            if (pb) return answerPredict(+pb.dataset.pred);
+            if (e.target.closest('.htp-predict-go')) return goStep(+$('htp-predict').dataset.k);
             var sb = e.target.closest('.htp-step-btn');
             if (sb) { stopSteps(); goStep(+sb.dataset.i); return; }
             var b = e.target.closest('[data-step]');
@@ -904,6 +1059,11 @@
             if (n) n.focus({ preventScroll: true });
         });
         // Pause de toutes les animations (WCAG 2.2.2)
+        document.querySelector('.htp-zoom2d').addEventListener('click', function () {
+            var on = el.d2.classList.toggle('is-zoomed');
+            this.setAttribute('aria-pressed', on);
+            this.lastChild.textContent = on ? ' Réduire le schéma' : ' Agrandir le schéma';
+        });
         $('htp-anim').addEventListener('click', function () {
             var still = document.body.classList.toggle('htp-still');
             this.setAttribute('aria-pressed', still);
@@ -913,21 +1073,16 @@
         el.patient.addEventListener('click', function (e) {
             if (e.target.closest('.htp-tour-x')) el.patient.hidden = true;
         });
-        var link = $('btn-htp-link'), trInput = $('tr_vel');
-        if (link && trInput) {
-            var syncLink = function () { link.hidden = !trInput.value; };
-            trInput.addEventListener('input', syncLink);
-            syncLink();
-            link.addEventListener('click', fromPatient);
-        }
-        el.hud = $('htp3d-hud-txt');
-        document.querySelectorAll('.tab-btn').forEach(function (b) {
-            b.addEventListener('click', function () {
-                document.body.classList.toggle('is-htp', b.dataset.tab === 'tab-htp');
-                if (b.dataset.tab !== 'tab-htp') stopSteps();
+        // Appelé par app.js à chaque changement d'onglet (l'onglet HTP est chargé à la demande)
+        window.HTP = {
+            fromPatient: fromPatient,
+            onTab: function (id) {
+                if (id !== 'tab-htp') stopSteps();
                 layoutView();
-            });
-        });
+            }
+        };
+        el.hud = $('htp3d-hud-txt');
+
         wideMQ.addEventListener('change', layoutView);
         document.addEventListener('visibilitychange', function () { if (document.hidden) stopSteps(); });
         document.querySelectorAll('input[name="htp-view"]').forEach(function (r) {
@@ -937,7 +1092,7 @@
             var z = e.target.closest('[data-zoom]');
             if (z && view3d) return view3d.zoom(+z.dataset.zoom);
             var b = e.target.closest('[data-view]');
-            if (b && view3d) view3d.setView(b.dataset.view);
+            if (b && view3d) { view3d.setView(b.dataset.view); markView(b.dataset.view); explore.view = null; }
         });
         el.d3.addEventListener('change', function (e) {
             if (e.target.dataset.layer && view3d) view3d.setLayer(e.target.dataset.layer, e.target.checked);
@@ -946,18 +1101,9 @@
             if (view3d) view3d.setHeartOpacity(+e.target.value);
         });
         // Coupes échographiques : petit axe ou 4 cavités ; le curseur déplace le plan
-        var cutLvl = $('htp3d-cut-level'), cutMode = 'none';
-        var cutBtns = el.d3.querySelectorAll('[data-cut]');
-        cutBtns.forEach(function (b) {
-            b.addEventListener('click', function () {
-                cutMode = b.dataset.cut;
-                cutBtns.forEach(function (x) { x.classList.toggle('is-on', x === b); x.setAttribute('aria-pressed', x === b); });
-                cutLvl.disabled = cutMode === 'none';
-                cutLvl.value = 0;
-                if (!view3d) return;
-                view3d.setCut(cutMode, 0);
-                view3d.setView(cutMode === 'none' ? 'face' : cutMode);
-            });
+        var cutLvl = $('htp3d-cut-level');
+        el.d3.querySelectorAll('[data-cut]').forEach(function (b) {
+            b.addEventListener('click', function () { explore.view = null; setCutMode(b.dataset.cut); });
         });
         cutLvl.addEventListener('input', function () { if (view3d) view3d.setCut(cutMode, +cutLvl.value); });
         el.quizBody.addEventListener('click', function (e) {

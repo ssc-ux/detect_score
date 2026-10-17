@@ -1860,3 +1860,173 @@
         margin-top: 1rem;
     }
 }
+
+/* ---------- Question « Et ensuite ? » ---------- */
+
+.htp-predict {
+    margin: 0 0 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--htp-alerte);
+    border-radius: var(--radius-md);
+    background: var(--htp-warn-soft);
+}
+
+.htp-predict-q {
+    margin: 0 0 8px;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.htp-predict-opts {
+    display: grid;
+    gap: 6px;
+}
+
+.htp-predict-fb {
+    margin: 8px 0 0;
+    font-size: 0.86rem;
+    line-height: 1.5;
+    color: var(--ink-2);
+}
+
+.htp-predict-go {
+    margin-top: 8px;
+    display: flex;
+}
+
+.htp-why {
+    margin-top: -4px !important;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    background: var(--chip);
+}
+
+/* ---------- G5 : mécanismes juxtaposés présentés en cartes ---------- */
+
+.htp-steplist.is-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.htp-steplist.is-cards li {
+    padding: 0;
+}
+
+.htp-steplist.is-cards li::before,
+.htp-steplist.is-cards li::after {
+    display: none;
+}
+
+.htp-steplist.is-cards .htp-step-btn {
+    height: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--line-strong);
+    background: var(--surface);
+}
+
+.htp-steplist.is-cards li.is-current .htp-step-btn {
+    border-color: var(--htp-alerte);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--htp-alerte) 30%, transparent);
+}
+
+/* Vue 3D active */
+.htp3d-controls .htp-chip[aria-pressed="true"] {
+    border-color: var(--accent);
+    color: var(--accent);
+    font-weight: 700;
+}
+
+/* ---------- Schéma agrandissable (mobile) ---------- */
+
+.htp-zoom2d {
+    display: none;
+}
+
+@media (max-width: 640px) {
+    .htp-zoom2d {
+        display: inline-flex;
+        min-height: 32px;
+        margin: 4px auto 0;
+        font-size: 0.78rem;
+    }
+
+    #htp-2d.is-zoomed {
+        overflow-x: auto;
+    }
+
+    #htp-2d.is-zoomed #htp-svg {
+        min-width: 620px;
+    }
+}
+
+/* ---------- Boucle pression-volume ---------- */
+
+.htp-pv {
+    margin: 0;
+    text-align: center;
+}
+
+.htp-pv svg {
+    width: 100%;
+    max-width: 260px;
+    height: auto;
+}
+
+.htp-pv figcaption {
+    font-size: 0.72rem;
+    color: var(--ink-3);
+}
+
+.htp-pv-axis {
+    stroke: var(--line-strong);
+    stroke-width: 1.2;
+}
+
+.htp-pv-t {
+    font-size: 9px;
+    fill: var(--ink-3);
+    font-family: var(--font-sans);
+}
+
+.htp-pv-ref {
+    fill: none;
+    stroke: var(--ink-3);
+    stroke-width: 1.2;
+    stroke-dasharray: 4 3;
+}
+
+.htp-pv-path {
+    fill: color-mix(in srgb, var(--htp-veineux) 14%, transparent);
+    stroke: var(--htp-veineux);
+    stroke-width: 2;
+}
+
+.htp-pv-dot {
+    fill: var(--htp-alerte);
+}
+
+@media (min-width: 900px) {
+    .htp-echo {
+        grid-template-columns: 1fr 190px 230px;
+    }
+}
+
+/* ---------- Ordre visuel sur mobile (le DOM met les étapes avant la 3D pour la tabulation) ---------- */
+
+@media (max-width: 1099px) {
+    #htp-sim {
+        display: flex;
+        flex-direction: column;
+    }
+
+    #htp-sim > * { order: 1; }
+    #htp-sim > .htp-groups { order: 2; }
+    #htp-sim > .htp-toolbar,
+    #htp-sim > #htp-patient { order: 3; }
+    #htp-sim > #htp-3d,
+    #htp-sim > #htp-2d { order: 4; }
+    #htp-sim > #htp-steps { order: 5; }
+    #htp-sim > #htp-adv { order: 6; }
+}

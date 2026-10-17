@@ -8,7 +8,6 @@
     <script>try{var t=localStorage.getItem("theme");if(t==="sombre")document.documentElement.dataset.theme="dark";else if(t==="auto")delete document.documentElement.dataset.theme}catch(e){}</script>
     <link rel="icon" href="icon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="style.css?v=23">
-    <link rel="stylesheet" href="htp.css?v=12">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="apple-touch-icon" href="icon-180.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -342,6 +341,48 @@
 
                     <div id="htp-patient" class="htp-patient" hidden></div>
 
+                    <aside id="htp-steps" class="htp-steps" aria-labelledby="htp-g-title">
+                        <p class="htp-steps-kicker">Ce qui se passe</p>
+                        <h3 id="htp-g-title" class="htp-h3"></h3>
+                        <p id="htp-g-site" class="htp-site"></p>
+                        <p id="htp-step-status" class="sr-only" role="status"></p>
+                        <div class="htp-now">
+                            <span id="htp-step-count" class="htp-step-count"></span>
+                            <span>PAPm <b id="htp-mpap-mini">--</b> mmHg</span>
+                            <span id="htp-profile-mini" class="htp-badge">--</span>
+                        </div>
+                        <ol id="htp-step-list" class="htp-chain htp-steplist"></ol>
+                        <p id="htp-step-terms" class="htp-step-terms" hidden></p>
+                        <p id="htp-g-key" class="htp-key"></p>
+                        <div id="htp-predict" class="htp-predict" hidden></div>
+                        <div class="htp-step-nav">
+                            <button type="button" class="btn-secondary" data-step="prev" aria-label="Étape précédente"><span aria-hidden="true">◀</span></button>
+                            <button type="button" class="btn-secondary" data-step="play" id="htp-step-play" aria-pressed="false"><span aria-hidden="true">▶</span> Lecture</button>
+                            <button type="button" class="btn-primary" data-step="next">Étape suivante <span aria-hidden="true">▶</span></button>
+                        </div>
+                        <details class="htp-more htp-compare">
+                            <summary>Comparer les groupes</summary>
+                            <div class="htp-table-wrap">
+                                <table class="htp-table">
+                                    <thead><tr><th scope="col">Situation</th><th scope="col">PAPO</th><th scope="col">RVP</th><th scope="col">Ce qui fait monter la PAPm</th><th scope="col">Examen clé</th></tr></thead>
+                                    <tbody>
+                                        <tr><th scope="row">Normal</th><td>≤ 15</td><td>≈ 1 UW</td><td>—</td><td>—</td></tr>
+                                        <tr><th scope="row">G1 · HTAP</th><td>≤ 15</td><td>&gt; 2 UW</td><td>RVP (artérioles remodelées)</td><td>Cathétérisme droit, après exclusion des G2-3-4 ; DETECT dans la ScS</td></tr>
+                                        <tr><th scope="row">G2 · Cœur gauche</th><td>&gt; 15</td><td>≤ 2 (isolée) / &gt; 2 (combinée)</td><td>PAPO (rétro-transmission)</td><td>Échocardiographie</td></tr>
+                                        <tr><th scope="row">G3 · Poumon</th><td>≤ 15</td><td>&gt; 2 UW (&gt; 5 : sévère)</td><td>RVP (hypoxie, perte de vaisseaux)</td><td>EFR, gazométrie, scanner</td></tr>
+                                        <tr><th scope="row">G4 · HTP-TEC</th><td>≤ 15</td><td>&gt; 2 UW</td><td>RVP (obstruction)</td><td>Scintigraphie V/Q</td></tr>
+                                        <tr><th scope="row">G5</th><td>variable</td><td>variable</td><td>plusieurs termes à la fois</td><td>selon la maladie</td></tr>
+                                        <tr><th scope="row">Hyperdébit</th><td>≤ 15</td><td>≤ 2 UW</td><td>DC (HTP non classée)</td><td>—</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </details>
+                        <details class="htp-more">
+                            <summary>Causes, examen clé, traitement</summary>
+                            <dl id="htp-g-facts" class="htp-facts"></dl>
+                        </details>
+                    </aside>
+
                     <div id="htp-3d" class="htp3d" hidden>
                         <div class="htp3d-stage">
                             <div class="htp3d-canvas"></div>
@@ -355,10 +396,10 @@
                         <div class="htp3d-controls">
                             <div class="htp3d-row" role="group" aria-label="Vues">
                                 <span class="htp3d-cap">Vue</span>
-                                <button type="button" class="htp-chip" data-view="face">Face</button>
-                                <button type="button" class="htp-chip" data-view="gauche">Profil G</button>
-                                <button type="button" class="htp-chip" data-view="dos">Dos</button>
-                                <button type="button" class="htp-chip" data-view="oblique">Oblique</button>
+                                <button type="button" class="htp-chip" data-view="face" aria-pressed="true">Face</button>
+                                <button type="button" class="htp-chip" data-view="gauche" aria-pressed="false">Profil G</button>
+                                <button type="button" class="htp-chip" data-view="dos" aria-pressed="false">Dos</button>
+                                <button type="button" class="htp-chip" data-view="oblique" aria-pressed="false">Oblique</button>
                                 <button type="button" class="htp-chip htp-zoom" data-zoom="0.8" aria-label="Zoomer">+</button>
                                 <button type="button" class="htp-chip htp-zoom" data-zoom="1.25" aria-label="Dézoomer">−</button>
                             </div>
@@ -503,6 +544,7 @@
                                 <text class="htp-ov-txt" x="196" y="174" text-anchor="middle">débit ↑↑</text>
                             </g>
                         </svg>
+                        <button type="button" class="htp-zoom2d btn-secondary" aria-pressed="false"><span aria-hidden="true">⤢</span> Agrandir le schéma</button>
                         <figcaption class="htp-legend">
                             <span><i class="htp-dot htp-dot-v"></i>sang désoxygéné</span>
                             <span><i class="htp-dot htp-dot-a"></i>sang oxygéné</span>
@@ -510,46 +552,6 @@
                         </figcaption>
                     </figure>
 
-                    <aside id="htp-steps" class="htp-steps" aria-labelledby="htp-g-title">
-                        <p class="htp-steps-kicker">Ce qui se passe</p>
-                        <h3 id="htp-g-title" class="htp-h3"></h3>
-                        <p id="htp-g-site" class="htp-site"></p>
-                        <p id="htp-step-status" class="sr-only" role="status"></p>
-                        <div class="htp-now">
-                            <span id="htp-step-count" class="htp-step-count"></span>
-                            <span>PAPm <b id="htp-mpap-mini">--</b> mmHg</span>
-                            <span id="htp-profile-mini" class="htp-badge">--</span>
-                        </div>
-                        <ol id="htp-step-list" class="htp-chain htp-steplist"></ol>
-                        <p id="htp-step-terms" class="htp-step-terms" hidden></p>
-                        <p id="htp-g-key" class="htp-key"></p>
-                        <div class="htp-step-nav">
-                            <button type="button" class="btn-secondary" data-step="prev" aria-label="Étape précédente"><span aria-hidden="true">◀</span></button>
-                            <button type="button" class="btn-secondary" data-step="play" id="htp-step-play" aria-pressed="false"><span aria-hidden="true">▶</span> Lecture</button>
-                            <button type="button" class="btn-primary" data-step="next">Étape suivante <span aria-hidden="true">▶</span></button>
-                        </div>
-                        <details class="htp-more htp-compare">
-                            <summary>Comparer les groupes</summary>
-                            <div class="htp-table-wrap">
-                                <table class="htp-table">
-                                    <thead><tr><th scope="col">Situation</th><th scope="col">PAPO</th><th scope="col">RVP</th><th scope="col">Ce qui fait monter la PAPm</th><th scope="col">Examen clé</th></tr></thead>
-                                    <tbody>
-                                        <tr><th scope="row">Normal</th><td>≤ 15</td><td>≈ 1 UW</td><td>—</td><td>—</td></tr>
-                                        <tr><th scope="row">G1 · HTAP</th><td>≤ 15</td><td>&gt; 2 UW</td><td>RVP (artérioles remodelées)</td><td>Cathétérisme droit, après exclusion des G2-3-4 ; DETECT dans la ScS</td></tr>
-                                        <tr><th scope="row">G2 · Cœur gauche</th><td>&gt; 15</td><td>≤ 2 (isolée) / &gt; 2 (combinée)</td><td>PAPO (rétro-transmission)</td><td>Échocardiographie</td></tr>
-                                        <tr><th scope="row">G3 · Poumon</th><td>≤ 15</td><td>&gt; 2 UW (&gt; 5 : sévère)</td><td>RVP (hypoxie, perte de vaisseaux)</td><td>EFR, gazométrie, scanner</td></tr>
-                                        <tr><th scope="row">G4 · HTP-TEC</th><td>≤ 15</td><td>&gt; 2 UW</td><td>RVP (obstruction)</td><td>Scintigraphie V/Q</td></tr>
-                                        <tr><th scope="row">G5</th><td>variable</td><td>variable</td><td>plusieurs termes à la fois</td><td>selon la maladie</td></tr>
-                                        <tr><th scope="row">Hyperdébit</th><td>≤ 15</td><td>≤ 2 UW</td><td>DC (HTP non classée)</td><td>—</td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </details>
-                        <details class="htp-more">
-                            <summary>Causes, examen clé, traitement</summary>
-                            <dl id="htp-g-facts" class="htp-facts"></dl>
-                        </details>
-                    </aside>
 
                     <details id="htp-adv" class="htp-adv">
                         <summary>Mode avancé : curseurs, échographie, autres cas</summary>
@@ -622,6 +624,21 @@
                                 <text class="htp-label" x="112" y="94" text-anchor="middle">VG</text>
                             </svg>
                             <figcaption id="htp-sa-cap">Coupe petit axe</figcaption>
+                        </figure>
+                        <figure class="htp-pv">
+                            <svg viewBox="0 0 240 180" role="img" aria-labelledby="htp-pv-cap">
+                                <line class="htp-pv-axis" x1="34" y1="150" x2="232" y2="150" />
+                                <line class="htp-pv-axis" x1="34" y1="150" x2="34" y2="8" />
+                                <text class="htp-pv-t" x="133" y="172" text-anchor="middle">Volume du VD (mL)</text>
+                                <text class="htp-pv-t" x="10" y="80" text-anchor="middle" transform="rotate(-90 10 80)">Pression (mmHg)</text>
+                                <text class="htp-pv-t" x="34" y="162" text-anchor="middle">0</text>
+                                <text class="htp-pv-t" x="232" y="162" text-anchor="end">280</text>
+                                <text class="htp-pv-t" x="30" y="12" text-anchor="end">100</text>
+                                <path id="htp-pv-ref" class="htp-pv-ref" d="" />
+                                <path id="htp-pv-path" class="htp-pv-path" d="" />
+                                <circle id="htp-pv-dot" class="htp-pv-dot" r="4" cx="0" cy="0" />
+                            </svg>
+                            <figcaption id="htp-pv-cap">Boucle pression-volume du VD (simulée) ; en pointillé : sujet normal</figcaption>
                         </figure>
                     </div>
                     </details>
@@ -754,9 +771,8 @@
     </div>
 
     <script src="logic.js?v=25"></script>
-    <script src="app.js?v=27"></script>
+    <script src="app.js?v=28"></script>
     <script src="fx.js?v=25" defer></script>
-    <script src="htp.js?v=19" defer></script>
     <script>
         if ('serviceWorker' in navigator && location.protocol === 'https:') {
             window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });

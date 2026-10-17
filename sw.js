@@ -1,10 +1,10 @@
 /* Service worker : l'app fonctionne hors ligne une fois ouverte.
-   La 3D (Three.js, modèle anatomique) n'est mise en cache qu'à sa première ouverture.
+   L'onglet HTP et sa 3D ne sont mis en cache qu'à leur première ouverture.
    Page HTML : réseau d'abord. Autres fichiers : cache d'abord, la clé étant l'URL complète
    (un nouveau ?v= force donc le réseau, sans mélange de versions après un déploiement). */
-const CACHE = 'detect-v8';
+const CACHE = 'detect-v9';
 const CORE = [
-    './', 'index.html', 'style.css', 'htp.css', 'logic.js', 'app.js', 'fx.js', 'htp.js',
+    './', 'index.html', 'style.css', 'logic.js', 'app.js', 'fx.js',
     'icon.svg', 'icon-192.png', 'nomogramme.png', 'manifest.webmanifest'
 ];
 
