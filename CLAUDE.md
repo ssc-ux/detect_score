@@ -28,9 +28,8 @@ la sclérodermie) + onglet pédagogique « Comprendre l'HTP » (bêta). Tout en 
   port 8766 (ex. `git worktree add /tmp/old 47f8f76` puis serveur dans ce dossier) → `identiques: true`.
 
 ## État au 17/10/2026
-- En ligne sur `main` : tout jusqu'au commit « 2e relecture scientifique, performance 3D ».
-- Sur la branche, **pas encore testé ni fusionné** : commit « accessibilité (audit WCAG 2.2) et ergonomie ».
-  À faire : lancer `tests/e2e.js`, corriger si besoin, puis fusionner dans `main`.
+- En ligne sur `main` : tout, y compris le lot « accessibilité (audit WCAG 2.2) et ergonomie »
+  (tests de bout en bout verts).
 - Audits rendus : voir `docs/audits/`. Audits pédagogie et technique interrompus par un redémarrage.
 - Idées en attente : liens de partage vers un cas (`#htp=g4`), HTP d'effort, fiche imprimable,
   déformation en « D » plus franche, validation par un spécialiste avant de retirer la mention bêta.
