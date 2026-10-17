@@ -43,7 +43,7 @@ const LAYER = {
 };
 const CHAMBERS = ['ra', 'rv', 'la', 'lv', 'septum'];
 // Cible du mode pas à pas → structures à faire briller
-const FOCUS = { rv: ['rv'], ra: ['ra'], la: ['la'], lv: ['lv'], pa: ['pa'], vp: ['pv'], endo: ['tree'], alv: ['lungL', 'lungR'] };
+const FOCUS = { rv: ['rv'], ra: ['ra'], la: ['la'], lv: ['lv'], pa: ['pa'], vp: ['pv'], endo: ['tree'], alv: ['lungL', 'lungR'], cap: ['lungL', 'lungR'] };
 
 export function mount(root) {
     const wrap = root.querySelector('.htp3d-canvas');
@@ -60,7 +60,18 @@ export function mount(root) {
     const gl = renderer.getContext();
     const dbg = gl.getExtension('WEBGL_debug_renderer_info');
     const soft = dbg && /swiftshader|llvmpipe|software/i.test(gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL));
-    renderer.setPixelRatio(soft ? 1 : Math.min(window.devicePixelRatio || 1, 1.5));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+    // Qualité réduite : rendu logiciel, ou appareil trop lent (mesuré au démarrage)
+    const quality = { low: false, frames: 0, sum: 0, skip: false };
+    function setLowQuality() {
+        if (quality.low) return;
+        quality.low = true;
+        renderer.setPixelRatio(soft ? 0.6 : 0.85);
+        resize();
+        Object.values(mat).forEach((m) => {
+            if (m.isMeshPhysicalMaterial) { m.sheen = 0; m.clearcoat = 0; m.needsUpdate = true; }
+        });
+    }
     renderer.localClippingEnabled = true;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.05;
@@ -121,6 +132,9 @@ export function mount(root) {
             float wRv = smoothstep(0.05, 0.6, s) * smoothstep(0.85 * uLvR, 1.35 * uLvR, rr);
             float rvot = 1.0 + 0.5 * smoothstep(-0.2 * uHalf, 0.8 * uHalf, h);
             vec3 disp = rd * (uK * 0.42 * wRv * rvot * (rr - 0.6 * uLvR));
+            // Le VD dilaté « prend » l'apex : paroi libre apicale repoussée en dehors et vers l'apex
+            float wApex = smoothstep(0.05, 0.6, s) * smoothstep(-0.2 * uHalf, -0.85 * uHalf, h) * smoothstep(0.3 * uLvR, 0.9 * uLvR, rr);
+            disp += (rd * 0.3 * uLvR - uAxis * 0.18 * uHalf) * (uK * wApex);
             // Septum (et paroi septale du VG) poussé vers le VG
             float wSep = smoothstep(0.25, 0.85, s) * (1.0 - smoothstep(0.75 * uLvR, 1.3 * uLvR, rr));
             disp -= uRvDir * (uK * 0.38 * uLvR * wSep);
@@ -154,10 +168,12 @@ export function mount(root) {
     function deformable(m) {
         m.onBeforeCompile = (sh) => {
             Object.assign(sh.uniforms, deform);
-            sh.vertexShader = DEFORM_GLSL + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
+            // Déformation appliquée dans l'espace monde, juste après la projection standard
+            sh.vertexShader = DEFORM_GLSL + sh.vertexShader.replace('#include <project_vertex>', `#include <project_vertex>
                 vec4 htpW = modelMatrix * vec4(transformed, 1.0);
                 htpW.xyz = htpDeform(htpW.xyz);
-                transformed = (inverse(modelMatrix) * htpW).xyz;`);
+                mvPosition = viewMatrix * htpW;
+                gl_Position = projectionMatrix * mvPosition;`);
         };
         m.customProgramCacheKey = () => 'htp-deform';
         return m;
@@ -190,6 +206,7 @@ export function mount(root) {
         septum: new THREE.MeshBasicMaterial({ color: '#8c4a42', side: THREE.BackSide, clippingPlanes: clipList })
     };
     ['ra', 'rv', 'la', 'lv', 'septum', 'cor', 'cvein'].forEach((k) => deformable(mat[k]));
+    if (soft) queueMicrotask(setLowQuality);
     Object.values(innerMat).forEach(deformable);
 
     const groups = { heart: new THREE.Group(), vessels: new THREE.Group(), lungs: new THREE.Group(), flow: new THREE.Group(), ov: new THREE.Group() };
@@ -468,14 +485,15 @@ export function mount(root) {
 
     function applyState() {
         if (!ready) return;
-        const k = clamp((st.mpap - 20) / 30, 0, 1);              // post-charge du VD
+        // Surcharge du VD (gradient transpulmonaire), fournie par le simulateur
+        const k = st.rvk !== undefined ? st.rvk : clamp((st.mpap - 20) / 30, 0, 1);
         deform.uK.value = k;
         deform.uRA.value = clamp((st.pod - 4) / 12, 0, 1);
         deform.uLA.value = clamp((st.pawp - 8) / 20, 0, 1);
         scaleParts('pa', 1 + 0.28 * clamp((st.mpap - 15) / 35, 0, 1));
         // Rapport VD/VG en 4 cavités (simulé) : ≈ 0,65 normal, > 1 en HTP sévère
-        info.textContent = 'Coupe 4 cavités · rapport VD/VG ≈ ' +
-            (0.65 + 0.75 * k).toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' (simulé)';
+        info.textContent = 'Coupe 4 cavités · diamètres basaux VD/VG ≈ ' +
+            (0.65 + 0.75 * k).toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' (simulé ; signe ESC si > 1,0)';
 
         const lumen = clamp(1 - (st.pvr - 1) / 15, 0.3, 1);
         branches.forEach((b) => {
@@ -551,6 +569,11 @@ export function mount(root) {
         const dt = prev ? Math.min(0.05, (now - prev) / 1000) : 0;
         prev = now;
         if (!onScreen || !wrap.offsetParent || document.hidden) return;
+        if (quality.low && (quality.skip = !quality.skip)) return;   // 30 images/s en qualité réduite
+        if (ready && !quality.low && quality.frames < 90) {
+            if (quality.frames++ > 30) quality.sum += dt;            // on ignore les premières images
+            if (quality.frames === 90 && quality.sum / 59 > 0.045) setLowQuality();
+        }
         if (camAnim) {
             const t = clamp((now - camAnim.t0) / 900, 0, 1);
             const e = 1 - Math.pow(1 - t, 3);

@@ -52,8 +52,8 @@
                 "Agression de l'endothélium : auto-immunité de la ScS, mutation BMPR2, toxique, VIH…",
                 "Déséquilibre des médiateurs : endothéline-1 ↑, monoxyde d'azote (NO) ↓, prostacycline ↓",
                 "Vasoconstriction, prolifération des cellules musculaires lisses et endothéliales (lésions plexiformes), thrombose in situ",
-                "Lumière artériolaire rétrécie → RVP ↑ → PAPm ↑ avec PAPO normale",
-                "Post-charge du VD ↑ : hypertrophie, puis dilatation et insuffisance cardiaque droite"
+                "Lumière artériolaire rétrécie → RVP ↑ → PAPm ↑ avec PAPO normale. Longtemps silencieuse au repos : la PAPm ne monte qu'après l'atteinte d'une grande partie du lit vasculaire",
+                "Post-charge du VD ↑ : hypertrophie, puis dilatation et insuffisance cardiaque droite. Quand le débit chute, la PAPm peut se stabiliser voire baisser : ce n'est pas une amélioration"
             ],
             ex: "HTAP idiopathique, héritable, médicamenteuse ou toxique, associée aux connectivites (ScS ++), au VIH, à l'hypertension portale, aux cardiopathies congénitales, à la schistosomiase. Inclut la maladie veino-occlusive / hémangiomatose capillaire (MVO/HCP), fréquente dans la ScS et moins sensible aux traitements.",
             exam: "Cathétérisme cardiaque droit (profil précapillaire) après avoir écarté les groupes 2, 3 et 4. Dans la ScS : évaluation annuelle du risque ; algorithme DETECT si ScS > 3 ans, DLCO < 60 % et CVF ≥ 40 %.",
@@ -64,7 +64,7 @@
             title: 'Groupe 2 · Cardiopathie gauche',
             site: 'Post-capillaire · veines pulmonaires et cœur gauche',
             chain: [
-                "Pressions de remplissage du VG ↑ : dysfonction diastolique ou systolique, valvulopathie mitrale ou aortique",
+                "Pressions de remplissage du VG ↑ (d'abord à l'effort) : dysfonction diastolique ou systolique, valvulopathie mitrale ou aortique",
                 "Pression de l'OG ↑, transmise passivement aux veines et capillaires pulmonaires (PAPO > 15)",
                 "PAPm ↑ par rétro-transmission, RVP normale : HTP post-capillaire isolée",
                 "Si l'hyperpression dure : remodelage veineux puis artériel, vasoconstriction → RVP > 2 UW : HTP post-capillaire combinée",
@@ -80,7 +80,7 @@
             site: 'Précapillaire · lit vasculaire pulmonaire',
             chain: [
                 "Hypoxie alvéolaire : BPCO, pneumopathie interstitielle, hypoventilation, altitude",
-                "Vasoconstriction pulmonaire hypoxique (réflexe d'Euler-Liljestrand) étendue à tout le poumon",
+                "Vasoconstriction pulmonaire hypoxique (mécanisme d'Euler-Liljestrand) étendue à tout le poumon",
                 "Destruction du lit capillaire (emphysème, fibrose) : moins de vaisseaux pour le même débit",
                 "Remodelage chronique des artérioles → RVP ↑ → PAPm ↑, le plus souvent modérée",
                 "HTP sévère (RVP > 5 UW) chez une minorité : pronostic plus réservé"
@@ -98,7 +98,7 @@
                 "Le thrombus s'organise en tissu fibreux adhérent à la paroi (bandes, membranes)",
                 "Obstruction mécanique des artères pulmonaires → RVP ↑",
                 "Les territoires restés libres reçoivent tout le débit → microvasculopathie secondaire, RVP ↑ encore",
-                "Insuffisance cardiaque droite progressive"
+                "Insuffisance cardiaque droite progressive ; la PAPm peut alors baisser avec le débit, sans que la maladie s'améliore"
             ],
             ex: "HTP thromboembolique chronique (HTP-TEC) ; plus rarement sarcome de l'artère pulmonaire, artérites, parasitoses.",
             exam: "Scintigraphie de ventilation/perfusion (à faire devant toute HTP) : défects de perfusion non concordants persistant après ≥ 3 mois d'anticoagulation ; cathétérisme droit (profil précapillaire) ; angioscanner et angiographie pour l'opérabilité, en centre expert.",
@@ -107,12 +107,12 @@
         },
         '5': {
             title: 'Groupe 5 · Mécanismes multiples ou incertains',
-            site: 'Variable selon la maladie',
+            site: 'Variable selon la maladie · mécanismes juxtaposés, non successifs',
             chain: [
                 "Compression extrinsèque des vaisseaux : médiastinite fibrosante, adénopathies, tumeur",
                 "Atteinte vasculaire directe : granulomes (sarcoïdose), microangiopathie thrombotique tumorale",
                 "Captation du NO par l'hémoglobine libre : anémies hémolytiques chroniques",
-                "Hyperdébit et surcharge : insuffisance rénale chronique avec fistule artérioveineuse",
+                "Hyperdébit (fistule artérioveineuse de l'insuffisance rénale chronique, anémie) : PAPm ↑ sans RVP ↑ ; la surcharge hydrosodée y ajoute souvent une composante post-capillaire",
                 "Souvent plusieurs mécanismes intriqués, dont une composante cardiaque gauche ou respiratoire"
             ],
             ex: "Sarcoïdose, histiocytose langerhansienne, neurofibromatose de type 1, syndromes myéloprolifératifs, anémies hémolytiques chroniques, insuffisance rénale chronique (avec ou sans dialyse), maladies métaboliques (Gaucher, glycogénoses), microangiopathie thrombotique tumorale, médiastinite fibrosante.",
@@ -150,19 +150,19 @@
         normal: [[N, 'rv'], [N, 'endo'], [N, 'alv'], [N, 'la'], [N, 'pa']],
         '1': [[N, 'endo'], [{ pvr: 2, pawp: 9, co: 5.4 }, 'endo'], [{ pvr: 3.5, pawp: 9, co: 5.2 }, 'endo'],
             [{ pvr: 8, pawp: 10, co: 4 }, 'pa'], [{ pvr: 11, pawp: 10, co: 3.2 }, 'rv']],
-        '2': [[{ pvr: 1.2, pawp: 12, co: 5.2 }, 'lv'], [{ pvr: 1.4, pawp: 20, co: 5 }, 'la'], [{ pvr: 1.5, pawp: 22, co: 5 }, 'vp'],
+        '2': [[{ pvr: 1.2, pawp: 12, co: 5.2 }, 'lv'], [{ pvr: 1.4, pawp: 20, co: 5 }, 'la'], [{ pvr: 1.5, pawp: 22, co: 5 }, 'pa'],
             [{ pvr: 4, pawp: 24, co: 4.5 }, 'endo'], [{ pvr: 4.5, pawp: 25, co: 4 }, 'rv']],
-        '3': [[{ pvr: 1.5, pawp: 9, co: 5.3 }, 'alv'], [{ pvr: 2.5, pawp: 9, co: 5.2 }, 'endo'], [{ pvr: 3, pawp: 9, co: 5.1 }, 'alv'],
-            [{ pvr: 3.5, pawp: 9, co: 5 }, 'pa'], [{ pvr: 6, pawp: 9, co: 4.5 }, 'rv']],
+        '3': [[{ pvr: 1.5, pawp: 9, co: 5.3 }, 'alv'], [{ pvr: 2.5, pawp: 9, co: 5.2 }, 'endo'], [{ pvr: 3, pawp: 9, co: 5.1 }, 'cap'],
+            [{ pvr: 3.5, pawp: 9, co: 5 }, 'endo'], [{ pvr: 6, pawp: 9, co: 4.5 }, 'rv']],
         '4': [[N, 'pa'], [{ pvr: 3, pawp: 9, co: 5.2 }, 'pa'], [{ pvr: 6, pawp: 10, co: 4.5 }, 'pa'],
             [{ pvr: 9, pawp: 10, co: 3.8 }, 'endo'], [{ pvr: 11, pawp: 10, co: 3.3 }, 'rv']],
         '5': [[{ pvr: 3, pawp: 10, co: 5 }, 'pa'], [{ pvr: 4, pawp: 11, co: 5 }, 'endo'], [{ pvr: 3.5, pawp: 10, co: 6 }, 'endo'],
-            [{ pvr: 2, pawp: 12, co: 8 }, 'pa'], [{ pvr: 4.5, pawp: 12, co: 4.8 }, 'lv']]
+            [{ pvr: 2, pawp: 12, co: 8 }, 'pa'], [{ pvr: 3.5, pawp: 18, co: 4.8 }, 'lv']]
     };
     var GROUP_ORDER = ['normal', '1', '2', '3', '4', '5'];
     // Structure mise en évidence sur le schéma 2D
     var FOCUS_2D = { rv: '#htp-rv', ra: '#htp-ra', la: '#htp-la', lv: '#htp-lv', pa: '#htp-pa', vp: '#htp-vp',
-        endo: '.htp-wall', alv: '.htp-alv circle' };
+        endo: '.htp-wall', alv: '.htp-alv circle', cap: '.htp-cap path' };
 
     var GLOSSARY = {
         'PAPm': "Pression artérielle pulmonaire moyenne, mesurée au cathétérisme droit. HTP si > 20 mmHg.",
@@ -238,10 +238,12 @@
         var trv = Math.round(Math.sqrt(Math.max(0, paps - pod) / 4) * 10) / 10;
         var raa = 13 + (pod - 4) * 1.1;
         var prof;
-        if (mpap <= 20) prof = 'none';
+        if (Math.round(mpap) <= 20) prof = 'none';      // cohérent avec la valeur affichée
         else if (pawp <= 15) prof = pvr > 2 ? 'pre' : 'uncl';
         else prof = pvr > 2 ? 'cpc' : 'ipc';
-        return { mpap: mpap, pod: pod, paps: paps, trv: trv, raa: raa, prof: prof };
+        // Surcharge du VD : pilotée par le gradient transpulmonaire (normal ≈ 7 mmHg), pas par la PAPm seule
+        var rvk = clamp((mpap - pawp - 8) / 25, 0, 1);
+        return { mpap: mpap, pod: pod, paps: paps, trv: trv, raa: raa, prof: prof, rvk: rvk };
     }
 
     /* ---------- Simulateur ---------- */
@@ -278,7 +280,8 @@
         el.trv.textContent = '≈ ' + fr(r.trv, 1) + ' m/s';
         el.raa.textContent = '≈ ' + Math.round(r.raa) + ' cm²';
         // TAPSE simulé : fonction longitudinale du VD, qui baisse avec la post-charge
-        $('htp-tapse').textContent = '≈ ' + Math.round(24 - 11 * clamp((r.mpap - 20) / 30, 0, 1)) + ' mm';
+        var tapse = Math.round(24 - 11 * r.rvk);
+        $('htp-tapse').textContent = '≈ ' + tapse + ' mm · TAPSE/PAPs ≈ ' + fr(tapse / r.paps, 2) + ' mm/mmHg';
         var proba = r.trv <= 2.8 ? ['faible', 'is-good'] : r.trv <= 3.4 ? ['intermédiaire', 'is-warn'] : ['élevée', 'is-bad'];
         el.proba.textContent = 'Probabilité échographique ' + proba[0] + ' d\'après la seule Vmax IT (selon l\'ESC, des signes dans ≥ 2 catégories – ventricules, AP, VCI/OD – la relèvent d\'un niveau)';
         el.proba.className = 'htp-badge htp-badge-sm ' + proba[1];
@@ -294,7 +297,7 @@
         el.tRvp.classList.toggle('is-high', pvr > 2);
 
         // Géométrie
-        var k = clamp((r.mpap - 20) / 30, 0, 1);              // post-charge du VD
+        var k = r.rvk;                                         // surcharge du VD
         el.lumen.setAttribute('height', clamp(20 - (pvr - 1) * 1.25, 3, 20).toFixed(1));
         el.lumen.setAttribute('y', (130 - +el.lumen.getAttribute('height') / 2).toFixed(1));
         el.pa.style.strokeWidth = (10 + clamp((r.mpap - 15) / 35, 0, 1) * 10).toFixed(1);
@@ -311,13 +314,13 @@
         el.jet.style.opacity = jet ? (0.35 + jet * 0.65).toFixed(2) : 0;
         el.jet.style.strokeWidth = (1.5 + jet * 4).toFixed(1);
 
-        renderShortAxis(r.mpap);
+        renderShortAxis(r.rvk);
         renderDetectLive(r);
         el.mpapMini.textContent = Math.round(r.mpap);
         el.profMini.textContent = p.label;
         el.profMini.className = 'htp-badge ' + p.cls;
         placeFocus();
-        last = { pvr: pvr, pawp: pawp, co: co, mpap: r.mpap, pod: r.pod, ov: state.ov, focus: state.focus };
+        last = { pvr: pvr, pawp: pawp, co: co, mpap: r.mpap, pod: r.pod, rvk: r.rvk, ov: state.ov, focus: state.focus };
         if (el.hud) {
             el.hud.innerHTML = '<b>PAPm ' + Math.round(r.mpap) + '</b> mmHg · RVP ' + fr(pvr, 1) + ' UW · PAPO ' + pawp +
                 ' · DC ' + fr(co, 1) + '<span class="htp3d-hud-prof ' + p.cls + '">' + p.label + '</span>';
@@ -325,9 +328,9 @@
         if (view3d) view3d.update(last);
     }
 
-    function renderShortAxis(mpap) {
-        var k = clamp((mpap - 20) / 30, 0, 1);
-        var f = clamp((mpap - 25) / 22, 0, 1.1);              // aplatissement du septum
+    function renderShortAxis(rvk) {
+        var k = rvk;
+        var f = clamp((rvk - 0.15) / 0.75, 0, 1.1);           // aplatissement du septum
         var cx = 112, top = 52, bot = 128;
         var sx = (cx - 50.7 * (1 - f)).toFixed(1);
         var w = (64 + k * 50).toFixed(1), h = (6 + k * 16).toFixed(1);
@@ -545,7 +548,7 @@
         loading3d = true;
         msg.hidden = false;
         msg.textContent = 'Chargement de la 3D…';
-        import('./htp3d.js?v=12').then(function (m) {
+        import('./htp3d.js?v=14').then(function (m) {
             // Le module affiche lui-même la progression du chargement du modèle
             view3d = m.mount(el.d3);
             if (last) view3d.update(last);

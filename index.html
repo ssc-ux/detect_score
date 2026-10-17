@@ -640,11 +640,13 @@
                             Modifications : fusion des trois modèles, retrait des valves, piliers et cartilages,
                             simplification et compression, couleurs conventionnelles, déformations simulées.</p>
                         <span class="reference-label htp-ref-gap">Modèle et limites</span>
-                        <p>La 3D provient d'un seul sujet, à partir de données post-mortem : sa forme n'est pas celle
-                            d'un cœur « type » en diastole. Le bleu et le rouge sont une convention (sang désoxygéné /
-                            oxygéné). L'arbre artériel pulmonaire est schématique : le remodelage de l'HTAP touche des
-                            artérioles invisibles à cette échelle. Les dilatations, les pressions et le flux sont
-                            simulés à visée pédagogique.</p>
+                        <p>La 3D provient d'un seul sujet, reconstruit à partir de coupes post-mortem (Visible Human Project) :
+                            sa forme ne correspond à aucune phase précise du cycle cardiaque et n'a pas de pressions de
+                            remplissage. Le bleu et le rouge sont une convention (sang désoxygéné / oxygéné). L'arbre
+                            artériel pulmonaire est schématique : le remodelage de l'HTAP touche des artérioles invisibles à
+                            cette échelle. Les dilatations, le battement, les pressions et le flux sont simulés à visée
+                            pédagogique ; le rapport VD/VG et le TAPSE affichés sont calculés à partir des pressions, pas
+                            mesurés sur le modèle.</p>
                         <span class="reference-label htp-ref-gap">PAPs → PAPm</span>
                         <p>Chemla D, Castelain V, Humbert M, et&nbsp;al. <em>New formula for predicting mean
                                 pulmonary artery pressure using systolic pulmonary artery pressure.</em> Chest
@@ -725,7 +727,7 @@
     <script src="logic.js?v=25"></script>
     <script src="app.js?v=26"></script>
     <script src="fx.js?v=25" defer></script>
-    <script src="htp.js?v=15" defer></script>
+    <script src="htp.js?v=17" defer></script>
     <script>
         if ('serviceWorker' in navigator && location.protocol === 'https:') {
             window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
