@@ -24,5 +24,15 @@ coupes petit axe / 4 cavités · battement · aspect tissu · qualité adaptativ
 ⏳ Ordre de tabulation à ≥ 1100 px (étapes après les commandes 3D) · aria-pressed sur les vues 3D ·
 texte SVG petit sur mobile.
 
-## Pédagogie et technique
-⏳ Interrompus par un redémarrage du conteneur : à relancer si besoin.
+## Pédagogie (interne de 3e année)
+✅ PAPm qui baisse vraiment en fin de G1/G4 · calque à l'étape citée · termes de l'étape définis ·
+« À retenir » · tableau comparatif · questions de prédiction · étapes visibles sans défiler (ordinateur)
+et schéma collant (mobile) · légendes des coupes.
+⏳ Une question « Et ensuite ? » avant chaque étape · explication par mauvaise réponse du quiz ·
+G5 présenté en cartes · coupe 4 cavités apex en haut (convention écho) · vues 3D liées aux étapes.
+
+## Technique
+✅ Coupe et calques pendant le chargement · lecture auto au changement d'onglet · service worker
+(clé = URL complète, caches des autres applis préservés) · color-mix avec secours · observateurs.
+⏳ Arbre artériel en InstancedMesh (141 → ~30 draw calls) · chargement de htp.js/htp.css à la demande ·
+package.json + intégration continue pour les tests.

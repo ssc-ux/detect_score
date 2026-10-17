@@ -30,6 +30,6 @@ la sclérodermie) + onglet pédagogique « Comprendre l'HTP » (bêta). Tout en 
 ## État au 17/10/2026
 - En ligne sur `main` : tout, y compris le lot « accessibilité (audit WCAG 2.2) et ergonomie »
   (tests de bout en bout verts).
-- Audits rendus : voir `docs/audits/`. Audits pédagogie et technique interrompus par un redémarrage.
+- Tous les audits sont rendus et appliqués (voir `docs/audits/`).
 - Idées en attente : liens de partage vers un cas (`#htp=g4`), HTP d'effort, fiche imprimable,
   déformation en « D » plus franche, validation par un spécialiste avant de retirer la mention bêta.
