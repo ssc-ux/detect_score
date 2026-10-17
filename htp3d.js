@@ -49,6 +49,10 @@ export function mount(root) {
     const wrap = root.querySelector('.htp3d-canvas');
     const labelLayer = root.querySelector('.htp3d-labels');
     const msg = root.querySelector('.htp3d-msg');
+    const info = document.createElement('p');
+    info.className = 'htp3d-cutinfo';
+    info.hidden = true;
+    root.querySelector('.htp3d-stage').appendChild(info);
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -87,16 +91,68 @@ export function mount(root) {
     rim.position.set(-5, 2, -7);
     scene.add(rim);
 
-    // Coupe petit axe
+    // Coupes échographiques : petit axe (« sax ») ou 4 cavités (« a4c »)
     const clipList = [];
-    const cut = { on: false, level: 0, plane: new THREE.Plane(), axis: V(0, 1, 0), center: V(), half: 1 };
+    const cut = { on: false, mode: 'none', level: 0, plane: new THREE.Plane(), axis: V(0, 1, 0), center: V(), half: 1,
+        n4: V(0, 0, 1), rvDir: V(-1, 0, 0), lvR: 0.7 };
 
+    // Déformation du cœur en HTP, calculée dans le shader pour toutes les pièces cardiaques
+    // (pas de trou aux jonctions) : paroi libre du VD dilatée, surtout vers la chambre de chasse,
+    // septum repoussé vers le VG (VG en « D »), OD et OG dilatées selon leurs pressions.
+    const deform = {
+        uK: { value: 0 }, uRA: { value: 0 }, uLA: { value: 0 },
+        uLvC: { value: V() }, uAxis: { value: V(0, 1, 0) }, uRvDir: { value: V(-1, 0, 0) },
+        uLvR: { value: 0.7 }, uHalf: { value: 1 }, uRaC: { value: V() }, uLaC: { value: V() }, uAtR: { value: 0.6 }
+    };
+    const DEFORM_GLSL = `
+        uniform float uK, uRA, uLA, uLvR, uHalf, uAtR;
+        uniform vec3 uLvC, uAxis, uRvDir, uRaC, uLaC;
+        vec3 htpDeform(vec3 p) {
+            vec3 d = p - uLvC;
+            float h = dot(d, uAxis);
+            vec3 r = d - uAxis * h;
+            float rr = max(length(r), 1e-4);
+            vec3 rd = r / rr;
+            float s = dot(rd, uRvDir);
+            // Ancrage progressif vers la base (anneaux, racines des gros vaisseaux)
+            float anchor = 1.0 - 0.75 * smoothstep(0.55 * uHalf, 1.25 * uHalf, h);
+            // Paroi libre du VD : côté VD et au-delà du VG ; plus marquée vers la chambre de chasse
+            float wRv = smoothstep(0.05, 0.6, s) * smoothstep(0.85 * uLvR, 1.35 * uLvR, rr);
+            float rvot = 1.0 + 0.5 * smoothstep(-0.2 * uHalf, 0.8 * uHalf, h);
+            vec3 disp = rd * (uK * 0.42 * wRv * rvot * (rr - 0.6 * uLvR));
+            // Septum (et paroi septale du VG) poussé vers le VG
+            float wSep = smoothstep(0.25, 0.85, s) * (1.0 - smoothstep(0.75 * uLvR, 1.3 * uLvR, rr));
+            disp -= uRvDir * (uK * 0.38 * uLvR * wSep);
+            disp *= anchor;
+            // Oreillettes : dilatation autour de leur centre
+            vec3 a = p - uRaC;
+            disp += a * (uRA * 0.32 * (1.0 - smoothstep(0.4 * uAtR, 1.5 * uAtR, length(a))));
+            vec3 l = p - uLaC;
+            disp += l * (uLA * 0.3 * (1.0 - smoothstep(0.4 * uAtR, 1.5 * uAtR, length(l))));
+            return p + disp;
+        }
+    `;
+    function deformable(m) {
+        m.onBeforeCompile = (sh) => {
+            Object.assign(sh.uniforms, deform);
+            sh.vertexShader = DEFORM_GLSL + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
+                vec4 htpW = modelMatrix * vec4(transformed, 1.0);
+                htpW.xyz = htpDeform(htpW.xyz);
+                transformed = (inverse(modelMatrix) * htpW).xyz;`);
+        };
+        m.customProgramCacheKey = () => 'htp-deform';
+        return m;
+    }
+
+    // Myocarde : reflet velouté rasant (aspect « tissu vivant »)
+    const MYO = { sheen: 0.45, sheenRoughness: 0.45, sheenColor: new THREE.Color('#ffc9c2') };
     const tissue = (color, extra = {}) => new THREE.MeshPhysicalMaterial({
         color, roughness: 0.48, metalness: 0, clearcoat: 0.5, clearcoatRoughness: 0.3, envMapIntensity: 0.45,
         transparent: true, clippingPlanes: clipList, ...extra
     });
     const mat = {
-        ra: tissue(COL.rh), rv: tissue(COL.rh), la: tissue(COL.lh), lv: tissue(COL.lh), septum: tissue(COL.muscle),
+        ra: tissue(COL.rh, MYO), rv: tissue(COL.rh, MYO), la: tissue(COL.lh, MYO), lv: tissue(COL.lh, MYO),
+        septum: tissue(COL.muscle, MYO),
         pa: tissue(COL.v), pv: tissue(COL.a), ao: tissue(COL.a), cava: tissue(COL.cava),
         cor: tissue(COL.cor, { clearcoat: 0.8 }), cvein: tissue(COL.cvein),
         lungL: tissue(COL.lung, { opacity: 0.14, depthWrite: false, roughness: 0.85, clearcoat: 0.15, envMapIntensity: 0.2 }),
@@ -114,6 +170,8 @@ export function mount(root) {
         lv: new THREE.MeshBasicMaterial({ color: '#b2433d', side: THREE.BackSide, clippingPlanes: clipList, depthTest: false }),
         septum: new THREE.MeshBasicMaterial({ color: '#8c4a42', side: THREE.BackSide, clippingPlanes: clipList })
     };
+    ['ra', 'rv', 'la', 'lv', 'septum', 'cor', 'cvein'].forEach((k) => deformable(mat[k]));
+    Object.values(innerMat).forEach(deformable);
 
     const groups = { heart: new THREE.Group(), vessels: new THREE.Group(), lungs: new THREE.Group(), flow: new THREE.Group(), ov: new THREE.Group() };
     Object.values(groups).forEach((g) => scene.add(g));
@@ -318,17 +376,42 @@ export function mount(root) {
         cut.axis = v;
         cut.center = mean;
         cut.half = (hi - lo) / 2;
-        ring.quaternion.setFromUnitVectors(V(0, 0, 1), v);
+        cut.lvR = pts.reduce((sum, p) => { const d = p.clone().sub(mean); return sum + d.sub(v.clone().multiplyScalar(d.dot(v))).length(); }, 0) / pts.length;
+        const toRv = parts.rv.center.clone().sub(mean);
+        cut.rvDir = toRv.sub(v.clone().multiplyScalar(toRv.dot(v))).normalize();
+        // Plan 4 cavités : contient le grand axe et la ligne VG → VD ; normale orientée vers l'avant
+        cut.n4 = v.clone().cross(cut.rvDir).normalize();
+        if (cut.n4.z < 0) cut.n4.negate();
+        deform.uLvC.value.copy(mean);
+        deform.uAxis.value.copy(v);
+        deform.uRvDir.value.copy(cut.rvDir);
+        deform.uLvR.value = cut.lvR;
+        deform.uHalf.value = cut.half;
+        deform.uRaC.value.copy(parts.ra.center);
+        deform.uLaC.value.copy(parts.la.center);
+        deform.uAtR.value = parts.ra.box.getSize(V()).length() / 3;
     }
 
     function applyCut() {
         if (!ready) return;
-        const c = cut.center.clone().addScaledVector(cut.axis, cut.level * cut.half);
-        cut.plane.setFromNormalAndCoplanarPoint(cut.axis.clone().negate(), c);
+        cut.on = cut.mode !== 'none';
+        let c, n;
+        if (cut.mode === 'a4c') {
+            // On retire la moitié antérieure ; le curseur déplace le plan d'avant en arrière
+            c = cut.center.clone().addScaledVector(cut.n4, cut.level * cut.lvR);
+            n = cut.n4.clone().negate();
+        } else {
+            // Petit axe : on garde la base et on regarde depuis l'apex, comme en échographie
+            c = cut.center.clone().addScaledVector(cut.axis, cut.level * cut.half);
+            n = cut.axis.clone();
+        }
+        cut.plane.setFromNormalAndCoplanarPoint(n, c);
         clipList.length = 0;
         if (cut.on) clipList.push(cut.plane);
-        ring.position.copy(c).addScaledVector(cut.axis, -0.01);
+        ring.quaternion.setFromUnitVectors(V(0, 0, 1), n);
+        ring.position.copy(c).addScaledVector(n, 0.01);
         ring.visible = cut.on;
+        info.hidden = cut.mode !== 'a4c';
         CHAMBERS.forEach((k) => parts[k] && parts[k].pivots.forEach((pv) => pv.traverse((o) => {
             if (o.isMesh && Object.values(innerMat).includes(o.material)) o.visible = cut.on;
         })));
@@ -358,7 +441,8 @@ export function mount(root) {
     function applyVisibility() {
         for (const k of Object.keys(groups)) groups[k].visible = layerOn[k] && (!cut.on || k === 'heart');
         labelLayer.hidden = !layerOn.labels;
-        labels.forEach((l) => { l.el.hidden = cut.on && l.txt !== 'VD' && l.txt !== 'VG'; });
+        const keep = cut.mode === 'a4c' ? ['VD', 'VG', 'OD', 'OG'] : ['VD', 'VG'];
+        labels.forEach((l) => { l.el.hidden = cut.on && !keep.includes(l.txt); });
     }
 
     const scaleParts = (k, sx, sy = sx, sz = sx) => parts[k] && parts[k].pivots.forEach((pv) => pv.scale.set(sx, sy, sz));
@@ -366,11 +450,13 @@ export function mount(root) {
     function applyState() {
         if (!ready) return;
         const k = clamp((st.mpap - 20) / 30, 0, 1);              // post-charge du VD
-        scaleParts('rv', 1 + 0.32 * k, 1 + 0.12 * k, 1 + 0.32 * k);
-        scaleParts('ra', 1 + 0.35 * clamp((st.pod - 4) / 12, 0, 1));
-        scaleParts('la', 1 + 0.32 * clamp((st.pawp - 8) / 20, 0, 1));
-        scaleParts('lv', 1 - 0.1 * k, 1, 1 - 0.1 * k);
+        deform.uK.value = k;
+        deform.uRA.value = clamp((st.pod - 4) / 12, 0, 1);
+        deform.uLA.value = clamp((st.pawp - 8) / 20, 0, 1);
         scaleParts('pa', 1 + 0.28 * clamp((st.mpap - 15) / 35, 0, 1));
+        // Rapport VD/VG en 4 cavités (simulé) : ≈ 0,65 normal, > 1 en HTP sévère
+        info.textContent = 'Coupe 4 cavités · rapport VD/VG ≈ ' +
+            (0.65 + 0.75 * k).toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' (simulé)';
 
         const lumen = clamp(1 - (st.pvr - 1) / 15, 0.3, 1);
         branches.forEach((b) => {
@@ -406,13 +492,14 @@ export function mount(root) {
     const TARGET = V(0, 0.45, 0);
     const D = 9.6;
     function viewPos(name) {
-        if (name === 'coupe') return cut.center.clone().addScaledVector(cut.axis, 7);
+        if (name === 'sax') return cut.center.clone().addScaledVector(cut.axis, -7);
+        if (name === 'a4c') return cut.center.clone().addScaledVector(cut.n4, 7.5);
         return { face: V(0, 0.8, D), gauche: V(D, 0.8, 0.4), dos: V(0, 0.8, -D), oblique: V(D * 0.68, D * 0.36, D * 0.68) }[name];
     }
     function setView(name, instant) {
         const to = viewPos(name);
         if (!to) return;
-        const target = name === 'coupe' ? cut.center.clone() : TARGET.clone();
+        const target = name === 'sax' || name === 'a4c' ? cut.center.clone() : TARGET.clone();
         if (instant || reduce.matches) { camera.position.copy(to); controls.target.copy(target); controls.update(); return; }
         camAnim = { from: camera.position.clone(), to, tFrom: controls.target.clone(), tTo: target, t0: performance.now() };
     }
@@ -438,6 +525,7 @@ export function mount(root) {
     io.observe(wrap);
 
     const tmp = new THREE.Vector3();
+    const ON_PLANE = { VD: 'rv', VG: 'lv', OD: 'ra', OG: 'la' };
     let raf = 0, prev = 0;
     function loop(now) {
         raf = requestAnimationFrame(loop);
@@ -466,9 +554,8 @@ export function mount(root) {
         renderer.render(scene, camera);
         const w = renderer.domElement.clientWidth, h = renderer.domElement.clientHeight;
         labels.forEach((l) => {
-            if (cut.on && (l.txt === 'VD' || l.txt === 'VG')) {
-                cut.plane.projectPoint(parts[l.txt === 'VD' ? 'rv' : 'lv'].center, tmp).project(camera);
-            } else tmp.copy(l.p).project(camera);
+            if (cut.on && ON_PLANE[l.txt]) cut.plane.projectPoint(parts[ON_PLANE[l.txt]].center, tmp).project(camera);
+            else tmp.copy(l.p).project(camera);
             l.el.style.transform = `translate(-50%,-50%) translate(${((tmp.x + 1) / 2) * w}px,${((1 - tmp.y) / 2) * h}px)`;
             l.el.style.opacity = tmp.z < 1 ? '' : 0;
         });
@@ -485,8 +572,8 @@ export function mount(root) {
         setView,
         setLayer(name, on) { layerOn[name] = on; if (ready) applyVisibility(); },
         setHeartOpacity(o) { heartOpacity = o; applyState(); },
-        setCut(on, level) {
-            cut.on = on;
+        setCut(mode, level) {
+            cut.mode = mode;
             if (level !== undefined) cut.level = level;
             applyCut();
         },

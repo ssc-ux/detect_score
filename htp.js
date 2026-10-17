@@ -542,7 +542,7 @@
         loading3d = true;
         msg.hidden = false;
         msg.textContent = 'Chargement de la 3D…';
-        import('./htp3d.js?v=10').then(function (m) {
+        import('./htp3d.js?v=11').then(function (m) {
             // Le module affiche lui-même la progression du chargement du modèle
             view3d = m.mount(el.d3);
             if (last) view3d.update(last);
@@ -836,16 +836,21 @@
         $('htp3d-opacity').addEventListener('input', function (e) {
             if (view3d) view3d.setHeartOpacity(+e.target.value);
         });
-        var cutBox = $('htp3d-cut'), cutLvl = $('htp3d-cut-level');
-        var syncCut = function () {
-            cutLvl.disabled = !cutBox.checked;
-            if (view3d) view3d.setCut(cutBox.checked, +cutLvl.value);
-        };
-        cutBox.addEventListener('change', function () {
-            syncCut();
-            if (view3d) view3d.setView(cutBox.checked ? 'coupe' : 'face');
+        // Coupes échographiques : petit axe ou 4 cavités ; le curseur déplace le plan
+        var cutLvl = $('htp3d-cut-level'), cutMode = 'none';
+        var cutBtns = el.d3.querySelectorAll('[data-cut]');
+        cutBtns.forEach(function (b) {
+            b.addEventListener('click', function () {
+                cutMode = b.dataset.cut;
+                cutBtns.forEach(function (x) { x.classList.toggle('is-on', x === b); x.setAttribute('aria-pressed', x === b); });
+                cutLvl.disabled = cutMode === 'none';
+                cutLvl.value = 0;
+                if (!view3d) return;
+                view3d.setCut(cutMode, 0);
+                view3d.setView(cutMode === 'none' ? 'face' : cutMode);
+            });
         });
-        cutLvl.addEventListener('input', syncCut);
+        cutLvl.addEventListener('input', function () { if (view3d) view3d.setCut(cutMode, +cutLvl.value); });
         el.quizBody.addEventListener('click', function (e) {
             var o = e.target.closest('[data-opt]');
             if (o) return answer(+o.dataset.opt);

@@ -1587,3 +1587,23 @@
     #htp-sim > #htp-steps { grid-area: steps; }
     #htp-sim > #htp-adv { grid-area: adv; }
 }
+
+.htp3d-cuts {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.htp3d-cutinfo {
+    position: absolute;
+    left: 12px;
+    bottom: 10px;
+    margin: 0;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgb(12 17 32 / 0.75);
+    color: #ffd2b0;
+    font-size: 0.78rem;
+    font-weight: 600;
+    pointer-events: none;
+}

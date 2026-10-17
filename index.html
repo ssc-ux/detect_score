@@ -8,7 +8,7 @@
     <script>try{var t=localStorage.getItem("theme");if(t==="sombre")document.documentElement.dataset.theme="dark";else if(t==="auto")delete document.documentElement.dataset.theme}catch(e){}</script>
     <link rel="icon" href="icon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="style.css?v=23">
-    <link rel="stylesheet" href="htp.css?v=9">
+    <link rel="stylesheet" href="htp.css?v=10">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="apple-touch-icon" href="icon-180.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -354,12 +354,16 @@
                                 <button type="button" class="htp-chip" data-view="gauche">Profil G</button>
                                 <button type="button" class="htp-chip" data-view="dos">Dos</button>
                                 <button type="button" class="htp-chip" data-view="oblique">Oblique</button>
-                                <button type="button" class="htp-chip" data-view="coupe">Coupe</button>
                             </div>
                             <div class="htp3d-row">
-                                <label class="htp3d-check htp3d-cap-check"><input type="checkbox" id="htp3d-cut"> Coupe petit axe</label>
+                                <span class="htp3d-cap">Coupe écho</span>
+                                <span class="htp3d-cuts" role="group" aria-label="Coupes échographiques">
+                                    <button type="button" class="htp-chip is-on" data-cut="none" aria-pressed="true">Aucune</button>
+                                    <button type="button" class="htp-chip" data-cut="sax" aria-pressed="false">Petit axe</button>
+                                    <button type="button" class="htp-chip" data-cut="a4c" aria-pressed="false">4 cavités</button>
+                                </span>
                                 <input type="range" id="htp3d-cut-level" min="-0.7" max="0.6" step="0.05" value="0"
-                                    aria-label="Niveau de coupe, de l'apex à la base" disabled>
+                                    aria-label="Position du plan de coupe" disabled>
                             </div>
                             <details class="htp3d-more">
                                 <summary>Réglages 3D</summary>
@@ -720,7 +724,7 @@
     <script src="logic.js?v=25"></script>
     <script src="app.js?v=26"></script>
     <script src="fx.js?v=25" defer></script>
-    <script src="htp.js?v=13" defer></script>
+    <script src="htp.js?v=14" defer></script>
     <script>
         if ('serviceWorker' in navigator && location.protocol === 'https:') {
             window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
