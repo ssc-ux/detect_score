@@ -180,6 +180,7 @@
         'DLCO': "Capacité de diffusion du monoxyde de carbone : explore la surface d'échange alvéolo-capillaire.",
         'CVF': "Capacité vitale forcée.",
         'PID': "Pneumopathie interstitielle diffuse.",
+        'TAPSE': "Excursion systolique de l'anneau tricuspide (mode TM) : reflet de la fonction longitudinale du VD. Anormale si < 17 mm.",
         'NT-proBNP': "Fragment N-terminal inactif du pro-BNP, libéré avec le BNP par les cardiomyocytes étirés."
     };
     var GLOSS_RE = new RegExp('(^|[^\\wÀ-ÿ-])(' + Object.keys(GLOSSARY).sort(function (a, b) { return b.length - a.length; })
@@ -276,6 +277,8 @@
         el.pod.textContent = '≈ ' + Math.round(r.pod) + ' mmHg';
         el.trv.textContent = '≈ ' + fr(r.trv, 1) + ' m/s';
         el.raa.textContent = '≈ ' + Math.round(r.raa) + ' cm²';
+        // TAPSE simulé : fonction longitudinale du VD, qui baisse avec la post-charge
+        $('htp-tapse').textContent = '≈ ' + Math.round(24 - 11 * clamp((r.mpap - 20) / 30, 0, 1)) + ' mm';
         var proba = r.trv <= 2.8 ? ['faible', 'is-good'] : r.trv <= 3.4 ? ['intermédiaire', 'is-warn'] : ['élevée', 'is-bad'];
         el.proba.textContent = 'Probabilité échographique ' + proba[0] + ' d\'après la seule Vmax IT (selon l\'ESC, des signes dans ≥ 2 catégories – ventricules, AP, VCI/OD – la relèvent d\'un niveau)';
         el.proba.className = 'htp-badge htp-badge-sm ' + proba[1];
@@ -542,7 +545,7 @@
         loading3d = true;
         msg.hidden = false;
         msg.textContent = 'Chargement de la 3D…';
-        import('./htp3d.js?v=11').then(function (m) {
+        import('./htp3d.js?v=12').then(function (m) {
             // Le module affiche lui-même la progression du chargement du modèle
             view3d = m.mount(el.d3);
             if (last) view3d.update(last);

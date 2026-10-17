@@ -102,10 +102,11 @@ export function mount(root) {
     const deform = {
         uK: { value: 0 }, uRA: { value: 0 }, uLA: { value: 0 },
         uLvC: { value: V() }, uAxis: { value: V(0, 1, 0) }, uRvDir: { value: V(-1, 0, 0) },
-        uLvR: { value: 0.7 }, uHalf: { value: 1 }, uRaC: { value: V() }, uLaC: { value: V() }, uAtR: { value: 0.6 }
+        uLvR: { value: 0.7 }, uHalf: { value: 1 }, uRaC: { value: V() }, uLaC: { value: V() }, uAtR: { value: 0.6 },
+        uPhase: { value: 0.6 }, uBeat: { value: 0 }
     };
     const DEFORM_GLSL = `
-        uniform float uK, uRA, uLA, uLvR, uHalf, uAtR;
+        uniform float uK, uRA, uLA, uLvR, uHalf, uAtR, uPhase, uBeat;
         uniform vec3 uLvC, uAxis, uRvDir, uRaC, uLaC;
         vec3 htpDeform(vec3 p) {
             vec3 d = p - uLvC;
@@ -126,9 +127,27 @@ export function mount(root) {
             disp *= anchor;
             // Oreillettes : dilatation autour de leur centre
             vec3 a = p - uRaC;
-            disp += a * (uRA * 0.32 * (1.0 - smoothstep(0.4 * uAtR, 1.5 * uAtR, length(a))));
+            float wRa = 1.0 - smoothstep(0.4 * uAtR, 1.5 * uAtR, length(a));
+            disp += a * (uRA * 0.32 * wRa);
             vec3 l = p - uLaC;
-            disp += l * (uLA * 0.3 * (1.0 - smoothstep(0.4 * uAtR, 1.5 * uAtR, length(l))));
+            float wLa = 1.0 - smoothstep(0.4 * uAtR, 1.5 * uAtR, length(l));
+            disp += l * (uLA * 0.3 * wLa);
+
+            // Battement : systole ventriculaire (0 à 0,35 du cycle), systole auriculaire (0,85 à 1)
+            float vS = uBeat * (uPhase < 0.35 ? sin(3.14159 * uPhase / 0.35) : 0.0);
+            float aS = uBeat * (uPhase > 0.85 ? sin(3.14159 * (uPhase - 0.85) / 0.15) : 0.0);
+            // Descente du plan des anneaux vers l'apex ; côté VD (TAPSE) réduite en HTP
+            float base = smoothstep(-uHalf, 0.9 * uHalf, h) * (1.0 - smoothstep(1.0 * uHalf, 2.2 * uHalf, h));
+            float rvSide = smoothstep(-0.2, 0.6, s);
+            float ring = mix(0.32, 0.5 * (1.0 - 0.6 * uK), rvSide);
+            disp -= uAxis * (vS * ring * base);
+            // Épaississement radial des ventricules, moindre pour un VD dilaté
+            float ventr = 1.0 - smoothstep(0.6 * uHalf, 1.1 * uHalf, h);
+            disp -= rd * (vS * 0.07 * rr * ventr * (1.0 - 0.5 * uK * rvSide));
+            // Septum aplati en diastole quand le VD est en surcharge
+            disp -= uRvDir * (uK * 0.12 * uLvR * wSep * (1.0 - vS) * anchor);
+            // Contraction des oreillettes en fin de diastole
+            disp -= a * (aS * 0.1 * wRa) + l * (aS * 0.1 * wLa);
             return p + disp;
         }
     `;
@@ -541,9 +560,12 @@ export function mount(root) {
         }
         controls.update();
         if (ready && !reduce.matches) {
-            const beat = 1 + 0.02 * Math.max(0, Math.sin(now / 1000 * 2 * Math.PI * 70 / 60));
-            groups.heart.scale.setScalar(beat);
-            if (groups.flow.visible) stepFlow(dt);
+            // Cycle cardiaque à 70/min ; le flux accélère pendant l'éjection
+            const phase = (now / 1000 * 70 / 60) % 1;
+            deform.uPhase.value = phase;
+            deform.uBeat.value = 1;
+            const vS = phase < 0.35 ? Math.sin(Math.PI * phase / 0.35) : 0;
+            if (groups.flow.visible) stepFlow(dt * (0.55 + 0.9 * vS));
             ov['5'].children.forEach((m, i) => { m.rotation.x = now / 900 + i; m.rotation.y = now / 1300; });
         }
         // Structure mise en avant par le mode pas à pas
