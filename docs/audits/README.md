@@ -18,7 +18,7 @@ coupes petit axe / 4 cavités · battement · aspect tissu · qualité adaptativ
 ⏳ Occlusion ambiante cuite dans le modèle · courbe pression-volume du VD.
 
 ## Accessibilité (WCAG 2.2 AA)
-✅ (sur la branche, à tester) annonce unique par étape · quiz sur schéma décrit en texte · groupes et
+✅ Annonce unique par étape · quiz sur schéma décrit en texte · groupes et
 étapes en vrais boutons · onglet actif exposé · focus conservé et visible · contrastes · lexique
 (aria-describedby, Échap) · pause des animations · zoom 3D · compteur d'étape, flèches, retour au quiz.
 ⏳ Ordre de tabulation à ≥ 1100 px (étapes après les commandes 3D) · aria-pressed sur les vues 3D ·
