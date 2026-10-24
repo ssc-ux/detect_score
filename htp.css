@@ -75,13 +75,6 @@
 
 /* ---------- Cas cliniques ---------- */
 
-.htp-presets {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin: 0.4rem 0 0.9rem;
-}
-
 .htp-chip {
     border: 1px solid var(--line-strong);
     background: var(--surface);
@@ -363,13 +356,6 @@
 
 /* ---------- Curseurs et résultats ---------- */
 
-.htp-grid {
-    display: grid;
-    grid-template-columns: 1.2fr 1fr;
-    gap: 1.25rem;
-    margin-top: 1.1rem;
-}
-
 .htp-slider {
     display: grid;
     grid-template-columns: 1fr auto;
@@ -410,39 +396,6 @@
     font-size: 0.85rem;
     font-variant-numeric: tabular-nums;
     color: var(--ink-2);
-}
-
-.htp-results {
-    border: 1px solid var(--line);
-    border-radius: var(--radius-md);
-    padding: 14px;
-    background: var(--surface-2);
-}
-
-.htp-mpap {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-}
-
-.htp-mpap-label {
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    color: var(--ink-3);
-}
-
-.htp-mpap-val {
-    font-size: 2.6rem;
-    font-weight: 700;
-    line-height: 1;
-    letter-spacing: -0.03em;
-    font-variant-numeric: tabular-nums;
-}
-
-.htp-mpap-unit {
-    color: var(--ink-3);
-    font-size: 0.85rem;
 }
 
 .htp-badge {
@@ -573,21 +526,6 @@
 
 .htp-seg span {
     min-width: 2.8rem;
-}
-
-.htp-group-body {
-    animation: rise 0.4s var(--ease-out) both;
-}
-
-.htp-site {
-    display: inline-block;
-    margin: 0 0 12px;
-    padding: 3px 10px;
-    border-radius: 999px;
-    background: var(--accent-soft);
-    color: var(--accent);
-    font-size: 0.78rem;
-    font-weight: 600;
 }
 
 .htp-chain {
@@ -792,7 +730,6 @@
 /* ---------- Mobile ---------- */
 
 @media (max-width: 640px) {
-    .htp-grid,
     .htp-echo {
         grid-template-columns: 1fr;
     }
@@ -845,11 +782,6 @@
     display: none !important;
 }
 
-.htp-tour-btn {
-    font-weight: 600;
-}
-
-.htp-tour,
 .htp-patient {
     position: relative;
     margin-top: 0.9rem;
@@ -868,20 +800,6 @@
     color: var(--ink-2);
 }
 
-.htp-tour-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.htp-tour-step {
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--accent);
-}
-
 .htp-tour-x {
     border: 0;
     background: none;
@@ -895,28 +813,6 @@
     position: absolute;
     top: 8px;
     right: 8px;
-}
-
-.htp-tour .htp-h3 {
-    margin: 4px 0 6px;
-}
-
-.htp-tour-text {
-    margin: 0 0 12px;
-    font-size: 0.9rem;
-    line-height: 1.6;
-    color: var(--ink-2);
-}
-
-.htp-tour-nav {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
-.htp-tour-nav button:disabled {
-    opacity: 0.45;
-    cursor: default;
 }
 
 .htp-link {
@@ -1139,43 +1035,10 @@
     }
 
     /* Simulateur : schéma en grand à gauche, étapes à droite */
-    #htp-sim {
-        display: grid;
-        grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
-        column-gap: 1.5rem;
-        align-items: start;
-        grid-template-areas:
-            "head head"
-            "groups groups"
-            "patient patient"
-            "v2d steps"
-            "adv adv";
-    }
-
-    #htp-sim > .card-header { grid-area: head; }
-    #htp-sim > .htp-groups { grid-area: groups; }
-    #htp-sim > #htp-patient { grid-area: patient; }
-    #htp-sim > #htp-2d { grid-area: v2d; position: sticky; top: 1rem; }
-    #htp-sim > #htp-steps { grid-area: steps; margin-top: 0; }
-    #htp-sim > #htp-adv { grid-area: adv; }
+    
 
     /* Mécanismes : cascade à gauche, repères à droite */
-    .htp-group-body {
-        display: grid;
-        grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-        column-gap: 2.5rem;
-        align-items: start;
-    }
-
-    .htp-group-body > .htp-h3,
-    .htp-group-body > .htp-site {
-        grid-column: 1 / -1;
-        justify-self: start;
-    }
-
-    .htp-group-body > .htp-chain { grid-column: 1; grid-row: 3 / span 2; }
-    .htp-group-body > .htp-facts { grid-column: 2; grid-row: 3; }
-    .htp-group-body > .htp-actions { grid-column: 2; grid-row: 4; }
+    
 }
 
 .htp-badge-sm {
@@ -1216,90 +1079,9 @@
     box-shadow: 0 2px 10px var(--accent-ring);
 }
 
-.htp-gbtn:focus-visible,
-.htp-steplist li:focus-visible {
+.htp-gbtn:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
-}
-
-.htp-steps {
-    margin-top: 1rem;
-    padding: 16px 18px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-md);
-    background: var(--surface-2);
-}
-
-.htp-steps-kicker {
-    margin: 0 0 2px;
-    font-size: 0.68rem;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--htp-alerte);
-}
-
-.htp-steps .htp-h3 {
-    margin-bottom: 6px;
-}
-
-.htp-now {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px 12px;
-    margin: 0 0 14px;
-    font-size: 0.88rem;
-    color: var(--ink-3);
-}
-
-.htp-now b {
-    font-size: 1.35rem;
-    color: var(--ink);
-    font-variant-numeric: tabular-nums;
-}
-
-.htp-now .htp-badge {
-    margin: 0;
-}
-
-.htp-steplist li {
-    cursor: pointer;
-    opacity: 0.5;
-    border-radius: 6px;
-    transition: opacity var(--t-med);
-}
-
-.htp-steplist li:hover,
-.htp-steplist li.is-done {
-    opacity: 0.8;
-}
-
-.htp-steplist li:last-child {
-    font-weight: inherit;
-}
-
-.htp-steplist li.is-current {
-    opacity: 1;
-    font-weight: 600;
-    color: var(--ink);
-}
-
-.htp-steplist li.is-current::before {
-    background: var(--htp-alerte);
-    box-shadow: 0 0 0 4px color-mix(in srgb, var(--htp-alerte) 25%, transparent);
-}
-
-.htp-step-nav {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin: 6px 0 10px;
-}
-
-.htp-step-nav button:disabled {
-    opacity: 0.4;
-    cursor: default;
 }
 
 .htp-more > summary,
@@ -1315,6 +1097,17 @@
     margin: 4px 0 0;
 }
 
+.htp-site {
+    display: inline-block;
+    margin: 0 0 12px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
 .htp-adv {
     margin-top: 1.2rem;
     padding-top: 0.4rem;
@@ -1328,23 +1121,6 @@
 
 .htp-adv[open] > summary {
     margin-bottom: 0.6rem;
-}
-
-.htp-focus {
-    fill: none;
-    stroke: var(--htp-alerte);
-    stroke-width: 3;
-    animation: htp-pulse 1.4s ease-in-out infinite;
-}
-
-.htp-quiz-svg .htp-focus {
-    display: none;
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .htp-focus {
-        animation: none;
-    }
 }
 
 /* ---------- Accessibilité ---------- */
@@ -1375,7 +1151,6 @@
     --htp-alerte-texte: #f08a4b;
 }
 
-.htp-steps-kicker,
 .htp-ov-txt {
     color: var(--htp-alerte-texte);
     fill: var(--htp-alerte-texte);
@@ -1383,7 +1158,6 @@
 
 .btn-primary:focus-visible,
 .btn-secondary:focus-visible,
-.htp-step-btn:focus-visible,
 .htp-chip:focus-visible,
 .htp-gbtn:focus-visible {
     outline: 3px solid var(--accent);
@@ -1406,45 +1180,6 @@
 }
 
 /* Étapes : vrais boutons, contraste suffisant pour les étapes à venir */
-.htp-steplist li {
-    opacity: 1;
-    cursor: default;
-}
-
-.htp-step-btn {
-    display: block;
-    width: 100%;
-    min-height: 24px;
-    padding: 2px 4px;
-    border: 0;
-    border-radius: 6px;
-    background: none;
-    color: var(--ink-3);
-    font: inherit;
-    text-align: left;
-    cursor: pointer;
-}
-
-.htp-step-btn:hover {
-    color: var(--ink);
-    background: color-mix(in srgb, var(--accent) 6%, transparent);
-}
-
-.htp-steplist li.is-done .htp-step-btn {
-    color: var(--ink-2);
-}
-
-.htp-steplist li.is-current .htp-step-btn {
-    color: var(--ink);
-    font-weight: 600;
-}
-
-.htp-step-count {
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    color: var(--ink-2);
-}
 
 /* Bandeau des constantes lisible sur le modèle */
 
@@ -1470,40 +1205,138 @@
     margin-bottom: 0.8rem;
 }
 
-/* Pause des animations : coin du schéma sur grand écran, sous le schéma sinon */
-#htp-2d > .htp-anim {
-    min-height: 32px;
+/* ---------- Comparaison : normal à gauche, cas choisi à droite ---------- */
+
+.htp-pair {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+}
+
+.htp-side-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px 10px;
+    min-height: 2.2rem;
+    margin-bottom: 6px;
+}
+
+.htp-side-head .htp-h3 {
+    margin: 0;
+}
+
+.htp-side-ref .htp-h3 {
+    color: var(--ink-2);
+}
+
+#htp-2d {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    column-gap: 8px;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent-ring);
+}
+
+.htp-ref-svg {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+#htp-svg,
+#htp-2d > figcaption {
+    flex: 0 0 100%;
+}
+
+#htp-2d > figcaption {
+    order: 1;
+}
+
+.htp-side-head .htp-anim {
+    min-height: 30px;
+    padding: 0 10px;
+    font-size: 0.75rem;
+}
+
+.htp-side-tools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+}
+
+.htp-cmp {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0.6rem 1rem;
+    align-items: start;
+    margin-top: 1rem;
+}
+
+.htp-table.htp-cmp-table {
+    grid-row: span 2;
+    min-width: 0;
+    font-size: 0.85rem;
+}
+
+.htp-cmp-table td,
+.htp-cmp-table th {
+    font-variant-numeric: tabular-nums;
+}
+
+.htp-cmp-table td.is-high {
+    color: var(--htp-alerte-texte);
+    font-weight: 700;
+}
+
+.htp-cmp .htp-key,
+.htp-cmp .htp-profile-txt {
+    margin: 0;
+}
+
+.htp-delta {
+    font-weight: 800;
+}
+
+.htp-adv .htp-eq-sm {
+    margin: 0 0 0.8rem;
+    padding: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.htp-controls {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.8rem 1.2rem;
+}
+
+.htp-slider-hint {
+    margin: 2px 0 0;
     font-size: 0.78rem;
+    color: var(--ink-3);
 }
 
-@media (min-width: 1100px) {
-    #htp-2d > .htp-anim {
-        position: absolute;
-        top: 8px;
-        right: 8px;
-    }
+.htp-extra {
+    margin-top: 0.6rem;
 }
 
-@media (max-width: 1099px) {
-    #htp-2d {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        column-gap: 8px;
+#htp-mech .htp-chain {
+    margin: 0 0 0.8rem;
+}
+
+@media (max-width: 899px) {
+    .htp-pair,
+    .htp-cmp,
+    .htp-controls {
+        grid-template-columns: minmax(0, 1fr);
     }
 
-    #htp-svg,
-    #htp-2d > figcaption {
-        flex: 0 0 100%;
-    }
-
-    #htp-2d > .htp-anim {
-        order: 1;
-        margin-top: 4px;
-    }
-
-    #htp-2d > figcaption {
-        order: 2;
+    .htp-cmp-table {
+        grid-row: auto;
     }
 }
 
@@ -1524,11 +1357,6 @@
     }
 }
 
-.htp-steplist li.is-done,
-.htp-steplist li:hover {
-    opacity: 1;
-}
-
 /* ---------- Pédagogie : à retenir, termes de l'étape, comparaison ---------- */
 
 .htp-key {
@@ -1540,18 +1368,6 @@
     font-size: 0.86rem;
     line-height: 1.5;
     color: var(--ink);
-}
-
-.htp-step-terms {
-    display: grid;
-    gap: 4px;
-    margin: 0 0 10px;
-    padding: 8px 12px;
-    border-radius: var(--radius-sm);
-    background: var(--chip);
-    font-size: 0.8rem;
-    line-height: 1.45;
-    color: var(--ink-2);
 }
 
 .htp-table-wrap {
@@ -1582,47 +1398,7 @@
     color: var(--ink-2);
 }
 
-/* Mobile : le schéma reste visible pendant la lecture des étapes */
-@media (max-width: 1099px) {
-    #htp-2d {
-        position: sticky;
-        top: 0;
-        z-index: 5;
-    }
-}
-
 /* ---------- Question « Et ensuite ? » ---------- */
-
-.htp-predict {
-    margin: 0 0 12px;
-    padding: 12px 14px;
-    border: 1px solid var(--htp-alerte);
-    border-radius: var(--radius-md);
-    background: var(--htp-warn-soft);
-}
-
-.htp-predict-q {
-    margin: 0 0 8px;
-    font-size: 0.9rem;
-    line-height: 1.5;
-}
-
-.htp-predict-opts {
-    display: grid;
-    gap: 6px;
-}
-
-.htp-predict-fb {
-    margin: 8px 0 0;
-    font-size: 0.86rem;
-    line-height: 1.5;
-    color: var(--ink-2);
-}
-
-.htp-predict-go {
-    margin-top: 8px;
-    display: flex;
-}
 
 .htp-why {
     margin-top: -4px !important;
@@ -1632,34 +1408,6 @@
 }
 
 /* ---------- G5 : mécanismes juxtaposés présentés en cartes ---------- */
-
-.htp-steplist.is-cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 8px;
-    margin-bottom: 12px;
-}
-
-.htp-steplist.is-cards li {
-    padding: 0;
-}
-
-.htp-steplist.is-cards li::before,
-.htp-steplist.is-cards li::after {
-    display: none;
-}
-
-.htp-steplist.is-cards .htp-step-btn {
-    height: 100%;
-    padding: 10px 12px;
-    border: 1px solid var(--line-strong);
-    background: var(--surface);
-}
-
-.htp-steplist.is-cards li.is-current .htp-step-btn {
-    border-color: var(--htp-alerte);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--htp-alerte) 30%, transparent);
-}
 
 /* Vue 3D active */
 
@@ -1740,16 +1488,3 @@
 
 /* ---------- Ordre visuel sur mobile : le schéma avant les étapes ---------- */
 
-@media (max-width: 1099px) {
-    #htp-sim {
-        display: flex;
-        flex-direction: column;
-    }
-
-    #htp-sim > * { order: 1; }
-    #htp-sim > .htp-groups { order: 2; }
-    #htp-sim > #htp-patient { order: 3; }
-    #htp-sim > #htp-2d { order: 4; }
-    #htp-sim > #htp-steps { order: 5; }
-    #htp-sim > #htp-adv { order: 6; }
-}

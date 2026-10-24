@@ -1,7 +1,7 @@
 // Playwright local (npm install) sinon installation globale
 let pw; try { pw = require('playwright'); } catch (e) { pw = require(require('child_process').execSync('npm root -g').toString().trim() + '/playwright'); }
 const { chromium } = pw;
-const EXP={normal:[16,"Pas d'HTP"],g1:[42,'HTP précapillaire'],g2i:[30,'HTP post-capillaire isolée'],g2c:[42,'HTP post-capillaire combinée'],g3:[27,'HTP précapillaire'],g4:[44,'HTP précapillaire'],g5:[34,'HTP précapillaire'],hd:[24,'HTP non classée']};
+const EXP={g1:[42,'HTP précapillaire'],g2i:[30,'HTP post-capillaire isolée'],g2c:[42,'HTP post-capillaire combinée'],g3:[27,'HTP précapillaire'],g4:[44,'HTP précapillaire'],g5:[34,'HTP précapillaire'],hd:[24,'HTP non classée']};
 (async()=>{ const b=await chromium.launch(); const fails=[]; const ok=(c,m)=>{ if(!c) fails.push(m); };
  for (const [n,vp,scheme] of [['desktop1366',{width:1366,height:768},'light'],['mobile320',{width:320,height:700},'dark']]) {
   const p=await b.newPage({viewport:vp,colorScheme:scheme}); const errs=[];
@@ -17,20 +17,17 @@ const EXP={normal:[16,"Pas d'HTP"],g1:[42,'HTP précapillaire'],g2i:[30,'HTP pos
   for (const [pvr,pawp,co,exp] of [[2,15,3,'HTP non classée'],[2,14,3,"Pas d'HTP"],[2.1,15,3,'HTP précapillaire'],[2,16,3,'HTP post-capillaire isolée'],[2.1,16,3,'HTP post-capillaire combinée']]) {
    await p.evaluate(([a,b,c])=>{const s=(id,v)=>{const e=document.getElementById(id);e.value=v;e.dispatchEvent(new Event('input'));}; s('htp-pvr',a);s('htp-pawp',b);s('htp-co',c);},[pvr,pawp,co]);
    const got=await p.textContent('#htp-profile'); ok(got===exp, `${n} seuil RVP ${pvr} PAPO ${pawp} DC ${co}: ${got} attendu ${exp}`); }
-  // Explorateur pas à pas : chaque groupe, chaque étape
-  const EXPSTEP={'2':{2:'HTP post-capillaire isolée',3:'HTP post-capillaire combinée'},'normal':{4:"Pas d'HTP"},'5':{3:'HTP non classée'},'1':{4:'HTP précapillaire'}};
-  for (const g of ['normal','1','2','3','4','5']) {
-   await p.click(`.htp-gbtn[data-group="${g}"]`); await p.waitForTimeout(150);
-   ok(await p.locator('#htp-step-list li').count()===5, `${n} groupe ${g} : 5 étapes`);
-   for (let i=0;i<5;i++){ if(i) { await p.click('[data-step="next"]');
-     if (await p.locator('#htp-predict').isVisible()) { await p.click('#htp-predict [data-pred="0"]'); await p.click('.htp-predict-go'); } }
-    await p.waitForTimeout(1400);
-    const cur=await p.locator('#htp-step-list li.is-current .htp-step-btn').getAttribute('data-i'); ok(+cur===i, `${n} groupe ${g} étape ${i} courante=${cur}`);
-    const exp=(EXPSTEP[g]||{})[i]; if(exp){ const got=await p.textContent('#htp-profile-mini'); ok(got===exp, `${n} groupe ${g} étape ${i+1}: ${got} attendu ${exp}`); }
-    await hscroll('groupe '+g+' étape '+i); }
-  }
-  await p.click('[data-step="next"]'); await p.waitForTimeout(200);
-  ok(await p.locator('.htp-gbtn.is-on[data-group="normal"]').count()===1, `${n} bouclage après G5`);
+  // Comparaison au normal : schéma de référence, tableau, mécanisme du groupe
+  ok(await p.locator('#htp-ref svg').count()===1, `${n} schéma de référence`);
+  await p.click('.htp-gbtn[data-preset="g2i"]'); await p.waitForTimeout(1400);
+  ok((await p.textContent('#htp-case-title'))==='G2 · post-capillaire isolée', `${n} titre du cas G2`);
+  ok(await p.locator('#htp-c-pawp.is-high').count()===1 && await p.locator('#htp-c-pvr.is-high').count()===0, `${n} tableau G2 : PAPO ↑, RVP normale`);
+  ok(await p.locator('#htp-mech').isVisible() && (await p.textContent('#htp-mech summary')).includes('groupe 2'), `${n} mécanisme du groupe 2`);
+  await p.click('.htp-gbtn[data-preset="hd"]'); await p.waitForTimeout(1400);
+  ok(!(await p.locator('#htp-mech').isVisible()) && await p.locator('#htp-c-co.is-high').count()===1, `${n} hyperdébit : DC ↑, pas de groupe`);
+  await p.evaluate(()=>{const e=document.getElementById('htp-pvr');e.value=6;e.dispatchEvent(new Event('input'));});
+  ok((await p.textContent('#htp-case-title'))==='Vos valeurs' && await p.locator('.htp-gbtn.is-on').count()===0, `${n} valeurs libres`);
+  await hscroll('comparaison');
   // Quiz complet
   let expected=0;
   const NQ=+(await p.textContent('.htp-quiz-n')).split('/')[1]; for (let i=0;i<NQ;i++){ await p.click('#htp-quiz-body .htp-opt[data-opt="0"]'); if (await p.locator('#htp-quiz-body .htp-opt[data-opt="0"].is-right').count()) expected++;

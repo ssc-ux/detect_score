@@ -6,10 +6,12 @@ la sclérodermie) + onglet pédagogique « Comprendre l'HTP » (bêta). Tout en 
 ## Fichiers
 - `index.html` : les 3 onglets (Calculateur, Comprendre l'HTP, Source).
 - `logic.js`, `app.js` : calculateur DETECT. **Ne pas modifier le calcul** sans test de non-régression.
-- `htp.js` : onglet HTP (données GROUPS/STEPS/PRESETS/QUIZ/GLOSSARY, schéma 2D, mode pas à pas,
+- `htp.js` : onglet HTP (données GROUPS/PRESETS/CASES/QUIZ/GLOSSARY, comparaison au normal, curseurs,
   quiz, lexique, lien depuis le calculateur). `htp.css` : styles de l'onglet.
-- Vue 3D retirée le 24/10/2026 (jugée trop compliquée) : récupérable dans l'historique git
-  (`htp3d.js`, `vendor/`, `models/` avant ce commit). Le schéma 2D est la vue principale.
+- Onglet HTP (24/10/2026, choix de l'utilisateur « maquette 2 + curseurs ») : schéma normal figé à gauche
+  (`snapshot('normal')`), cas choisi à droite (schéma vivant `#htp-svg`), tableau de ce qui change, curseurs
+  PAPO/RVP/DC repliés. La vue 3D et le mode pas à pas (étapes, questions « Et ensuite ? ») ont été retirés :
+  récupérables dans l'historique git (3D : `htp3d.js`, `vendor/`, `models/`).
 - `sw.js` : service worker (hors ligne).
 
 ## Conventions

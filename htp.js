@@ -57,8 +57,7 @@
             ],
             ex: "HTAP idiopathique, héritable, médicamenteuse ou toxique, associée aux connectivites (ScS ++), au VIH, à l'hypertension portale, aux cardiopathies congénitales, à la schistosomiase. Inclut la maladie veino-occlusive / hémangiomatose capillaire (MVO/HCP), fréquente dans la ScS et moins sensible aux traitements.",
             exam: "Cathétérisme cardiaque droit (profil précapillaire) après avoir écarté les groupes 2, 3 et 4. Dans la ScS : évaluation annuelle du risque ; algorithme DETECT si ScS > 3 ans, DLCO < 60 % et CVF ≥ 40 %.",
-            ttt: "Traitements ciblant les 3 voies (endothéline, NO, prostacycline) ± sotatercept (voie de l'activine).",
-            presets: [['g1', 'Voir dans le simulateur']]
+            ttt: "Traitements ciblant les 3 voies (endothéline, NO, prostacycline) ± sotatercept (voie de l'activine)."
         },
         '2': {
             title: 'Groupe 2 · Cardiopathie gauche',
@@ -72,8 +71,7 @@
             ],
             ex: "Cause la plus fréquente d'HTP. Insuffisance cardiaque à FE préservée (surtout) ou réduite, valvulopathies mitrales et aortiques, cardiomyopathies.",
             exam: "Échocardiographie (OG dilatée, dysfonction diastolique) ; cathétérisme droit avec mesure de la PAPO si doute.",
-            ttt: "Traiter la cardiopathie gauche ; les traitements spécifiques de l'HTAP ne sont pas recommandés.",
-            presets: [['g2i', 'Simuler : isolée'], ['g2c', 'Simuler : combinée']]
+            ttt: "Traiter la cardiopathie gauche ; les traitements spécifiques de l'HTAP ne sont pas recommandés."
         },
         '3': {
             title: 'Groupe 3 · Maladie respiratoire ou hypoxie',
@@ -87,8 +85,7 @@
             ],
             ex: "BPCO, emphysème, pneumopathies interstitielles (dont la PID de la ScS), syndrome emphysème-fibrose, syndrome obésité-hypoventilation, haute altitude.",
             exam: "EFR, gazométrie, scanner thoracique ; cathétérisme droit si la prise en charge en dépend.",
-            ttt: "Traiter la maladie respiratoire, oxygène si hypoxémie ; tréprostinil inhalé possible dans l'HTP des PID ; autres traitements de l'HTAP non recommandés en routine (riociguat déconseillé dans les PID idiopathiques) ; HTP sévère (RVP > 5 UW) : avis en centre expert.",
-            presets: [['g3', 'Voir dans le simulateur']]
+            ttt: "Traiter la maladie respiratoire, oxygène si hypoxémie ; tréprostinil inhalé possible dans l'HTP des PID ; autres traitements de l'HTAP non recommandés en routine (riociguat déconseillé dans les PID idiopathiques) ; HTP sévère (RVP > 5 UW) : avis en centre expert."
         },
         '4': {
             title: 'Groupe 4 · Obstruction des artères pulmonaires',
@@ -102,8 +99,7 @@
             ],
             ex: "HTP thromboembolique chronique (HTP-TEC) ; plus rarement sarcome de l'artère pulmonaire, artérites, parasitoses.",
             exam: "Scintigraphie de ventilation/perfusion (à faire devant toute HTP) : défects de perfusion non concordants persistant après ≥ 3 mois d'anticoagulation ; cathétérisme droit (profil précapillaire) ; angioscanner et angiographie pour l'opérabilité, en centre expert.",
-            ttt: "Anticoagulation au long cours ; endartériectomie pulmonaire (guérison possible), angioplastie par ballonnet, riociguat.",
-            presets: [['g4', 'Voir dans le simulateur']]
+            ttt: "Anticoagulation au long cours ; endartériectomie pulmonaire (guérison possible), angioplastie par ballonnet, riociguat."
         },
         '5': {
             title: 'Groupe 5 · Mécanismes multiples ou incertains',
@@ -117,8 +113,7 @@
             ],
             ex: "Sarcoïdose, histiocytose langerhansienne, neurofibromatose de type 1, syndromes myéloprolifératifs, anémies hémolytiques chroniques, insuffisance rénale chronique (avec ou sans dialyse), maladies métaboliques (Gaucher, glycogénoses), microangiopathie thrombotique tumorale, médiastinite fibrosante.",
             exam: "Bilan orienté par la maladie causale ; cathétérisme droit pour préciser la part de chaque mécanisme.",
-            ttt: "Traiter la maladie causale ; traitements de l'HTAP au cas par cas, en centre expert.",
-            presets: [['g5', 'Voir dans le simulateur']]
+            ttt: "Traiter la maladie causale ; traitements de l'HTAP au cas par cas, en centre expert."
         }
     };
 
@@ -133,53 +128,10 @@
         ['Vmax IT (écho)', '↑', "La vitesse du jet d'IT donne le gradient VD-OD (4 V²), donc une estimation de la PAPs.", 'trv']
     ];
 
-    // Mode pas à pas : chaque étape a son état hémodynamique et la structure à regarder
-    GROUPS.normal = {
-        title: 'Circulation pulmonaire normale',
-        site: 'Basse pression, basse résistance',
-        chain: [
-            "Le VD éjecte tout le débit cardiaque dans l'artère pulmonaire",
-            "Le lit vasculaire pulmonaire est immense et compliant : la résistance est faible (RVP ≈ 1 UW)",
-            "Le sang traverse les capillaires au contact des alvéoles et s'oxygène",
-            "Il revient à l'OG à basse pression (PAPO ≈ 9 mmHg)",
-            "Résultat : PAPm ≈ 15 mmHg ; un VD à paroi fine suffit"
-        ]
-    };
-    var N = { pvr: 1.2, pawp: 9, co: 5.4 };
-    var STEPS = {
-        normal: [[N, 'rv'], [N, 'endo'], [N, 'alv'], [N, 'la'], [N, 'pa']],
-        '1': [[N, 'endo'], [{ pvr: 2, pawp: 9, co: 5.4 }, 'endo'], [{ pvr: 3.5, pawp: 9, co: 5.2 }, 'endo'],
-            [{ pvr: 8, pawp: 10, co: 4 }, 'pa'], [{ pvr: 13, pawp: 10, co: 2.4 }, 'rv']],
-        '2': [[{ pvr: 1.2, pawp: 12, co: 5.2 }, 'lv'], [{ pvr: 1.4, pawp: 20, co: 5 }, 'la'], [{ pvr: 1.5, pawp: 22, co: 5 }, 'pa'],
-            [{ pvr: 4, pawp: 24, co: 4.5 }, 'endo'], [{ pvr: 4.5, pawp: 25, co: 4 }, 'rv']],
-        '3': [[{ pvr: 1.5, pawp: 9, co: 5.3 }, 'alv'], [{ pvr: 2.5, pawp: 9, co: 5.2 }, 'endo'], [{ pvr: 3, pawp: 9, co: 5.1 }, 'cap'],
-            [{ pvr: 3.5, pawp: 9, co: 5 }, 'endo'], [{ pvr: 6, pawp: 9, co: 4.5 }, 'rv']],
-        '4': [[N, 'pa'], [{ pvr: 3, pawp: 9, co: 5.2 }, 'pa'], [{ pvr: 6, pawp: 10, co: 4.5 }, 'pa'],
-            [{ pvr: 9, pawp: 10, co: 3.8 }, 'endo'], [{ pvr: 14, pawp: 10, co: 2.4 }, 'rv']],
-        '5': [[{ pvr: 3, pawp: 10, co: 5 }, 'pa'], [{ pvr: 4, pawp: 11, co: 5 }, 'endo'], [{ pvr: 3.5, pawp: 10, co: 6 }, 'endo'],
-            [{ pvr: 2, pawp: 12, co: 8 }, 'pa'], [{ pvr: 3.5, pawp: 18, co: 4.8 }, 'lv']]
-    };
-    var GROUP_ORDER = ['normal', '1', '2', '3', '4', '5'];
-    // Étape à partir de laquelle le calque du mécanisme apparaît (avant, il donnerait la réponse)
-    var OV_FROM = { '1': 2, '2': 1 };
-    // Message à retenir pour chaque groupe, rattaché à l'équation
-    // Une question de prédiction par groupe, posée avant l'étape « at » (apprentissage actif)
-    var PREDICT = {
-        normal: { at: 1, q: "Le VD éjecte tout le débit cardiaque. Pourquoi la PAPm reste-t-elle basse ?",
-            o: ['Le VD est peu puissant', 'La résistance du lit pulmonaire est très faible', 'La PAPO est élevée'], a: 1,
-            e: "Le lit vasculaire pulmonaire est immense et compliant : RVP ≈ 1 UW, donc peu de pression pour un grand débit." },
-        '1': { at: 3, q: "Les artérioles se rétrécissent. Quel terme de l'équation augmente ?",
-            o: ['La PAPO', 'La RVP', 'Le débit'], a: 1,
-            e: "Lumière artériolaire rétrécie = RVP ↑. La PAPO reste normale : c'est le profil précapillaire." },
-        '2': { at: 2, q: "L'OG est sous pression. Quel terme de l'équation augmente en premier ?",
-            o: ['La RVP', 'La PAPO', 'Le débit'], a: 1,
-            e: "La pression de l'OG remonte passivement : PAPO > 15 mmHg. Les artérioles sont d'abord saines (RVP ≤ 2 UW)." },
-        '3': { at: 1, q: "Que font les artérioles qui irriguent des alvéoles mal ventilées ?",
-            o: ['Elles se dilatent', 'Elles se contractent', 'Rien ne change'], a: 1,
-            e: "Vasoconstriction hypoxique (mécanisme d'Euler-Liljestrand) : utile si l'hypoxie est localisée, elle fait monter la RVP quand elle est diffuse." },
-        '4': { at: 2, q: "Des caillots organisés obstruent les artères pulmonaires. Quel terme augmente ?",
-            o: ['La PAPO', 'La RVP', 'Le débit'], a: 1,
-            e: "Obstruction mécanique = RVP ↑, avec un cœur gauche normal (PAPO ≤ 15)." }
+    // Cas affiché à droite : titre et groupe dont on montre le mécanisme
+    var CASES = {
+        g1: ['G1 · HTAP', '1'], g2i: ['G2 · post-capillaire isolée', '2'], g2c: ['G2 · post-capillaire combinée', '2'],
+        g3: ['G3 · Poumon / hypoxie', '3'], g4: ['G4 · HTP-TEC', '4'], g5: ['G5 · Multifactorielle', '5'], hd: ['Hyperdébit']
     };
     var GROUP_WHY = [
         "il faudrait une HTP précapillaire sans maladie respiratoire, thromboembolique ou multifactorielle pour l'expliquer.",
@@ -188,18 +140,6 @@
         "il faudrait des défects de perfusion non concordants à la scintigraphie V/Q.",
         "il faudrait une maladie à mécanismes multiples (sarcoïdose, hémopathie, insuffisance rénale…)."
     ];
-
-    var KEYS = {
-        normal: "PAPm ≈ 15 mmHg : le lit pulmonaire absorbe tout le débit à basse pression (RVP ≈ 1 UW).",
-        '1': "PAPm ↑ par la RVP, PAPO normale. En fin d'évolution le DC chute : une PAPm qui baisse peut signer une aggravation.",
-        '2': "PAPm ↑ par la PAPO (> 15). RVP ≤ 2 UW : isolée ; RVP > 2 UW : combinée, de moins bon pronostic.",
-        '3': "PAPm ↑ par la RVP (hypoxie, perte de vaisseaux), le plus souvent modérée ; sévère si RVP > 5 UW.",
-        '4': "PAPm ↑ par la RVP (obstruction mécanique) : scintigraphie V/Q devant toute HTP, car c'est potentiellement curable.",
-        '5': "Plusieurs termes de l'équation à la fois (RVP, PAPO, DC) selon la maladie : analyser chaque composante."
-    };
-    // Structure mise en évidence sur le schéma 2D
-    var FOCUS_2D = { rv: '#htp-rv', ra: '#htp-ra', la: '#htp-la', lv: '#htp-lv', pa: '#htp-pa', vp: '#htp-vp',
-        endo: '.htp-wall', alv: '.htp-alv circle', cap: '.htp-cap path' };
 
     var GLOSSARY = {
         'PAPm': "Pression artérielle pulmonaire moyenne, mesurée au cathétérisme droit. HTP si > 20 mmHg.",
@@ -308,7 +248,7 @@
     /* ---------- Simulateur ---------- */
 
     var el = {};
-    var state = { co: 5.5, ov: null, focus: null };
+    var state = { co: 5.5, ov: null };
 
     function render() {
         var pvr = +el.pvr.value, pawp = +el.pawp.value, co = +el.co.value;
@@ -334,6 +274,17 @@
             glossify(el.profileTxt);
         }
         el.tpg.textContent = Math.round(r.mpap - pawp) + ' mmHg';
+        // Tableau : ce qui s'écarte de la normale
+        var cell = function (id, txt, up, down) {
+            var c = $(id);
+            c.innerHTML = txt + (up ? ' <span class="htp-delta is-up">↑</span>' : down ? ' <span class="htp-delta is-down">↓</span>' : '');
+            c.classList.toggle('is-high', !!(up || down));
+        };
+        cell('htp-c-pawp', pawp + ' mmHg', pawp > 15);
+        cell('htp-c-pvr', fr(pvr, 1) + ' UW', pvr > 2);
+        cell('htp-c-co', fr(co, 1) + ' L/min', co > 7, co < 4);
+        $('htp-d-mpap').textContent = r.mpap > 20.5 ? '↑' : '';
+        el.mpap.parentNode.classList.toggle('is-high', r.mpap > 20.5);
 
         el.paps.textContent = '≈ ' + Math.round(r.paps) + ' mmHg';
         el.pod.textContent = '≈ ' + Math.round(r.pod) + ' mmHg';
@@ -377,10 +328,6 @@
         renderShortAxis(r.rvk);
         renderPV(r, co);
         renderDetectLive(r);
-        el.mpapMini.textContent = Math.round(r.mpap);
-        el.profMini.textContent = p.label;
-        el.profMini.className = 'htp-badge ' + p.cls;
-        placeFocus();
     }
 
     // ---------- Boucle pression-volume du VD (simulée) ----------
@@ -448,11 +395,15 @@
         state.preset = presetKey || null;
         setOverlay(ov !== undefined ? ov : pr ? pr.ov : null);
         el.hint.hidden = !pr;
+        el.profileTxt.hidden = !!pr;
         if (pr) {
             el.hint.innerHTML = '<strong>À observer :</strong> ' + pr.hint;
             glossify(el.hint);
         }
-        document.querySelectorAll('.htp-chip[data-preset]').forEach(function (c) {
+        var cs = CASES[presetKey];
+        $('htp-case-title').textContent = cs ? cs[0] : 'Vos valeurs';
+        renderMechanism(cs && cs[1]);
+        document.querySelectorAll('.htp-gbtn[data-preset]').forEach(function (c) {
             var on = c.dataset.preset === presetKey;
             c.classList.toggle('is-on', on);
             c.setAttribute('aria-pressed', on);
@@ -489,156 +440,28 @@
     }
 
     function goSim(v, presetKey, ov, fromQuiz) {
-        stopSteps();
-        state.focus = null;
-        $('htp-adv').open = true;
+        if (!presetKey) $('htp-adv').open = true;
         $('htp-back-quiz').hidden = !fromQuiz;
         tweenTo(v, presetKey, ov);
         $('htp-sim').scrollIntoView({ behavior: reducedMotion.matches ? 'auto' : 'smooth', block: 'start' });
         el.pvr.focus({ preventScroll: true });
     }
 
-    /* ---------- Explorer le mécanisme, étape par étape ---------- */
+    /* ---------- Mécanisme du groupe affiché ---------- */
 
-    var explore = { g: 'normal', i: 0, play: false, timer: 0, asked: {} };
-    var isCards = function () { return explore.g === '5'; };   // G5 : mécanismes juxtaposés, pas une chronologie
-
-    function selectGroup(g) {
-        explore.g = g;
-        document.querySelectorAll('.htp-gbtn').forEach(function (b) {
-            var on = b.dataset.group === g;
-            b.classList.toggle('is-on', on);
-            b.setAttribute('aria-pressed', on);
-        });
-        var d = GROUPS[g];
-        $('htp-g-key').innerHTML = '<strong>À retenir :</strong> ' + esc(KEYS[g]);
-        glossify($('htp-g-key'));
-        $('htp-g-title').textContent = d.title;
+    function renderMechanism(g) {
+        var d = GROUPS[g], box = $('htp-mech');
+        box.hidden = !d;
+        if (!d) return;
+        if (box.dataset.g === g) return;
+        box.dataset.g = g;
+        box.querySelector('summary').textContent = 'Mécanisme du groupe ' + g + ', causes, examen clé, traitement';
         $('htp-g-site').textContent = d.site;
-        el.stepList.classList.toggle('is-cards', g === '5');
-        el.stepList.innerHTML = d.chain.map(function (c, k) {
-            return '<li><button type="button" class="htp-step-btn" data-i="' + k + '">' + esc(c) + '</button></li>';
-        }).join('');
-        var facts = $('htp-g-facts');
-        facts.closest('details').hidden = !d.ex;
-        if (d.ex) {
-            facts.innerHTML = '<div><dt>Causes</dt><dd>' + esc(d.ex) + '</dd></div>' +
-                '<div><dt>Examen clé</dt><dd>' + esc(d.exam) + '</dd></div>' +
-                '<div><dt>Principe du traitement</dt><dd>' + esc(d.ttt) + '</dd></div>';
-            glossify(facts);
-        }
-        goStep(0);
-    }
-
-    function goStep(k) {
-        var steps = STEPS[explore.g];
-        explore.i = clamp(k, 0, steps.length - 1);
-        var st = steps[explore.i];
-        state.focus = st[1];
-        el.patient.hidden = true;
-        var ov = explore.g === 'normal' || explore.i < (OV_FROM[explore.g] || 0) ? null : explore.g;
-        tweenTo(st[0], null, ov);
-        renderStepTerms(GROUPS[explore.g].chain[explore.i]);
-        el.stepList.querySelectorAll('li').forEach(function (li, n) {
-            li.classList.toggle('is-current', n === explore.i);
-            li.classList.toggle('is-done', n < explore.i);
-            var b = li.firstElementChild;
-            if (n === explore.i) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
-        });
-        var isLast = explore.i === steps.length - 1;
-        var prevBtn = el.steps.querySelector('[data-step="prev"]');
-        if (explore.i === 0 && document.activeElement === prevBtn) el.steps.querySelector('[data-step="next"]').focus();
-        prevBtn.disabled = explore.i === 0;
-        $('htp-step-count').textContent = (isCards() ? 'Mécanisme ' : 'Étape ') + (explore.i + 1) + ' / ' + steps.length;
-        $('htp-predict').hidden = true;
-        // Une seule annonce pour les lecteurs d'écran, avec l'état d'arrivée
-        var target = compute(st[0].pvr, st[0].pawp, st[0].co);
-        $('htp-step-status').textContent = GROUPS[explore.g].title + ', étape ' + (explore.i + 1) + ' sur ' + steps.length +
-            ' : ' + GROUPS[explore.g].chain[explore.i] + '. PAPm ' + Math.round(target.mpap) + ' mmHg, ' + PROFILES[target.prof].label + '.';
-        var nextG = GROUP_ORDER[(GROUP_ORDER.indexOf(explore.g) + 1) % GROUP_ORDER.length];
-        el.steps.querySelector('[data-step="next"]').innerHTML = (isLast ?
-            (nextG === 'normal' ? 'Recommencer' : 'Groupe suivant') : (isCards() ? 'Mécanisme suivant' : 'Étape suivante')) + ' <span aria-hidden="true">▶</span>';
-        scheduleStep();
-    }
-
-    function scheduleStep() {
-        clearTimeout(explore.timer);
-        if (explore.play && explore.i === STEPS[explore.g].length - 1) explore.play = false;
-        $('htp-step-play').innerHTML = explore.play ? '<span aria-hidden="true">⏸</span> Pause' : '<span aria-hidden="true">▶</span> Lecture';
-        $('htp-step-play').setAttribute('aria-pressed', explore.play);
-        if (explore.play) explore.timer = setTimeout(function () { advance(explore.i + 1); }, 8000);
-    }
-
-    function renderStepTerms(text) {
-        var low = text.toLowerCase();
-        var found = Object.keys(GLOSSARY).filter(function (k) {
-            return new RegExp('(^|[^\\wÀ-ÿ-])' + k.toLowerCase().replace(/[-/]/g, '\\$&') + '(?![\\wÀ-ÿ-])').test(low);
-        });
-        var box = $('htp-step-terms');
-        box.hidden = !found.length;
-        box.innerHTML = found.map(function (k) { return '<span><b>' + esc(k) + '</b> : ' + esc(GLOSSARY[k]) + '</span>'; }).join('');
-    }
-
-    function stopSteps() {
-        explore.play = false;
-        clearTimeout(explore.timer);
-        var b = $('htp-step-play');
-        if (b) { b.innerHTML = '<span aria-hidden="true">▶</span> Lecture'; b.setAttribute('aria-pressed', 'false'); }
-    }
-
-    // Avancer d'une étape, en posant d'abord la question de prédiction du groupe si elle arrive
-    function advance(k) {
-        var pq = PREDICT[explore.g];
-        if (pq && k === pq.at && !explore.asked[explore.g]) return askPredict(pq, k);
-        goStep(k);
-    }
-
-    function askPredict(pq, k) {
-        stopSteps();
-        var box = $('htp-predict');
-        box.hidden = false;
-        box.innerHTML = '<p class="htp-predict-q"><strong>Et ensuite ?</strong> ' + esc(pq.q) + '</p>' +
-            '<div class="htp-predict-opts">' + pq.o.map(function (o, j) {
-                return '<button type="button" class="htp-opt" data-pred="' + j + '">' + esc(o) + '</button>';
-            }).join('') + '</div><p class="htp-predict-fb" role="status"></p>';
-        box.dataset.k = k;
-        box.querySelector('.htp-opt').focus({ preventScroll: true });
-    }
-
-    function answerPredict(j) {
-        var pq = PREDICT[explore.g], box = $('htp-predict');
-        explore.asked[explore.g] = true;
-        box.querySelectorAll('.htp-opt').forEach(function (b, n) {
-            b.disabled = true;
-            if (n === pq.a) b.classList.add('is-right');
-            else if (n === j) b.classList.add('is-wrong');
-        });
-        box.querySelector('.htp-predict-fb').innerHTML = '<strong>' + (j === pq.a ? 'Exact.' : 'Non.') + '</strong> ' + esc(pq.e) +
-            ' <button type="button" class="btn-primary htp-predict-go">Voir l\'étape <span aria-hidden="true">▶</span></button>';
-        box.querySelector('.htp-predict-go').focus({ preventScroll: true });
-    }
-
-    function nextStep() {
-        if (explore.i < STEPS[explore.g].length - 1) return advance(explore.i + 1);
-        selectGroup(GROUP_ORDER[(GROUP_ORDER.indexOf(explore.g) + 1) % GROUP_ORDER.length]);
-    }
-
-    // Encadré orange autour de la structure en jeu sur le schéma 2D
-    function placeFocus() {
-        var sel = FOCUS_2D[state.focus];
-        if (!sel) { el.focus.style.display = 'none'; return; }
-        try {
-            var x1 = Infinity, y1 = Infinity, x2 = -Infinity, y2 = -Infinity;
-            el.svg.querySelectorAll(sel).forEach(function (n) {
-                var b = n.getBBox();
-                x1 = Math.min(x1, b.x); y1 = Math.min(y1, b.y);
-                x2 = Math.max(x2, b.x + b.width); y2 = Math.max(y2, b.y + b.height);
-            });
-            if (!isFinite(x1) || x2 - x1 === 0) throw 0;
-            el.focus.setAttribute('x', x1 - 7); el.focus.setAttribute('y', y1 - 7);
-            el.focus.setAttribute('width', x2 - x1 + 14); el.focus.setAttribute('height', y2 - y1 + 14);
-            el.focus.style.display = '';
-        } catch (e) { el.focus.style.display = 'none'; }
+        $('htp-g-chain').innerHTML = d.chain.map(function (c) { return '<li>' + esc(c) + '</li>'; }).join('');
+        $('htp-g-facts').innerHTML = '<div><dt>Causes</dt><dd>' + esc(d.ex) + '</dd></div>' +
+            '<div><dt>Examen clé</dt><dd>' + esc(d.exam) + '</dd></div>' +
+            '<div><dt>Principe du traitement</dt><dd>' + esc(d.ttt) + '</dd></div>';
+        glossify(box);
     }
 
     /* ---------- Depuis le calculateur DETECT ---------- */
@@ -763,7 +586,7 @@
     }
 
     // Photographie du schéma 2D dans l'état d'un cas, sans les textes qui donnent la réponse
-    function snapshot(key) {
+    function snapshot(key, cls) {
         var cur = state.target || { pvr: +el.pvr.value, pawp: +el.pawp.value, co: +el.co.value };
         state.target = null;
         var curPreset = state.preset, curOv = state.ov;
@@ -784,7 +607,7 @@
         var OV_TXT = { '2': ', oreillette gauche dilatée', '3': ', alvéoles mal ventilées', '4': ', lésions dans l\'artère pulmonaire' };
         c.setAttribute('aria-label', 'Schéma du cas : PAPO ' + pr.pawp + ' mmHg, RVP ' + fr(pr.pvr, 1) + ' UW, DC ' +
             fr(pr.co, 1) + ' L/min' + (OV_TXT[pr.ov] || ''));
-        c.classList.add('htp-quiz-svg');
+        c.classList.add(cls || 'htp-quiz-svg');
         applyValues(cur, curPreset, curOv);
         return c;
     }
@@ -920,61 +743,29 @@
         el.quizBody = $('htp-quiz-body'); el.quizScore = $('htp-quiz-score');
 
         [el.pvr, el.pawp, el.co].forEach(function (s) {
-            s.addEventListener('input', function () { stopSteps(); state.focus = null; el.patient.hidden = true; applyValues({ pvr: +el.pvr.value, pawp: +el.pawp.value, co: +el.co.value }, null); });
+            s.addEventListener('input', function () { el.patient.hidden = true; applyValues({ pvr: +el.pvr.value, pawp: +el.pawp.value, co: +el.co.value }, null); });
         });
-        document.querySelectorAll('.htp-chip[data-preset]').forEach(function (c) {
-            c.addEventListener('click', function () { stopSteps(); state.focus = null; tweenTo(PRESETS[c.dataset.preset], c.dataset.preset); });
+        document.querySelectorAll('.htp-gbtn[data-preset]').forEach(function (c) {
+            c.addEventListener('click', function () { tweenTo(PRESETS[c.dataset.preset], c.dataset.preset); });
         });
         el.patient = $('htp-patient');
         el.d2 = $('htp-2d');
-        el.steps = $('htp-steps');
-        el.stepList = $('htp-step-list');
-        el.focus = $('htp-focus');
-        el.mpapMini = $('htp-mpap-mini');
-        el.profMini = $('htp-profile-mini');
-        document.querySelectorAll('.htp-gbtn').forEach(function (b) {
-            b.addEventListener('click', function () { stopSteps(); selectGroup(b.dataset.group); });
-        });
-        el.steps.addEventListener('click', function (e) {
-            var pb = e.target.closest('[data-pred]');
-            if (pb) return answerPredict(+pb.dataset.pred);
-            if (e.target.closest('.htp-predict-go')) return goStep(+$('htp-predict').dataset.k);
-            var sb = e.target.closest('.htp-step-btn');
-            if (sb) { stopSteps(); goStep(+sb.dataset.i); return; }
-            var b = e.target.closest('[data-step]');
-            if (!b) return;
-            var a = b.dataset.step;
-            if (a === 'prev') { stopSteps(); goStep(explore.i - 1); }
-            else if (a === 'next') { stopSteps(); nextStep(); }
-            else if (a === 'play') {
-                explore.play = !explore.play;
-                if (explore.play && explore.i === STEPS[explore.g].length - 1) goStep(0); else scheduleStep();
-            }
-        });
-        // Flèches gauche / droite : étape précédente / suivante
-        el.steps.addEventListener('keydown', function (e) {
-            if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
-            e.preventDefault();
-            stopSteps();
-            if (e.key === 'ArrowLeft') goStep(explore.i - 1); else nextStep();
-        });
         $('htp-back-quiz').addEventListener('click', function () {
             $('htp-back-quiz').hidden = true;
             $('htp-quiz').scrollIntoView({ behavior: reducedMotion.matches ? 'auto' : 'smooth', block: 'start' });
             var n = el.quizBody.querySelector('.htp-next, .htp-quiz-n');
             if (n) n.focus({ preventScroll: true });
         });
-        // Pause de toutes les animations (WCAG 2.2.2)
         document.querySelector('.htp-zoom2d').addEventListener('click', function () {
             var on = el.d2.classList.toggle('is-zoomed');
             this.setAttribute('aria-pressed', on);
             this.lastChild.textContent = on ? ' Réduire le schéma' : ' Agrandir le schéma';
         });
+        // Pause de toutes les animations (WCAG 2.2.2)
         $('htp-anim').addEventListener('click', function () {
             var still = document.body.classList.toggle('htp-still');
             this.setAttribute('aria-pressed', still);
             this.innerHTML = still ? '<span aria-hidden="true">▶</span> Reprendre les animations' : '<span aria-hidden="true">⏸</span> Animations';
-            if (still) stopSteps();
         });
         el.patient.addEventListener('click', function (e) {
             if (e.target.closest('.htp-tour-x')) el.patient.hidden = true;
@@ -982,11 +773,8 @@
         // Appelé par app.js à chaque changement d'onglet (l'onglet HTP est chargé à la demande)
         window.HTP = {
             fromPatient: fromPatient,
-            onTab: function (id) {
-                if (id !== 'tab-htp') stopSteps();
-            }
+            onTab: function () {}
         };
-        document.addEventListener('visibilitychange', function () { if (document.hidden) stopSteps(); });
         el.quizBody.addEventListener('click', function (e) {
             var o = e.target.closest('[data-opt]');
             if (o) return answer(+o.dataset.opt);
@@ -1002,8 +790,11 @@
         });
 
         renderDetect();
-        applyValues(N, null);
-        selectGroup('normal');
+        // Schéma de référence (normal) à gauche, puis le premier cas à droite
+        var ref = snapshot('normal', 'htp-ref-svg');
+        ref.setAttribute('aria-label', 'Schéma de référence : circulation normale, PAPm 16 mmHg');
+        $('htp-ref').prepend(ref);
+        applyValues(PRESETS.g1, 'g1');
         shuffle();
         renderQuiz();
         $('htp-lexique').innerHTML = Object.keys(GLOSSARY).sort(function (a, b) { return a.localeCompare(b, 'fr'); }).map(function (k) {
