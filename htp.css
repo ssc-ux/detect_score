@@ -144,7 +144,7 @@
 }
 
 .htp-zone {
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.14em;
     fill: var(--ink-3);
@@ -243,12 +243,12 @@
 }
 
 .htp-small {
-    font-size: 10px;
+    font-size: 11px;
     fill: var(--ink-3);
 }
 
 .htp-tag {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     fill: var(--ink-2);
 }
@@ -292,7 +292,7 @@
 }
 
 .htp-ov-txt {
-    font-size: 10.5px;
+    font-size: 11.5px;
     font-weight: 700;
     fill: var(--htp-alerte);
 }
@@ -845,19 +845,6 @@
     display: none !important;
 }
 
-.htp-toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 0.8rem;
-}
-
-.htp-view-seg span {
-    min-width: 5.5rem;
-}
-
 .htp-tour-btn {
     font-weight: 600;
 }
@@ -938,103 +925,6 @@
 
 /* ---------- Vue 3D ---------- */
 
-.htp3d-stage {
-    position: relative;
-    overflow: hidden;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-md);
-    background: radial-gradient(ellipse at 50% 40%, var(--surface), var(--surface-2));
-    min-height: 280px;
-}
-
-.htp3d-canvas canvas {
-    display: block;
-    touch-action: none;
-    cursor: grab;
-}
-
-.htp3d-canvas canvas:active {
-    cursor: grabbing;
-}
-
-.htp3d-labels {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-}
-
-.htp3d-label {
-    position: absolute;
-    left: 0;
-    top: 0;
-    padding: 2px 7px;
-    border-radius: 999px;
-    background: var(--surface);
-    background: color-mix(in srgb, var(--surface) 82%, transparent);
-    border: 1px solid var(--line);
-    font-size: 0.72rem;
-    font-weight: 700;
-    color: var(--ink);
-    white-space: nowrap;
-    will-change: transform;
-}
-
-.htp3d-msg {
-    position: absolute;
-    inset: 0;
-    display: grid;
-    place-items: center;
-    margin: 0;
-    color: var(--ink-3);
-    font-size: 0.9rem;
-}
-
-.htp3d-controls {
-    margin-top: 10px;
-}
-
-.htp3d-row {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px 10px;
-    margin-bottom: 8px;
-}
-
-.htp3d-cap {
-    min-width: 5.5rem;
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--ink-3);
-}
-
-.htp3d-check {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 0.85rem;
-    color: var(--ink-2);
-    cursor: pointer;
-}
-
-.htp3d-check input,
-#htp3d-opacity {
-    accent-color: var(--accent);
-}
-
-#htp3d-opacity {
-    flex: 1;
-    min-width: 140px;
-}
-
-.htp3d-help {
-    margin: 0;
-    font-size: 0.75rem;
-    color: var(--ink-3);
-}
-
 /* ---------- Marquage bêta (onglet et liens vers l'onglet) ---------- */
 
 .beta-tag {
@@ -1094,17 +984,6 @@
         padding: 0 4px;
         font-size: 0.55rem;
     }
-}
-
-#htp3d-cut-level {
-    flex: 1;
-    min-width: 140px;
-    accent-color: var(--htp-alerte);
-}
-
-.htp3d-cap-check {
-    min-width: 9rem;
-    font-weight: 600;
 }
 
 .htp-quiz-fig {
@@ -1189,93 +1068,10 @@
 
 /* ---------- Scène 3D : écran sombre façon salle de cathétérisme ---------- */
 
-.htp3d-stage {
-    background: radial-gradient(ellipse at 50% 35%, #1f2a4d 0%, #0c1120 72%);
-    border-color: #1d2540;
-    box-shadow: inset 0 0 60px rgb(0 0 0 / 0.45);
-}
-
-.htp3d-label {
-    background: rgb(12 17 32 / 0.72);
-    border-color: rgb(255 255 255 / 0.16);
-    color: #e6ecff;
-}
-
-.htp3d-msg {
-    color: #9fb0d8;
-}
-
-.htp3d-hud {
-    position: absolute;
-    top: 10px;
-    left: 12px;
-    right: 12px;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px 12px;
-    pointer-events: none;
-    font-size: 0.74rem;
-    font-variant-numeric: tabular-nums;
-    color: #c9d4f5;
-}
-
-.htp3d-hud b {
-    color: #fff;
-    font-size: 0.9rem;
-}
-
-.htp3d-live {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 2px 8px;
-    border-radius: 999px;
-    background: rgb(255 80 80 / 0.16);
-    color: #ff8f8f;
-    font-size: 0.64rem;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-}
-
-.htp3d-live::before {
-    content: "";
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: #ff5a5a;
-    animation: htp-pulse-dot 1.4s ease-in-out infinite;
-}
-
 @keyframes htp-pulse-dot {
     50% {
         opacity: 0.25;
     }
-}
-
-.htp3d-hud-prof {
-    margin-left: 4px;
-    padding: 2px 8px;
-    border-radius: 999px;
-    background: rgb(255 255 255 / 0.1);
-    font-weight: 700;
-    color: #dfe6ff;
-}
-
-.htp3d-hud-prof.is-good {
-    color: #6fdc9e;
-}
-
-.htp3d-hud-prof.is-bad {
-    color: #ff8f86;
-}
-
-.htp3d-hud-prof.is-warn {
-    color: #ffb37a;
-}
-
-.htp3d-hud-prof.is-info {
-    color: #9fbfff;
 }
 
 /* ---------- Grand écran : onglet en mode « labo » ---------- */
@@ -1342,42 +1138,26 @@
         margin-top: 12px;
     }
 
-    /* Simulateur : 3D à gauche, schéma et commandes à droite */
+    /* Simulateur : schéma en grand à gauche, étapes à droite */
     #htp-sim {
         display: grid;
-        grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+        grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
         column-gap: 1.5rem;
         align-items: start;
         grid-template-areas:
             "head head"
-            "presets tools"
+            "groups groups"
             "patient patient"
-            "v3d v2d"
-            "v3d hint"
-            "v3d tour"
-            "v3d grid"
-            "v3d ."
-            "echo echo";
+            "v2d steps"
+            "adv adv";
     }
 
     #htp-sim > .card-header { grid-area: head; }
-    #htp-sim > .htp-presets { grid-area: presets; }
-    #htp-sim > .htp-toolbar { grid-area: tools; justify-content: flex-end; align-self: start; margin: 0.4rem 0 0.9rem; }
+    #htp-sim > .htp-groups { grid-area: groups; }
     #htp-sim > #htp-patient { grid-area: patient; }
-    #htp-sim > #htp-3d { grid-area: v3d; }
-    #htp-sim > #htp-2d { grid-area: v2d; }
-    #htp-sim > #htp-hint { grid-area: hint; }
-    #htp-sim > #htp-tour { grid-area: tour; }
-    #htp-sim > .htp-grid { grid-area: grid; }
-    #htp-sim > .htp-echo { grid-area: echo; }
-
-    .htp-view-seg {
-        display: none;
-    }
-
-    #htp-sim .htp3d-stage {
-        min-height: 520px;
-    }
+    #htp-sim > #htp-2d { grid-area: v2d; position: sticky; top: 1rem; }
+    #htp-sim > #htp-steps { grid-area: steps; margin-top: 0; }
+    #htp-sim > #htp-adv { grid-area: adv; }
 
     /* Mécanismes : cascade à gauche, repères à droite */
     .htp-group-body {
@@ -1523,8 +1303,7 @@
 }
 
 .htp-more > summary,
-.htp-adv > summary,
-.htp3d-more > summary {
+.htp-adv > summary {
     cursor: pointer;
     padding: 8px 0;
     font-size: 0.86rem;
@@ -1551,14 +1330,6 @@
     margin-bottom: 0.6rem;
 }
 
-.htp3d-more {
-    margin: 2px 0 6px;
-}
-
-.htp3d-help a {
-    color: inherit;
-}
-
 .htp-focus {
     fill: none;
     stroke: var(--htp-alerte);
@@ -1574,43 +1345,6 @@
     .htp-focus {
         animation: none;
     }
-}
-
-@media (min-width: 1100px) {
-    #htp-sim {
-        grid-template-areas:
-            "head head"
-            "groups tools"
-            "patient patient"
-            "v3d v2d"
-            "v3d steps"
-            "v3d ."
-            "adv adv";
-    }
-
-    #htp-sim > .htp-groups { grid-area: groups; }
-    #htp-sim > #htp-steps { grid-area: steps; }
-    #htp-sim > #htp-adv { grid-area: adv; }
-}
-
-.htp3d-cuts {
-    display: inline-flex;
-    flex-wrap: wrap;
-    gap: 6px;
-}
-
-.htp3d-cutinfo {
-    position: absolute;
-    left: 12px;
-    bottom: 10px;
-    margin: 0;
-    padding: 4px 10px;
-    border-radius: 999px;
-    background: rgb(12 17 32 / 0.75);
-    color: #ffd2b0;
-    font-size: 0.78rem;
-    font-weight: 600;
-    pointer-events: none;
 }
 
 /* ---------- Accessibilité ---------- */
@@ -1667,8 +1401,7 @@
 }
 
 .beta-tag,
-.htp-beta-note,
-.htp-view-seg span {
+.htp-beta-note {
     color: var(--ink-2);
 }
 
@@ -1714,26 +1447,8 @@
 }
 
 /* Bandeau des constantes lisible sur le modèle */
-.htp3d-hud {
-    right: auto;
-    padding: 4px 10px;
-    border-radius: 10px;
-    background: rgb(12 17 32 / 0.78);
-}
-
-.htp3d-hud-prof {
-    white-space: nowrap;
-}
 
 /* Cibles tactiles ≥ 24 px */
-.htp3d-check {
-    min-height: 24px;
-}
-
-.htp3d-check input {
-    width: 20px;
-    height: 20px;
-}
 
 .htp-slider input[type="range"] {
     min-height: 24px;
@@ -1753,6 +1468,43 @@
 
 .htp-back-quiz {
     margin-bottom: 0.8rem;
+}
+
+/* Pause des animations : coin du schéma sur grand écran, sous le schéma sinon */
+#htp-2d > .htp-anim {
+    min-height: 32px;
+    font-size: 0.78rem;
+}
+
+@media (min-width: 1100px) {
+    #htp-2d > .htp-anim {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+    }
+}
+
+@media (max-width: 1099px) {
+    #htp-2d {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        column-gap: 8px;
+    }
+
+    #htp-svg,
+    #htp-2d > figcaption {
+        flex: 0 0 100%;
+    }
+
+    #htp-2d > .htp-anim {
+        order: 1;
+        margin-top: 4px;
+    }
+
+    #htp-2d > figcaption {
+        order: 2;
+    }
 }
 
 /* Pause de toutes les animations */
@@ -1839,28 +1591,6 @@
     }
 }
 
-/* Grand écran : les étapes en haut de la colonne de droite, visibles sans défiler */
-@media (min-width: 1100px) {
-    #htp-sim {
-        grid-template-areas:
-            "head head"
-            "groups tools"
-            "patient patient"
-            "v3d steps"
-            "v3d v2d"
-            "v3d ."
-            "adv adv";
-    }
-
-    #htp-sim > #htp-steps {
-        margin-top: 0;
-    }
-
-    #htp-sim > #htp-2d {
-        margin-top: 1rem;
-    }
-}
-
 /* ---------- Question « Et ensuite ? » ---------- */
 
 .htp-predict {
@@ -1932,11 +1662,6 @@
 }
 
 /* Vue 3D active */
-.htp3d-controls .htp-chip[aria-pressed="true"] {
-    border-color: var(--accent);
-    color: var(--accent);
-    font-weight: 700;
-}
 
 /* ---------- Schéma agrandissable (mobile) ---------- */
 
@@ -1948,7 +1673,7 @@
     .htp-zoom2d {
         display: inline-flex;
         min-height: 32px;
-        margin: 4px auto 0;
+        margin: 4px 0 0;
         font-size: 0.78rem;
     }
 
@@ -2013,7 +1738,7 @@
     }
 }
 
-/* ---------- Ordre visuel sur mobile (le DOM met les étapes avant la 3D pour la tabulation) ---------- */
+/* ---------- Ordre visuel sur mobile : le schéma avant les étapes ---------- */
 
 @media (max-width: 1099px) {
     #htp-sim {
@@ -2023,9 +1748,7 @@
 
     #htp-sim > * { order: 1; }
     #htp-sim > .htp-groups { order: 2; }
-    #htp-sim > .htp-toolbar,
     #htp-sim > #htp-patient { order: 3; }
-    #htp-sim > #htp-3d,
     #htp-sim > #htp-2d { order: 4; }
     #htp-sim > #htp-steps { order: 5; }
     #htp-sim > #htp-adv { order: 6; }

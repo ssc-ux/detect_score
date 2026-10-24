@@ -331,14 +331,6 @@
                         <button type="button" class="htp-gbtn" aria-pressed="false" data-group="5">G5 · Multifactorielle</button>
                     </div>
 
-                    <div class="htp-toolbar">
-                        <div class="seg htp-view-seg" role="group" aria-label="Type de vue">
-                            <label><input type="radio" name="htp-view" value="2d" checked><span>Schéma 2D</span></label>
-                            <label><input type="radio" name="htp-view" value="3d"><span>Vue 3D</span></label>
-                        </div>
-                        <button type="button" id="htp-anim" class="btn-secondary htp-anim" aria-pressed="false"><span aria-hidden="true">⏸</span> Animations</button>
-                    </div>
-
                     <div id="htp-patient" class="htp-patient" hidden></div>
 
                     <aside id="htp-steps" class="htp-steps" aria-labelledby="htp-g-title">
@@ -383,57 +375,8 @@
                         </details>
                     </aside>
 
-                    <div id="htp-3d" class="htp3d" hidden>
-                        <div class="htp3d-stage">
-                            <div class="htp3d-canvas"></div>
-                            <div class="htp3d-labels" aria-hidden="true"></div>
-                            <div class="htp3d-hud" aria-live="off">
-                                <span class="htp3d-live" aria-hidden="true">SIMULATION</span>
-                                <span id="htp3d-hud-txt"></span>
-                            </div>
-                            <p class="htp3d-msg" hidden></p>
-                        </div>
-                        <div class="htp3d-controls">
-                            <div class="htp3d-row" role="group" aria-label="Vues">
-                                <span class="htp3d-cap">Vue</span>
-                                <button type="button" class="htp-chip" data-view="face" aria-pressed="true">Face</button>
-                                <button type="button" class="htp-chip" data-view="gauche" aria-pressed="false">Profil G</button>
-                                <button type="button" class="htp-chip" data-view="dos" aria-pressed="false">Dos</button>
-                                <button type="button" class="htp-chip" data-view="oblique" aria-pressed="false">Oblique</button>
-                                <button type="button" class="htp-chip htp-zoom" data-zoom="0.8" aria-label="Zoomer">+</button>
-                                <button type="button" class="htp-chip htp-zoom" data-zoom="1.25" aria-label="Dézoomer">−</button>
-                            </div>
-                            <div class="htp3d-row">
-                                <span class="htp3d-cap">Coupe écho</span>
-                                <span class="htp3d-cuts" role="group" aria-label="Coupes échographiques">
-                                    <button type="button" class="htp-chip is-on" data-cut="none" aria-pressed="true">Aucune</button>
-                                    <button type="button" class="htp-chip" data-cut="sax" aria-pressed="false">Petit axe</button>
-                                    <button type="button" class="htp-chip" data-cut="a4c" aria-pressed="false">4 cavités</button>
-                                </span>
-                                <input type="range" id="htp3d-cut-level" min="-0.7" max="0.6" step="0.05" value="0"
-                                    aria-label="Position du plan de coupe" disabled>
-                            </div>
-                            <details class="htp3d-more">
-                                <summary>Réglages 3D</summary>
-                            <div class="htp3d-row" role="group" aria-label="Calques">
-                                <span class="htp3d-cap">Calques</span>
-                                <label class="htp3d-check"><input type="checkbox" data-layer="heart" checked> Cœur</label>
-                                <label class="htp3d-check"><input type="checkbox" data-layer="lungs" checked> Poumons</label>
-                                <label class="htp3d-check"><input type="checkbox" data-layer="vessels" checked> Vaisseaux</label>
-                                <label class="htp3d-check"><input type="checkbox" data-layer="flow" checked> Flux</label>
-                                <label class="htp3d-check"><input type="checkbox" data-layer="labels" checked> Étiquettes</label>
-                            </div>
-                            <div class="htp3d-row">
-                                <label class="htp3d-cap" for="htp3d-opacity">Opacité du cœur</label>
-                                <input type="range" id="htp3d-opacity" min="0.15" max="1" step="0.05" value="1">
-                            </div>
-                            </details>
-                            <p class="htp3d-help">Glisser pour tourner · molette ou pincement pour zoomer ·
-                                modèle anatomique : <a href="https://humanatlas.io/3d-reference-library" target="_blank" rel="noopener">Human Reference Atlas</a> (HuBMAP), CC BY 4.0</p>
-                        </div>
-                    </div>
-
                     <figure class="htp-stage" id="htp-2d">
+                        <button type="button" id="htp-anim" class="btn-secondary htp-anim" aria-pressed="false"><span aria-hidden="true">⏸</span> Animations</button>
                         <svg id="htp-svg" viewBox="0 0 640 282" role="img" aria-labelledby="htp-svg-title" aria-describedby="htp-step-status">
                             <title id="htp-svg-title">Schéma de la circulation pulmonaire : cœur droit, artère
                                 pulmonaire, poumon, cœur gauche</title>
@@ -678,21 +621,6 @@
                         <span class="reference-label">Définitions et classification</span>
                         <p>Humbert M, Kovacs G, Hoeper MM, et&nbsp;al. <em>2022 ESC/ERS Guidelines for the diagnosis
                                 and treatment of pulmonary hypertension.</em> Eur Heart J 2022;43:3618–3731.</p>
-                        <span class="reference-label htp-ref-gap">Modèle anatomique 3D</span>
-                        <p>Human Reference Atlas, HuBMAP Consortium. <em>3D Reference Object Library</em> :
-                            cœur, vascularisation cardiaque et poumons de l'homme de référence (v1.2), d'après le
-                            Visible Human Project (National Library of Medicine). Licence
-                            <a href="https://creativecommons.org/licenses/by/4.0/deed.fr" target="_blank" rel="noopener">CC BY 4.0</a>.
-                            Modifications : fusion des trois modèles, retrait des valves, piliers et cartilages,
-                            simplification et compression, couleurs conventionnelles, déformations simulées.</p>
-                        <span class="reference-label htp-ref-gap">Modèle et limites</span>
-                        <p>La 3D provient d'un seul sujet, reconstruit à partir de coupes post-mortem (Visible Human Project) :
-                            sa forme ne correspond à aucune phase précise du cycle cardiaque et n'a pas de pressions de
-                            remplissage. Le bleu et le rouge sont une convention (sang désoxygéné / oxygéné). L'arbre
-                            artériel pulmonaire est schématique : le remodelage de l'HTAP touche des artérioles invisibles à
-                            cette échelle. Les dilatations, le battement, les pressions et le flux sont simulés à visée
-                            pédagogique ; le rapport VD/VG et le TAPSE affichés sont calculés à partir des pressions, pas
-                            mesurés sur le modèle.</p>
                         <span class="reference-label htp-ref-gap">PAPs → PAPm</span>
                         <p>Chemla D, Castelain V, Humbert M, et&nbsp;al. <em>New formula for predicting mean
                                 pulmonary artery pressure using systolic pulmonary artery pressure.</em> Chest
@@ -771,7 +699,7 @@
     </div>
 
     <script src="logic.js?v=25"></script>
-    <script src="app.js?v=29"></script>
+    <script src="app.js?v=30"></script>
     <script src="fx.js?v=25" defer></script>
     <script>
         if ('serviceWorker' in navigator && location.protocol === 'https:') {

@@ -181,8 +181,6 @@
             o: ['La PAPO', 'La RVP', 'Le débit'], a: 1,
             e: "Obstruction mécanique = RVP ↑, avec un cœur gauche normal (PAPO ≤ 15)." }
     };
-    // Vue 3D proposée selon la structure en jeu (OG postérieure, VD en coupe petit axe…)
-    var STEP_VIEW = { la: 'dos', vp: 'dos', lv: 'gauche', rv: 'sax' };
     var GROUP_WHY = [
         "il faudrait une HTP précapillaire sans maladie respiratoire, thromboembolique ou multifactorielle pour l'expliquer.",
         "il faudrait une PAPO > 15 mmHg (cardiopathie gauche).",
@@ -311,8 +309,6 @@
 
     var el = {};
     var state = { co: 5.5, ov: null, focus: null };
-    var last = null;
-    var view3d = null;
 
     function render() {
         var pvr = +el.pvr.value, pawp = +el.pawp.value, co = +el.co.value;
@@ -385,15 +381,9 @@
         el.profMini.textContent = p.label;
         el.profMini.className = 'htp-badge ' + p.cls;
         placeFocus();
-        last = { pvr: pvr, pawp: pawp, co: co, mpap: r.mpap, pod: r.pod, rvk: r.rvk, ov: state.ov, focus: state.focus };
-        if (el.hud) {
-            el.hud.innerHTML = '<b>PAPm ' + Math.round(r.mpap) + '</b> mmHg · RVP ' + fr(pvr, 1) + ' UW · PAPO ' + pawp +
-                ' · DC ' + fr(co, 1) + ' · <span class="htp3d-hud-prof ' + p.cls + '">' + p.label + '</span>';
-        }
-        if (view3d) view3d.update(last);
     }
 
-    // ---------- Boucle pression-volume du VD (simulée, synchronisée avec le battement 3D) ----------
+    // ---------- Boucle pression-volume du VD (simulée) ----------
     // Cycle à 70/min : contraction isovolumique, éjection, relaxation isovolumique, remplissage
     var PV_PHASES = [0.05, 0.35, 0.42, 1];
     function pvPoints(r, co) {
@@ -510,8 +500,7 @@
 
     /* ---------- Explorer le mécanisme, étape par étape ---------- */
 
-    var explore = { g: 'normal', i: 0, play: false, timer: 0, asked: {}, view: null };
-    var cutMode = 'none';
+    var explore = { g: 'normal', i: 0, play: false, timer: 0, asked: {} };
     var isCards = function () { return explore.g === '5'; };   // G5 : mécanismes juxtaposés, pas une chronologie
 
     function selectGroup(g) {
@@ -562,7 +551,6 @@
         prevBtn.disabled = explore.i === 0;
         $('htp-step-count').textContent = (isCards() ? 'Mécanisme ' : 'Étape ') + (explore.i + 1) + ' / ' + steps.length;
         $('htp-predict').hidden = true;
-        autoView(st[1]);
         // Une seule annonce pour les lecteurs d'écran, avec l'état d'arrivée
         var target = compute(st[0].pvr, st[0].pawp, st[0].co);
         $('htp-step-status').textContent = GROUPS[explore.g].title + ', étape ' + (explore.i + 1) + ' sur ' + steps.length +
@@ -630,35 +618,6 @@
         box.querySelector('.htp-predict-go').focus({ preventScroll: true });
     }
 
-    // Vue 3D associée à la structure en jeu ; ne bouge la caméra que si la vue proposée change
-    function autoView(focus) {
-        var v = (explore.g !== 'normal' && STEP_VIEW[focus]) || (focus === 'la' || focus === 'vp' ? 'dos' : 'face');
-        if (!view3d || el.d3.hidden || v === explore.view) return;
-        explore.view = v;
-        if (v === 'sax') setCutMode('sax');
-        else { if (cutMode !== 'none') setCutMode('none'); view3d.setView(v); markView(v); }
-    }
-
-    function markView(v) {
-        el.d3.querySelectorAll('[data-view]').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.view === v); });
-    }
-
-    function setCutMode(mode) {
-        cutMode = mode;
-        el.d3.querySelectorAll('[data-cut]').forEach(function (x) {
-            var on = x.dataset.cut === mode;
-            x.classList.toggle('is-on', on);
-            x.setAttribute('aria-pressed', on);
-        });
-        var lvl = $('htp3d-cut-level');
-        lvl.disabled = mode === 'none';
-        lvl.value = 0;
-        markView(mode === 'none' ? 'face' : null);
-        if (!view3d) return;
-        view3d.setCut(mode, 0);
-        view3d.setView(mode === 'none' ? 'face' : mode);
-    }
-
     function nextStep() {
         if (explore.i < STEPS[explore.g].length - 1) return advance(explore.i + 1);
         selectGroup(GROUP_ORDER[(GROUP_ORDER.indexOf(explore.g) + 1) % GROUP_ORDER.length]);
@@ -704,58 +663,6 @@
             'Une Vmax IT ≤ 2,8 m/s correspond à une probabilité échographique faible, même si la formule donne une PAPm > 20 mmHg. ' +
             'Le profil affiché ne découle que des hypothèses ci-dessus. ' +
             '<small>Les estimations échographiques du simulateur suivent son propre modèle et peuvent différer de vos mesures.</small>';
-    }
-
-    /* ---------- Vue 3D ---------- */
-
-    var loading3d = false;
-    // Grand écran : 3D et schéma 2D côte à côte ; sinon bascule 2D / 3D
-    var wideMQ = window.matchMedia('(min-width: 1100px)');
-    function layoutView() {
-        if (!document.body.classList.contains('is-htp')) return;
-        if (wideMQ.matches) {
-            el.d2.hidden = false;
-            el.d3.hidden = false;
-            load3d();
-        } else {
-            setViewMode(document.querySelector('input[name="htp-view"]:checked').value);
-        }
-    }
-
-    function setViewMode(mode) {
-        var is3d = mode === '3d';
-        el.d2.hidden = is3d;
-        el.d3.hidden = !is3d;
-        if (is3d) load3d();
-    }
-
-    function load3d() {
-        if (view3d || loading3d) return;
-        var msg = el.d3.querySelector('.htp3d-msg');
-        var c = document.createElement('canvas');
-        var gl = c.getContext('webgl2') || c.getContext('webgl');
-        var lose = gl && gl.getExtension('WEBGL_lose_context');
-        if (lose) lose.loseContext();
-        if (!gl) {
-            msg.hidden = false;
-            msg.textContent = 'Vue 3D indisponible sur cet appareil (WebGL désactivé).';
-            return;
-        }
-        loading3d = true;
-        msg.hidden = false;
-        msg.textContent = 'Chargement de la 3D…';
-        import('./htp3d.js?v=19').then(function (m) {
-            // Le module affiche lui-même la progression du chargement du modèle
-            view3d = m.mount(el.d3);
-            if (last) view3d.update(last);
-            el.d3.querySelectorAll('[data-layer]').forEach(function (cb) { if (!cb.checked) view3d.setLayer(cb.dataset.layer, false); });
-            view3d.setHeartOpacity(+$('htp3d-opacity').value);
-            var cutOn = el.d3.querySelector('[data-cut].is-on');
-            if (cutOn && cutOn.dataset.cut !== 'none') view3d.setCut(cutOn.dataset.cut, +$('htp3d-cut-level').value);
-        }).catch(function (err) {
-            console.error(err);
-            msg.textContent = 'Impossible de charger la vue 3D.';
-        }).then(function () { loading3d = false; });
     }
 
     /* ---------- Particules (débit) ---------- */
@@ -1020,7 +927,6 @@
         });
         el.patient = $('htp-patient');
         el.d2 = $('htp-2d');
-        el.d3 = $('htp-3d');
         el.steps = $('htp-steps');
         el.stepList = $('htp-step-list');
         el.focus = $('htp-focus');
@@ -1078,34 +984,9 @@
             fromPatient: fromPatient,
             onTab: function (id) {
                 if (id !== 'tab-htp') stopSteps();
-                layoutView();
             }
         };
-        el.hud = $('htp3d-hud-txt');
-
-        wideMQ.addEventListener('change', layoutView);
         document.addEventListener('visibilitychange', function () { if (document.hidden) stopSteps(); });
-        document.querySelectorAll('input[name="htp-view"]').forEach(function (r) {
-            r.addEventListener('change', function () { setViewMode(r.value); });
-        });
-        el.d3.addEventListener('click', function (e) {
-            var z = e.target.closest('[data-zoom]');
-            if (z && view3d) return view3d.zoom(+z.dataset.zoom);
-            var b = e.target.closest('[data-view]');
-            if (b && view3d) { view3d.setView(b.dataset.view); markView(b.dataset.view); explore.view = null; }
-        });
-        el.d3.addEventListener('change', function (e) {
-            if (e.target.dataset.layer && view3d) view3d.setLayer(e.target.dataset.layer, e.target.checked);
-        });
-        $('htp3d-opacity').addEventListener('input', function (e) {
-            if (view3d) view3d.setHeartOpacity(+e.target.value);
-        });
-        // Coupes échographiques : petit axe ou 4 cavités ; le curseur déplace le plan
-        var cutLvl = $('htp3d-cut-level');
-        el.d3.querySelectorAll('[data-cut]').forEach(function (b) {
-            b.addEventListener('click', function () { explore.view = null; setCutMode(b.dataset.cut); });
-        });
-        cutLvl.addEventListener('input', function () { if (view3d) view3d.setCut(cutMode, +cutLvl.value); });
         el.quizBody.addEventListener('click', function (e) {
             var o = e.target.closest('[data-opt]');
             if (o) return answer(+o.dataset.opt);
