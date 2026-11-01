@@ -49,16 +49,10 @@
 }
 
 .htp-lead,
-.htp-lead-small,
 .htp-p {
     margin: 0;
     color: var(--ink-2);
     line-height: 1.6;
-}
-
-.htp-lead-small {
-    font-size: 0.88rem;
-    color: var(--ink-3);
 }
 
 .htp-eq {
@@ -575,10 +569,6 @@
     min-width: 2.8rem;
 }
 
-.htp-group-body {
-    animation: rise 0.4s var(--ease-out) both;
-}
-
 .htp-site {
     display: inline-block;
     margin: 0 0 12px;
@@ -587,52 +577,6 @@
     background: var(--accent-soft);
     color: var(--accent);
     font-size: 0.78rem;
-    font-weight: 600;
-}
-
-.htp-chain {
-    list-style: none;
-    counter-reset: htp;
-    margin: 0 0 1rem;
-    padding: 0;
-}
-
-.htp-chain li {
-    position: relative;
-    counter-increment: htp;
-    padding: 0 0 14px 38px;
-    font-size: 0.9rem;
-    line-height: 1.5;
-}
-
-.htp-chain li::before {
-    content: counter(htp);
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background: var(--accent);
-    color: var(--accent-texte);
-    font-size: 0.75rem;
-    font-weight: 700;
-    display: grid;
-    place-items: center;
-}
-
-.htp-chain li:not(:last-child)::after {
-    content: "";
-    position: absolute;
-    left: 11px;
-    top: 26px;
-    bottom: 2px;
-    width: 2px;
-    background: var(--line-strong);
-}
-
-.htp-chain li:last-child {
-    padding-bottom: 0;
     font-weight: 600;
 }
 
@@ -793,7 +737,7 @@
 
 @media (max-width: 640px) {
     .htp-grid,
-    .htp-echo {
+.htp-echo {
         grid-template-columns: 1fr;
     }
 
@@ -809,7 +753,7 @@
 
 @media (prefers-reduced-motion: reduce) {
     .htp-jet,
-    .htp-ov.is-on .htp-hl {
+.htp-ov.is-on .htp-hl {
         animation: none;
     }
 }
@@ -817,7 +761,7 @@
 /* Petits écrans : le schéma est réduit de moitié, on grossit le texte et on masque les libellés secondaires. */
 @media (max-width: 640px) {
     #htp-svg .htp-small,
-    #htp-svg .htp-zone {
+#htp-svg .htp-zone {
         display: none;
     }
 
@@ -843,19 +787,6 @@
 #tab-htp [hidden],
 .htp-link[hidden] {
     display: none !important;
-}
-
-.htp-toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 0.8rem;
-}
-
-.htp-view-seg span {
-    min-width: 5.5rem;
 }
 
 .htp-tour-btn {
@@ -938,103 +869,6 @@
 
 /* ---------- Vue 3D ---------- */
 
-.htp3d-stage {
-    position: relative;
-    overflow: hidden;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-md);
-    background: radial-gradient(ellipse at 50% 40%, var(--surface), var(--surface-2));
-    min-height: 280px;
-}
-
-.htp3d-canvas canvas {
-    display: block;
-    touch-action: none;
-    cursor: grab;
-}
-
-.htp3d-canvas canvas:active {
-    cursor: grabbing;
-}
-
-.htp3d-labels {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-}
-
-.htp3d-label {
-    position: absolute;
-    left: 0;
-    top: 0;
-    padding: 2px 7px;
-    border-radius: 999px;
-    background: var(--surface);
-    background: color-mix(in srgb, var(--surface) 82%, transparent);
-    border: 1px solid var(--line);
-    font-size: 0.72rem;
-    font-weight: 700;
-    color: var(--ink);
-    white-space: nowrap;
-    will-change: transform;
-}
-
-.htp3d-msg {
-    position: absolute;
-    inset: 0;
-    display: grid;
-    place-items: center;
-    margin: 0;
-    color: var(--ink-3);
-    font-size: 0.9rem;
-}
-
-.htp3d-controls {
-    margin-top: 10px;
-}
-
-.htp3d-row {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px 10px;
-    margin-bottom: 8px;
-}
-
-.htp3d-cap {
-    min-width: 5.5rem;
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--ink-3);
-}
-
-.htp3d-check {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 0.85rem;
-    color: var(--ink-2);
-    cursor: pointer;
-}
-
-.htp3d-check input,
-#htp3d-opacity {
-    accent-color: var(--accent);
-}
-
-#htp3d-opacity {
-    flex: 1;
-    min-width: 140px;
-}
-
-.htp3d-help {
-    margin: 0;
-    font-size: 0.75rem;
-    color: var(--ink-3);
-}
-
 /* ---------- Marquage bêta (onglet et liens vers l'onglet) ---------- */
 
 .beta-tag {
@@ -1094,17 +928,6 @@
         padding: 0 4px;
         font-size: 0.55rem;
     }
-}
-
-#htp3d-cut-level {
-    flex: 1;
-    min-width: 140px;
-    accent-color: var(--htp-alerte);
-}
-
-.htp3d-cap-check {
-    min-width: 9rem;
-    font-weight: 600;
 }
 
 .htp-quiz-fig {
@@ -1189,214 +1012,13 @@
 
 /* ---------- Scène 3D : écran sombre façon salle de cathétérisme ---------- */
 
-.htp3d-stage {
-    background: radial-gradient(ellipse at 50% 35%, #1f2a4d 0%, #0c1120 72%);
-    border-color: #1d2540;
-    box-shadow: inset 0 0 60px rgb(0 0 0 / 0.45);
-}
-
-.htp3d-label {
-    background: rgb(12 17 32 / 0.72);
-    border-color: rgb(255 255 255 / 0.16);
-    color: #e6ecff;
-}
-
-.htp3d-msg {
-    color: #9fb0d8;
-}
-
-.htp3d-hud {
-    position: absolute;
-    top: 10px;
-    left: 12px;
-    right: 12px;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px 12px;
-    pointer-events: none;
-    font-size: 0.74rem;
-    font-variant-numeric: tabular-nums;
-    color: #c9d4f5;
-}
-
-.htp3d-hud b {
-    color: #fff;
-    font-size: 0.9rem;
-}
-
-.htp3d-live {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 2px 8px;
-    border-radius: 999px;
-    background: rgb(255 80 80 / 0.16);
-    color: #ff8f8f;
-    font-size: 0.64rem;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-}
-
-.htp3d-live::before {
-    content: "";
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: #ff5a5a;
-    animation: htp-pulse-dot 1.4s ease-in-out infinite;
-}
-
 @keyframes htp-pulse-dot {
     50% {
         opacity: 0.25;
     }
 }
 
-.htp3d-hud-prof {
-    margin-left: 4px;
-    padding: 2px 8px;
-    border-radius: 999px;
-    background: rgb(255 255 255 / 0.1);
-    font-weight: 700;
-    color: #dfe6ff;
-}
-
-.htp3d-hud-prof.is-good {
-    color: #6fdc9e;
-}
-
-.htp3d-hud-prof.is-bad {
-    color: #ff8f86;
-}
-
-.htp3d-hud-prof.is-warn {
-    color: #ffb37a;
-}
-
-.htp3d-hud-prof.is-info {
-    color: #9fbfff;
-}
-
 /* ---------- Grand écran : onglet en mode « labo » ---------- */
-
-@media (min-width: 1100px) {
-    body.is-htp .app-container {
-        max-width: 1440px;
-        padding: 0 32px;
-    }
-
-    body.is-htp .masthead {
-        display: none;
-    }
-
-    body.is-htp #tab-htp.active {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-        column-gap: 1.25rem;
-        align-items: start;
-        margin-top: 1rem;
-    }
-
-    #tab-htp > * {
-        grid-column: 1 / -1;
-    }
-
-    #tab-htp > #htp-detect,
-    #tab-htp > #htp-quiz {
-        grid-column: auto;
-    }
-
-    /* Bandeau d'accueil */
-    .htp-intro {
-        display: grid;
-        grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-        column-gap: 3rem;
-        align-items: center;
-        padding: 2rem 2.4rem;
-        background: linear-gradient(120deg, var(--surface) 35%, var(--accent-soft) 100%);
-    }
-
-    .htp-intro > * {
-        grid-column: 1;
-    }
-
-    .htp-kicker { grid-row: 1; }
-    .htp-intro .htp-title { grid-row: 2; font-size: 2.3rem; }
-    .htp-lead { grid-row: 3; }
-    .htp-beta-note { grid-row: 4; margin: 12px 0 0; justify-self: start; }
-
-    .htp-intro .htp-eq {
-        grid-column: 2;
-        grid-row: 1 / 4;
-        margin: 0;
-        padding: 1.6rem 1rem;
-        font-size: 1.75rem;
-        letter-spacing: 0.02em;
-        box-shadow: inset 0 0 0 1px var(--accent-ring);
-    }
-
-    .htp-intro .htp-lead-small {
-        grid-column: 2;
-        grid-row: 4;
-        margin-top: 12px;
-    }
-
-    /* Simulateur : 3D à gauche, schéma et commandes à droite */
-    #htp-sim {
-        display: grid;
-        grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
-        column-gap: 1.5rem;
-        align-items: start;
-        grid-template-areas:
-            "head head"
-            "presets tools"
-            "patient patient"
-            "v3d v2d"
-            "v3d hint"
-            "v3d tour"
-            "v3d grid"
-            "v3d ."
-            "echo echo";
-    }
-
-    #htp-sim > .card-header { grid-area: head; }
-    #htp-sim > .htp-presets { grid-area: presets; }
-    #htp-sim > .htp-toolbar { grid-area: tools; justify-content: flex-end; align-self: start; margin: 0.4rem 0 0.9rem; }
-    #htp-sim > #htp-patient { grid-area: patient; }
-    #htp-sim > #htp-3d { grid-area: v3d; }
-    #htp-sim > #htp-2d { grid-area: v2d; }
-    #htp-sim > #htp-hint { grid-area: hint; }
-    #htp-sim > #htp-tour { grid-area: tour; }
-    #htp-sim > .htp-grid { grid-area: grid; }
-    #htp-sim > .htp-echo { grid-area: echo; }
-
-    .htp-view-seg {
-        display: none;
-    }
-
-    #htp-sim .htp3d-stage {
-        min-height: 520px;
-    }
-
-    /* Mécanismes : cascade à gauche, repères à droite */
-    .htp-group-body {
-        display: grid;
-        grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-        column-gap: 2.5rem;
-        align-items: start;
-    }
-
-    .htp-group-body > .htp-h3,
-    .htp-group-body > .htp-site {
-        grid-column: 1 / -1;
-        justify-self: start;
-    }
-
-    .htp-group-body > .htp-chain { grid-column: 1; grid-row: 3 / span 2; }
-    .htp-group-body > .htp-facts { grid-column: 2; grid-row: 3; }
-    .htp-group-body > .htp-actions { grid-column: 2; grid-row: 4; }
-}
 
 .htp-badge-sm {
     border-radius: 10px;
@@ -1436,95 +1058,12 @@
     box-shadow: 0 2px 10px var(--accent-ring);
 }
 
-.htp-gbtn:focus-visible,
-.htp-steplist li:focus-visible {
+.htp-gbtn:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
 }
 
-.htp-steps {
-    margin-top: 1rem;
-    padding: 16px 18px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-md);
-    background: var(--surface-2);
-}
-
-.htp-steps-kicker {
-    margin: 0 0 2px;
-    font-size: 0.68rem;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--htp-alerte);
-}
-
-.htp-steps .htp-h3 {
-    margin-bottom: 6px;
-}
-
-.htp-now {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px 12px;
-    margin: 0 0 14px;
-    font-size: 0.88rem;
-    color: var(--ink-3);
-}
-
-.htp-now b {
-    font-size: 1.35rem;
-    color: var(--ink);
-    font-variant-numeric: tabular-nums;
-}
-
-.htp-now .htp-badge {
-    margin: 0;
-}
-
-.htp-steplist li {
-    cursor: pointer;
-    opacity: 0.5;
-    border-radius: 6px;
-    transition: opacity var(--t-med);
-}
-
-.htp-steplist li:hover,
-.htp-steplist li.is-done {
-    opacity: 0.8;
-}
-
-.htp-steplist li:last-child {
-    font-weight: inherit;
-}
-
-.htp-steplist li.is-current {
-    opacity: 1;
-    font-weight: 600;
-    color: var(--ink);
-}
-
-.htp-steplist li.is-current::before {
-    background: var(--htp-alerte);
-    box-shadow: 0 0 0 4px color-mix(in srgb, var(--htp-alerte) 25%, transparent);
-}
-
-.htp-step-nav {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin: 6px 0 10px;
-}
-
-.htp-step-nav button:disabled {
-    opacity: 0.4;
-    cursor: default;
-}
-
-.htp-more > summary,
-.htp-adv > summary,
-.htp3d-more > summary {
+.htp-more > summary {
     cursor: pointer;
     padding: 8px 0;
     font-size: 0.86rem;
@@ -1534,29 +1073,6 @@
 
 .htp-more .htp-facts {
     margin: 4px 0 0;
-}
-
-.htp-adv {
-    margin-top: 1.2rem;
-    padding-top: 0.4rem;
-    border-top: 1px solid var(--line);
-}
-
-.htp-adv > summary {
-    font-size: 0.92rem;
-    color: var(--accent);
-}
-
-.htp-adv[open] > summary {
-    margin-bottom: 0.6rem;
-}
-
-.htp3d-more {
-    margin: 2px 0 6px;
-}
-
-.htp3d-help a {
-    color: inherit;
 }
 
 .htp-focus {
@@ -1574,43 +1090,6 @@
     .htp-focus {
         animation: none;
     }
-}
-
-@media (min-width: 1100px) {
-    #htp-sim {
-        grid-template-areas:
-            "head head"
-            "groups tools"
-            "patient patient"
-            "v3d v2d"
-            "v3d steps"
-            "v3d ."
-            "adv adv";
-    }
-
-    #htp-sim > .htp-groups { grid-area: groups; }
-    #htp-sim > #htp-steps { grid-area: steps; }
-    #htp-sim > #htp-adv { grid-area: adv; }
-}
-
-.htp3d-cuts {
-    display: inline-flex;
-    flex-wrap: wrap;
-    gap: 6px;
-}
-
-.htp3d-cutinfo {
-    position: absolute;
-    left: 12px;
-    bottom: 10px;
-    margin: 0;
-    padding: 4px 10px;
-    border-radius: 999px;
-    background: rgb(12 17 32 / 0.75);
-    color: #ffd2b0;
-    font-size: 0.78rem;
-    font-weight: 600;
-    pointer-events: none;
 }
 
 /* ---------- Accessibilité ---------- */
@@ -1641,7 +1120,6 @@
     --htp-alerte-texte: #f08a4b;
 }
 
-.htp-steps-kicker,
 .htp-ov-txt {
     color: var(--htp-alerte-texte);
     fill: var(--htp-alerte-texte);
@@ -1667,16 +1145,11 @@
 }
 
 .beta-tag,
-.htp-beta-note,
-.htp-view-seg span {
+.htp-beta-note {
     color: var(--ink-2);
 }
 
 /* Étapes : vrais boutons, contraste suffisant pour les étapes à venir */
-.htp-steplist li {
-    opacity: 1;
-    cursor: default;
-}
 
 .htp-step-btn {
     display: block;
@@ -1697,15 +1170,6 @@
     background: color-mix(in srgb, var(--accent) 6%, transparent);
 }
 
-.htp-steplist li.is-done .htp-step-btn {
-    color: var(--ink-2);
-}
-
-.htp-steplist li.is-current .htp-step-btn {
-    color: var(--ink);
-    font-weight: 600;
-}
-
 .htp-step-count {
     font-size: 0.75rem;
     font-weight: 700;
@@ -1714,26 +1178,8 @@
 }
 
 /* Bandeau des constantes lisible sur le modèle */
-.htp3d-hud {
-    right: auto;
-    padding: 4px 10px;
-    border-radius: 10px;
-    background: rgb(12 17 32 / 0.78);
-}
-
-.htp3d-hud-prof {
-    white-space: nowrap;
-}
 
 /* Cibles tactiles ≥ 24 px */
-.htp3d-check {
-    min-height: 24px;
-}
-
-.htp3d-check input {
-    width: 20px;
-    height: 20px;
-}
 
 .htp-slider input[type="range"] {
     min-height: 24px;
@@ -1760,21 +1206,6 @@
 .htp-still *::before,
 .htp-still *::after {
     animation-play-state: paused !important;
-}
-
-.htp-lexique-box {
-    margin-top: 8px;
-}
-
-@media (min-width: 1100px) {
-    .htp-intro .htp-lexique-box {
-        grid-column: 1 / -1;
-    }
-}
-
-.htp-steplist li.is-done,
-.htp-steplist li:hover {
-    opacity: 1;
 }
 
 /* ---------- Pédagogie : à retenir, termes de l'étape, comparaison ---------- */
@@ -1840,26 +1271,6 @@
 }
 
 /* Grand écran : les étapes en haut de la colonne de droite, visibles sans défiler */
-@media (min-width: 1100px) {
-    #htp-sim {
-        grid-template-areas:
-            "head head"
-            "groups tools"
-            "patient patient"
-            "v3d steps"
-            "v3d v2d"
-            "v3d ."
-            "adv adv";
-    }
-
-    #htp-sim > #htp-steps {
-        margin-top: 0;
-    }
-
-    #htp-sim > #htp-2d {
-        margin-top: 1rem;
-    }
-}
 
 /* ---------- Question « Et ensuite ? » ---------- */
 
@@ -1903,63 +1314,9 @@
 
 /* ---------- G5 : mécanismes juxtaposés présentés en cartes ---------- */
 
-.htp-steplist.is-cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 8px;
-    margin-bottom: 12px;
-}
-
-.htp-steplist.is-cards li {
-    padding: 0;
-}
-
-.htp-steplist.is-cards li::before,
-.htp-steplist.is-cards li::after {
-    display: none;
-}
-
-.htp-steplist.is-cards .htp-step-btn {
-    height: 100%;
-    padding: 10px 12px;
-    border: 1px solid var(--line-strong);
-    background: var(--surface);
-}
-
-.htp-steplist.is-cards li.is-current .htp-step-btn {
-    border-color: var(--htp-alerte);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--htp-alerte) 30%, transparent);
-}
-
 /* Vue 3D active */
-.htp3d-controls .htp-chip[aria-pressed="true"] {
-    border-color: var(--accent);
-    color: var(--accent);
-    font-weight: 700;
-}
 
 /* ---------- Schéma agrandissable (mobile) ---------- */
-
-.htp-zoom2d {
-    display: none;
-}
-
-@media (max-width: 640px) {
-    .htp-zoom2d {
-        display: inline-flex;
-        min-height: 32px;
-        margin: 4px auto 0;
-        font-size: 0.78rem;
-    }
-
-    #htp-2d.is-zoomed {
-        overflow-x: auto;
-    }
-
-    #htp-2d.is-zoomed #htp-svg {
-        min-width: 620px;
-    }
-}
 
 /* ---------- Boucle pression-volume ---------- */
 
@@ -2015,18 +1372,351 @@
 
 /* ---------- Ordre visuel sur mobile (le DOM met les étapes avant la 3D pour la tabulation) ---------- */
 
-@media (max-width: 1099px) {
-    #htp-sim {
-        display: flex;
-        flex-direction: column;
+
+/* ---------- Mise en page : une colonne, schéma puis étape, le reste replié ---------- */
+
+#tab-htp {
+    max-width: 920px;
+    margin-inline: auto;
+}
+
+#tab-htp.active {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+#tab-htp > .card {
+    margin: 0;
+}
+
+.htp-head {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 8px;
+}
+
+.htp-head .htp-kicker,
+.htp-head .htp-title {
+    margin: 0;
+}
+
+.htp-head .htp-title {
+    font-size: clamp(1.4rem, 4.5vw, 2rem);
+    line-height: 1.2;
+    text-wrap: balance;
+}
+
+.htp-head .htp-lead {
+    max-width: 65ch;
+}
+
+.htp-head .htp-eq {
+    display: inline;
+    margin: 0;
+    padding: 1px 6px;
+    font-size: 1em;
+    white-space: nowrap;
+}
+
+#tab-htp > .htp-groups {
+    margin: 0;
+}
+
+#htp-2d {
+    position: relative;
+}
+
+.htp-fig-tools {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 1;
+    display: flex;
+    gap: 6px;
+}
+
+.htp-zoom2d {
+    display: none;
+}
+
+.htp-gbtn {
+    min-height: 44px;
+}
+
+.htp-sim {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.htp-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.htp-now {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.htp-now .htp-badge {
+    margin: 0;
+}
+
+.htp-now-mpap b {
+    font-size: 1.05em;
+}
+
+.htp-step-meta {
+    margin: 4px 0 0;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--ink-3);
+}
+
+.htp-step-group {
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--ink-2);
+}
+
+.htp-step-text {
+    margin: 0;
+    min-height: 2.9em;
+    font-size: clamp(1.05rem, 3.4vw, 1.25rem);
+    font-weight: 500;
+    line-height: 1.45;
+    color: var(--ink);
+}
+
+.htp-step-terms {
+    margin: 0;
+}
+
+.htp-step-nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.htp-dots {
+    display: flex;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.htp-dots .htp-step-btn {
+    position: relative;
+    width: 36px;
+    height: 32px;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: none;
+    cursor: pointer;
+}
+
+.htp-dots .htp-step-btn::before {
+    content: "";
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    top: 50%;
+    height: 6px;
+    margin-top: -3px;
+    border-radius: 3px;
+    background: var(--line-strong);
+    transition: background var(--t-fast), height var(--t-fast), margin var(--t-fast);
+}
+
+.htp-dots li.is-done .htp-step-btn::before,
+.htp-dots li.is-current .htp-step-btn::before {
+    background: var(--accent);
+}
+
+.htp-dots li.is-current .htp-step-btn::before {
+    height: 10px;
+    margin-top: -5px;
+}
+
+.htp-dots .htp-step-btn:hover::before {
+    background: var(--accent-strong);
+}
+
+.htp-dots .htp-step-btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+}
+
+.htp-step-btns {
+    display: flex;
+    gap: 8px;
+}
+
+.htp-step-btns button {
+    min-height: 44px;
+}
+
+.htp-step-btns button:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+#tab-htp > .htp-key {
+    margin: 0;
+    padding: 12px 16px;
+    font-size: 0.95rem;
+}
+
+.htp-play {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.htp-play-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 12px;
+}
+
+.htp-play-head .htp-h3 {
+    margin: 0;
+}
+
+.htp-play-sub {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--ink-3);
+}
+
+.htp-play-head .htp-back-quiz {
+    margin: 0 0 0 auto;
+}
+
+.htp-play .htp-grid {
+    margin-top: 0;
+}
+
+.htp-presets {
+    align-items: center;
+}
+
+.htp-presets-lbl {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--ink-2);
+}
+
+.htp-play .htp-hint {
+    margin: 0;
+}
+
+.htp-acc {
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid var(--line);
+}
+
+.htp-acc > .htp-more {
+    border-bottom: 1px solid var(--line);
+}
+
+#tab-htp .htp-more > summary {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 48px;
+    padding: 8px 4px;
+    font-size: 0.95rem;
+    color: var(--ink);
+    list-style: none;
+}
+
+#tab-htp .htp-more > summary::-webkit-details-marker {
+    display: none;
+}
+
+#tab-htp .htp-more > summary::after {
+    content: "+";
+    margin-left: auto;
+    font-size: 1.2rem;
+    line-height: 1;
+    color: var(--ink-3);
+}
+
+#tab-htp .htp-more[open] > summary::after {
+    content: "−";
+}
+
+#tab-htp .htp-more > summary .htp-quiz-score {
+    margin-left: auto;
+    font-weight: 500;
+    color: var(--ink-3);
+}
+
+#tab-htp .htp-more > summary .htp-quiz-score + * {
+    margin-left: 0;
+}
+
+.htp-acc > .htp-more[open] {
+    padding-bottom: 16px;
+}
+
+.htp-play .htp-adv {
+    border-top: 1px solid var(--line);
+}
+
+#tab-htp > .htp-beta-note {
+    margin: 0;
+}
+
+/* Grand écran : l'en-tête DETECT est masqué pour laisser la place à l'onglet */
+@media (min-width: 1100px) {
+    body.is-htp .masthead {
+        display: none;
+    }
+}
+
+@media (max-width: 640px) {
+    .htp-fig-tools {
+        position: static;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        margin-bottom: 6px;
     }
 
-    #htp-sim > * { order: 1; }
-    #htp-sim > .htp-groups { order: 2; }
-    #htp-sim > .htp-toolbar,
-    #htp-sim > #htp-patient { order: 3; }
-    #htp-sim > #htp-3d,
-    #htp-sim > #htp-2d { order: 4; }
-    #htp-sim > #htp-steps { order: 5; }
-    #htp-sim > #htp-adv { order: 6; }
+    .htp-zoom2d {
+        display: inline-flex;
+        align-items: center;
+        min-height: 36px;
+        padding: 0 12px;
+        font-size: 0.82rem;
+    }
+
+    #htp-2d.is-zoomed {
+        overflow-x: auto;
+    }
+
+    #htp-2d.is-zoomed #htp-svg {
+        min-width: 620px;
+    }
+
+    .htp-step-btns {
+        width: 100%;
+    }
+
+    .htp-step-btns [data-step="next"] {
+        flex: 1;
+    }
 }

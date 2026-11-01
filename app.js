@@ -1,6 +1,6 @@
 
 // Onglet « Comprendre l'HTP » chargé à la demande (versions à incrémenter ici)
-const HTP_ASSETS = { css: 'htp.css?v=13', js: 'htp.js?v=20' };
+const HTP_ASSETS = { css: 'htp.css?v=14', js: 'htp.js?v=21' };
 let htpLoading = null;
 function loadHtp() {
     if (htpLoading) return htpLoading;

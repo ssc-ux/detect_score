@@ -2,7 +2,7 @@
 let pw; try { pw = require('playwright'); } catch (e) { pw = require(require('child_process').execSync('npm root -g').toString().trim() + '/playwright'); }
 const { chromium } = pw;
 const EXP={normal:[16,"Pas d'HTP"],g1:[42,'HTP précapillaire'],g2i:[30,'HTP post-capillaire isolée'],g2c:[42,'HTP post-capillaire combinée'],g3:[27,'HTP précapillaire'],g4:[44,'HTP précapillaire'],g5:[34,'HTP précapillaire'],hd:[24,'HTP non classée']};
-(async()=>{ const b=await chromium.launch({args:['--use-gl=swiftshader','--enable-unsafe-swiftshader']}); const fails=[]; const ok=(c,m)=>{ if(!c) fails.push(m); };
+(async()=>{ const b=await chromium.launch(); const fails=[]; const ok=(c,m)=>{ if(!c) fails.push(m); };
  for (const [n,vp,scheme] of [['desktop1366',{width:1366,height:768},'light'],['mobile320',{width:320,height:700},'dark']]) {
   const p=await b.newPage({viewport:vp,colorScheme:scheme}); const errs=[];
   p.on('pageerror',e=>errs.push(e.message)); p.on('console',m=>{ if(m.type()==='error') errs.push(m.text()); });
@@ -32,6 +32,7 @@ const EXP={normal:[16,"Pas d'HTP"],g1:[42,'HTP précapillaire'],g2i:[30,'HTP pos
   await p.click('[data-step="next"]'); await p.waitForTimeout(200);
   ok(await p.locator('.htp-gbtn.is-on[data-group="normal"]').count()===1, `${n} bouclage après G5`);
   // Quiz complet
+  await p.evaluate(()=>{document.getElementById('htp-quiz').open=true;});
   let expected=0;
   const NQ=+(await p.textContent('.htp-quiz-n')).split('/')[1]; for (let i=0;i<NQ;i++){ await p.click('#htp-quiz-body .htp-opt[data-opt="0"]'); if (await p.locator('#htp-quiz-body .htp-opt[data-opt="0"].is-right').count()) expected++;
    ok(await p.locator('#htp-quiz-body .htp-opt.is-right').count()===1, `${n} quiz q${i+1} correction`); await p.click('[data-quiz="next"]'); }
@@ -43,19 +44,13 @@ const EXP={normal:[16,"Pas d'HTP"],g1:[42,'HTP précapillaire'],g2i:[30,'HTP pos
   await p.evaluate(()=>{const t=document.getElementById('tr_vel');t.value='3.2';t.dispatchEvent(new Event('input'));document.getElementById('ra_area').value='20';document.getElementById('btn-htp-link').click();});
   await p.waitForTimeout(1500); ok(await p.locator('#tab-htp.active').count()===1 && await p.locator('#htp-patient').isVisible(), `${n} lien patient`);
   ok((await p.textContent('#htp-patient')).includes('PAPm ≈ '+(await p.textContent('#htp-mpap'))), `${n} cohérence PAPm bandeau/simulateur`);
-  // 3D
-  if (await p.locator('.htp-view-seg').isVisible()) await p.click('.htp-view-seg label:nth-child(2)'); await p.waitForTimeout(2500);
-  ok(await p.locator('.htp3d-canvas canvas').count()===1, `${n} 3D chargée`);
-  for (const v of ['gauche','dos','oblique','face']) { await p.click(`[data-view="${v}"]`); await p.waitForTimeout(300); }
-  await p.evaluate(()=>{document.querySelector('.htp3d-more').open=true;});
-  for (const l of ['heart','lungs','vessels','flow','labels']) { await p.click(`label:has([data-layer="${l}"])`); await p.click(`label:has([data-layer="${l}"])`); }
-  await p.click('[data-cut="sax"]'); await p.waitForTimeout(900); await p.click('[data-cut="a4c"]'); await p.waitForTimeout(900); ok((await p.textContent('.htp3d-cutinfo')).includes('VD/VG'), n+' info 4 cavités'); await p.click('[data-preset="g4"]'); await p.waitForTimeout(1300);
-  await p.locator('.htp3d-stage').screenshot({path:`${(process.argv[2] || require('os').tmpdir())}/e2e-${n}-cut.png`});
-  await p.click('[data-cut="none"]'); await p.waitForTimeout(300);
-  // Thème : bascule pendant la 3D
+  // Schéma agrandi (mobile) et pause des animations
+  if (await p.locator('.htp-zoom2d').isVisible()) { await p.click('.htp-zoom2d'); ok(await p.locator('#htp-2d.is-zoomed').count()===1, n+' schéma agrandi'); await p.click('.htp-zoom2d'); }
+  await p.click('#htp-anim'); ok(await p.locator('body.htp-still').count()===1, n+' pause animations'); await p.click('#htp-anim');
+  // Thème : bascule
   await p.evaluate(()=>{document.documentElement.dataset.theme = document.documentElement.dataset.theme==='dark'?'light':'dark';}); await p.waitForTimeout(300);
-  await p.locator('.htp3d-stage').screenshot({path:`${(process.argv[2] || require('os').tmpdir())}/e2e-${n}-3d.png`});
-  await hscroll('3D');
+  await p.locator('#htp-sim').screenshot({path:`${(process.argv[2] || require('os').tmpdir())}/e2e-${n}-2d.png`});
+  await hscroll('fin');
   ok(errs.length===0, `${n} erreurs console: ${errs.join(' | ')}`);
   await p.close(); }
  console.log(fails.length? 'ÉCHECS:\n'+fails.join('\n') : 'TOUT OK'); if (fails.length) process.exitCode = 1; await b.close(); })();

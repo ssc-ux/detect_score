@@ -298,142 +298,30 @@
             </div>
 
             <div id="tab-htp" class="tab-content">
-                <section class="card htp-intro">
-                    <p class="htp-kicker">Laboratoire d'hémodynamique <span class="beta-tag">bêta</span></p>
-                    <h2 class="htp-title">Comprendre l'hypertension pulmonaire</h2>
-                    <p class="htp-lead">Choisissez un groupe et suivez son mécanisme étape par étape : le cœur, les pressions
-                        et le schéma évoluent à chaque étape. Tout repose sur une seule équation :</p>
-                    <p class="htp-eq">PAPm = PAPO + RVP × DC</p>
-                    <p class="htp-lead-small">La pression dans l'artère pulmonaire (PAPm) monte si la pression gauche
-                        remonte (PAPO), si les artérioles résistent (RVP) ou si le débit augmente (DC).</p>
-                    <details class="htp-more htp-lexique-box">
-                        <summary>Lexique des sigles</summary>
-                        <dl id="htp-lexique" class="htp-facts"></dl>
-                    </details>
-                    <p class="htp-beta-note">Version bêta, à visée pédagogique : contenu en cours de relecture,
-                        ne pas utiliser pour une décision clinique.</p>
-                </section>
+                <header class="htp-head">
+                    <p class="htp-kicker">Comprendre l'HTP <span class="beta-tag">bêta</span></p>
+                    <h2 class="htp-title">Pourquoi la pression monte dans l'artère pulmonaire</h2>
+                    <p class="htp-lead">Tout tient en une équation : <span class="htp-eq">PAPm = PAPO + RVP × DC</span>.
+                        La PAPm monte si la pression gauche remonte (PAPO), si les artérioles résistent (RVP) ou si le
+                        débit augmente (DC). Choisissez un groupe, puis avancez étape par étape.</p>
+                </header>
 
-                <section class="card" id="htp-sim">
-                    <div class="card-header">
-                        <div class="step-heading">
-                            <span class="step-index">A</span>
-                            <h2>Explorer le mécanisme</h2>
-                        </div>
-                    </div>
+                <div class="htp-groups" role="group" aria-label="Choisir un groupe">
+                    <button type="button" class="htp-gbtn" aria-pressed="false" data-group="normal">Normal</button>
+                    <button type="button" class="htp-gbtn" aria-pressed="false" data-group="1">G1 · HTAP</button>
+                    <button type="button" class="htp-gbtn" aria-pressed="false" data-group="2">G2 · Cœur gauche</button>
+                    <button type="button" class="htp-gbtn" aria-pressed="false" data-group="3">G3 · Poumon</button>
+                    <button type="button" class="htp-gbtn" aria-pressed="false" data-group="4">G4 · HTP-TEC</button>
+                    <button type="button" class="htp-gbtn" aria-pressed="false" data-group="5">G5 · Multifactorielle</button>
+                </div>
 
-                    <div class="htp-groups" role="group" aria-label="Choisir un groupe">
-                        <button type="button" class="htp-gbtn" aria-pressed="false" data-group="normal">Normal</button>
-                        <button type="button" class="htp-gbtn" aria-pressed="false" data-group="1">G1 · HTAP</button>
-                        <button type="button" class="htp-gbtn" aria-pressed="false" data-group="2">G2 · Cœur gauche</button>
-                        <button type="button" class="htp-gbtn" aria-pressed="false" data-group="3">G3 · Poumon / hypoxie</button>
-                        <button type="button" class="htp-gbtn" aria-pressed="false" data-group="4">G4 · HTP-TEC</button>
-                        <button type="button" class="htp-gbtn" aria-pressed="false" data-group="5">G5 · Multifactorielle</button>
-                    </div>
-
-                    <div class="htp-toolbar">
-                        <div class="seg htp-view-seg" role="group" aria-label="Type de vue">
-                            <label><input type="radio" name="htp-view" value="2d" checked><span>Schéma 2D</span></label>
-                            <label><input type="radio" name="htp-view" value="3d"><span>Vue 3D</span></label>
-                        </div>
-                        <button type="button" id="htp-anim" class="btn-secondary htp-anim" aria-pressed="false"><span aria-hidden="true">⏸</span> Animations</button>
-                    </div>
-
+                <section class="card htp-sim" id="htp-sim" aria-labelledby="htp-g-title">
                     <div id="htp-patient" class="htp-patient" hidden></div>
-
-                    <aside id="htp-steps" class="htp-steps" aria-labelledby="htp-g-title">
-                        <p class="htp-steps-kicker">Ce qui se passe</p>
-                        <h3 id="htp-g-title" class="htp-h3"></h3>
-                        <p id="htp-g-site" class="htp-site"></p>
-                        <p id="htp-step-status" class="sr-only" role="status"></p>
-                        <div class="htp-now">
-                            <span id="htp-step-count" class="htp-step-count"></span>
-                            <span>PAPm <b id="htp-mpap-mini">--</b> mmHg</span>
-                            <span id="htp-profile-mini" class="htp-badge">--</span>
-                        </div>
-                        <ol id="htp-step-list" class="htp-chain htp-steplist"></ol>
-                        <p id="htp-step-terms" class="htp-step-terms" hidden></p>
-                        <p id="htp-g-key" class="htp-key"></p>
-                        <div id="htp-predict" class="htp-predict" hidden></div>
-                        <div class="htp-step-nav">
-                            <button type="button" class="btn-secondary" data-step="prev" aria-label="Étape précédente"><span aria-hidden="true">◀</span></button>
-                            <button type="button" class="btn-secondary" data-step="play" id="htp-step-play" aria-pressed="false"><span aria-hidden="true">▶</span> Lecture</button>
-                            <button type="button" class="btn-primary" data-step="next">Étape suivante <span aria-hidden="true">▶</span></button>
-                        </div>
-                        <details class="htp-more htp-compare">
-                            <summary>Comparer les groupes</summary>
-                            <div class="htp-table-wrap">
-                                <table class="htp-table">
-                                    <thead><tr><th scope="col">Situation</th><th scope="col">PAPO</th><th scope="col">RVP</th><th scope="col">Ce qui fait monter la PAPm</th><th scope="col">Examen clé</th></tr></thead>
-                                    <tbody>
-                                        <tr><th scope="row">Normal</th><td>≤ 15</td><td>≈ 1 UW</td><td>—</td><td>—</td></tr>
-                                        <tr><th scope="row">G1 · HTAP</th><td>≤ 15</td><td>&gt; 2 UW</td><td>RVP (artérioles remodelées)</td><td>Cathétérisme droit, après exclusion des G2-3-4 ; DETECT dans la ScS</td></tr>
-                                        <tr><th scope="row">G2 · Cœur gauche</th><td>&gt; 15</td><td>≤ 2 (isolée) / &gt; 2 (combinée)</td><td>PAPO (rétro-transmission)</td><td>Échocardiographie</td></tr>
-                                        <tr><th scope="row">G3 · Poumon</th><td>≤ 15</td><td>&gt; 2 UW (&gt; 5 : sévère)</td><td>RVP (hypoxie, perte de vaisseaux)</td><td>EFR, gazométrie, scanner</td></tr>
-                                        <tr><th scope="row">G4 · HTP-TEC</th><td>≤ 15</td><td>&gt; 2 UW</td><td>RVP (obstruction)</td><td>Scintigraphie V/Q</td></tr>
-                                        <tr><th scope="row">G5</th><td>variable</td><td>variable</td><td>plusieurs termes à la fois</td><td>selon la maladie</td></tr>
-                                        <tr><th scope="row">Hyperdébit</th><td>≤ 15</td><td>≤ 2 UW</td><td>DC (HTP non classée)</td><td>—</td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </details>
-                        <details class="htp-more">
-                            <summary>Causes, examen clé, traitement</summary>
-                            <dl id="htp-g-facts" class="htp-facts"></dl>
-                        </details>
-                    </aside>
-
-                    <div id="htp-3d" class="htp3d" hidden>
-                        <div class="htp3d-stage">
-                            <div class="htp3d-canvas"></div>
-                            <div class="htp3d-labels" aria-hidden="true"></div>
-                            <div class="htp3d-hud" aria-live="off">
-                                <span class="htp3d-live" aria-hidden="true">SIMULATION</span>
-                                <span id="htp3d-hud-txt"></span>
-                            </div>
-                            <p class="htp3d-msg" hidden></p>
-                        </div>
-                        <div class="htp3d-controls">
-                            <div class="htp3d-row" role="group" aria-label="Vues">
-                                <span class="htp3d-cap">Vue</span>
-                                <button type="button" class="htp-chip" data-view="face" aria-pressed="true">Face</button>
-                                <button type="button" class="htp-chip" data-view="gauche" aria-pressed="false">Profil G</button>
-                                <button type="button" class="htp-chip" data-view="dos" aria-pressed="false">Dos</button>
-                                <button type="button" class="htp-chip" data-view="oblique" aria-pressed="false">Oblique</button>
-                                <button type="button" class="htp-chip htp-zoom" data-zoom="0.8" aria-label="Zoomer">+</button>
-                                <button type="button" class="htp-chip htp-zoom" data-zoom="1.25" aria-label="Dézoomer">−</button>
-                            </div>
-                            <div class="htp3d-row">
-                                <span class="htp3d-cap">Coupe écho</span>
-                                <span class="htp3d-cuts" role="group" aria-label="Coupes échographiques">
-                                    <button type="button" class="htp-chip is-on" data-cut="none" aria-pressed="true">Aucune</button>
-                                    <button type="button" class="htp-chip" data-cut="sax" aria-pressed="false">Petit axe</button>
-                                    <button type="button" class="htp-chip" data-cut="a4c" aria-pressed="false">4 cavités</button>
-                                </span>
-                                <input type="range" id="htp3d-cut-level" min="-0.7" max="0.6" step="0.05" value="0"
-                                    aria-label="Position du plan de coupe" disabled>
-                            </div>
-                            <details class="htp3d-more">
-                                <summary>Réglages 3D</summary>
-                            <div class="htp3d-row" role="group" aria-label="Calques">
-                                <span class="htp3d-cap">Calques</span>
-                                <label class="htp3d-check"><input type="checkbox" data-layer="heart" checked> Cœur</label>
-                                <label class="htp3d-check"><input type="checkbox" data-layer="lungs" checked> Poumons</label>
-                                <label class="htp3d-check"><input type="checkbox" data-layer="vessels" checked> Vaisseaux</label>
-                                <label class="htp3d-check"><input type="checkbox" data-layer="flow" checked> Flux</label>
-                                <label class="htp3d-check"><input type="checkbox" data-layer="labels" checked> Étiquettes</label>
-                            </div>
-                            <div class="htp3d-row">
-                                <label class="htp3d-cap" for="htp3d-opacity">Opacité du cœur</label>
-                                <input type="range" id="htp3d-opacity" min="0.15" max="1" step="0.05" value="1">
-                            </div>
-                            </details>
-                            <p class="htp3d-help">Glisser pour tourner · molette ou pincement pour zoomer ·
-                                modèle anatomique : <a href="https://humanatlas.io/3d-reference-library" target="_blank" rel="noopener">Human Reference Atlas</a> (HuBMAP), CC BY 4.0</p>
-                        </div>
-                    </div>
-
                     <figure class="htp-stage" id="htp-2d">
+                        <div class="htp-fig-tools">
+                            <button type="button" class="htp-zoom2d btn-secondary" aria-pressed="false"><span aria-hidden="true">⤢</span> Agrandir le schéma</button>
+                            <button type="button" id="htp-anim" class="btn-secondary htp-anim" aria-pressed="false"><span aria-hidden="true">⏸</span> Animations</button>
+                        </div>
                         <svg id="htp-svg" viewBox="0 0 640 282" role="img" aria-labelledby="htp-svg-title" aria-describedby="htp-step-status">
                             <title id="htp-svg-title">Schéma de la circulation pulmonaire : cœur droit, artère
                                 pulmonaire, poumon, cœur gauche</title>
@@ -544,42 +432,53 @@
                                 <text class="htp-ov-txt" x="196" y="174" text-anchor="middle">débit ↑↑</text>
                             </g>
                         </svg>
-                        <button type="button" class="htp-zoom2d btn-secondary" aria-pressed="false"><span aria-hidden="true">⤢</span> Agrandir le schéma</button>
                         <figcaption class="htp-legend">
                             <span><i class="htp-dot htp-dot-v"></i>sang désoxygéné</span>
                             <span><i class="htp-dot htp-dot-a"></i>sang oxygéné</span>
                             <span><i class="htp-dot htp-dot-j"></i>jet d'insuffisance tricuspide</span>
                         </figcaption>
                     </figure>
-
-
-                    <details id="htp-adv" class="htp-adv">
-                        <summary>Mode avancé : curseurs, échographie, autres cas</summary>
-                        <button type="button" id="htp-back-quiz" class="btn-secondary htp-back-quiz" hidden><span aria-hidden="true">↩</span> Retour au quiz</button>
-                    <div class="htp-presets" role="group" aria-label="Cas cliniques">
-                        <button type="button" class="htp-chip" data-preset="normal">Normal</button>
-                        <button type="button" class="htp-chip" data-preset="g1">G1 · HTAP (ScS)</button>
-                        <button type="button" class="htp-chip" data-preset="g2i">G2 · post-cap. isolée</button>
-                        <button type="button" class="htp-chip" data-preset="g2c">G2 · post-cap. combinée</button>
-                        <button type="button" class="htp-chip" data-preset="g3">G3 · poumon / hypoxie</button>
-                        <button type="button" class="htp-chip" data-preset="g4">G4 · HTP-TEC</button>
-                        <button type="button" class="htp-chip" data-preset="g5">G5 · multifactorielle</button>
-                        <button type="button" class="htp-chip" data-preset="hd">Hyperdébit</button>
+                    <div id="htp-steps" class="htp-steps">
+                        <div class="htp-now">
+                            <span class="htp-badge htp-now-mpap">PAPm <b id="htp-mpap-mini">--</b> mmHg</span>
+                            <span id="htp-profile-mini" class="htp-badge">--</span>
+                        </div>
+                        <p class="htp-step-meta"><span id="htp-step-count"></span> · <span id="htp-g-site"></span></p>
+                        <h3 id="htp-g-title" class="htp-step-group"></h3>
+                        <p id="htp-step-text" class="htp-step-text"></p>
+                        <p id="htp-step-terms" class="htp-step-terms" hidden></p>
+                        <p id="htp-step-status" class="sr-only" role="status"></p>
+                        <div id="htp-predict" class="htp-predict" hidden></div>
+                        <div class="htp-step-nav">
+                            <ol id="htp-step-list" class="htp-dots" aria-label="Étapes"></ol>
+                            <div class="htp-step-btns">
+                                <button type="button" class="btn-secondary" data-step="prev" aria-label="Étape précédente"><span aria-hidden="true">◀</span></button>
+                                <button type="button" class="btn-secondary" data-step="play" id="htp-step-play" aria-pressed="false"><span aria-hidden="true">▶</span> Lecture</button>
+                                <button type="button" class="btn-primary" data-step="next">Étape suivante <span aria-hidden="true">▶</span></button>
+                            </div>
+                        </div>
                     </div>
+                </section>
 
-                    <p id="htp-hint" class="htp-hint" hidden></p>
+                <p id="htp-g-key" class="htp-key"></p>
 
+                <section class="card htp-play" id="htp-play" aria-labelledby="htp-play-title">
+                    <div class="htp-play-head">
+                        <h3 id="htp-play-title" class="htp-h3">Jouer avec les valeurs</h3>
+                        <p class="htp-play-sub">Le schéma suit les curseurs.</p>
+                        <button type="button" id="htp-back-quiz" class="btn-secondary htp-back-quiz" hidden><span aria-hidden="true">↩</span> Retour au quiz</button>
+                    </div>
                     <div class="htp-grid">
                         <div class="htp-controls">
-                            <div class="htp-slider">
-                                <label for="htp-pvr">RVP <small>résistance artériolaire</small></label>
-                                <output aria-live="off" id="htp-pvr-out" for="htp-pvr">1,2 UW</output>
-                                <input type="range" id="htp-pvr" min="0.5" max="15" step="0.1" value="1.2">
-                            </div>
                             <div class="htp-slider">
                                 <label for="htp-pawp">PAPO <small>pression du cœur gauche</small></label>
                                 <output aria-live="off" id="htp-pawp-out" for="htp-pawp">9 mmHg</output>
                                 <input type="range" id="htp-pawp" min="4" max="35" step="1" value="9">
+                            </div>
+                            <div class="htp-slider">
+                                <label for="htp-pvr">RVP <small>résistance artériolaire</small></label>
+                                <output aria-live="off" id="htp-pvr-out" for="htp-pvr">1,2 UW</output>
+                                <input type="range" id="htp-pvr" min="0.5" max="15" step="0.1" value="1.2">
                             </div>
                             <div class="htp-slider">
                                 <label for="htp-co">DC <small>débit cardiaque</small></label>
@@ -588,7 +487,6 @@
                             </div>
                             <p id="htp-formula" class="htp-formula"></p>
                         </div>
-
                         <div class="htp-results">
                             <div class="htp-mpap">
                                 <span class="htp-mpap-label">PAPm</span>
@@ -602,7 +500,20 @@
                             </dl>
                         </div>
                     </div>
-
+                    <div class="htp-presets" role="group" aria-labelledby="htp-presets-lbl">
+                        <span id="htp-presets-lbl" class="htp-presets-lbl">Charger un cas :</span>
+                        <button type="button" class="htp-chip" data-preset="normal">Normal</button>
+                        <button type="button" class="htp-chip" data-preset="g1">G1 · HTAP (ScS)</button>
+                        <button type="button" class="htp-chip" data-preset="g2i">G2 · post-cap. isolée</button>
+                        <button type="button" class="htp-chip" data-preset="g2c">G2 · post-cap. combinée</button>
+                        <button type="button" class="htp-chip" data-preset="g3">G3 · poumon / hypoxie</button>
+                        <button type="button" class="htp-chip" data-preset="g4">G4 · HTP-TEC</button>
+                        <button type="button" class="htp-chip" data-preset="g5">G5 · multifactorielle</button>
+                        <button type="button" class="htp-chip" data-preset="hd">Hyperdébit</button>
+                    </div>
+                    <p id="htp-hint" class="htp-hint" hidden></p>
+                    <details id="htp-adv" class="htp-more htp-adv">
+                        <summary>Échographie simulée et boucle pression-volume</summary>
                     <div class="htp-echo">
                         <div class="htp-echo-txt">
                             <h3 class="htp-h3">Ce que verrait l'échographie <small>(estimations)</small></h3>
@@ -644,63 +555,63 @@
                     </details>
                 </section>
 
-                <section class="card" id="htp-detect">
-                    <div class="card-header">
-                        <div class="step-heading">
-                            <span class="step-index">B</span>
-                            <h2>Du mécanisme au score DETECT</h2>
+                <div class="htp-acc">
+                    <details class="htp-more htp-compare">
+                        <summary>Comparer les 6 groupes</summary>
+                        <div class="htp-table-wrap">
+                                <table class="htp-table">
+                                    <thead><tr><th scope="col">Situation</th><th scope="col">PAPO</th><th scope="col">RVP</th><th scope="col">Ce qui fait monter la PAPm</th><th scope="col">Examen clé</th></tr></thead>
+                                    <tbody>
+                                        <tr><th scope="row">Normal</th><td>≤ 15</td><td>≈ 1 UW</td><td>—</td><td>—</td></tr>
+                                        <tr><th scope="row">G1 · HTAP</th><td>≤ 15</td><td>&gt; 2 UW</td><td>RVP (artérioles remodelées)</td><td>Cathétérisme droit, après exclusion des G2-3-4 ; DETECT dans la ScS</td></tr>
+                                        <tr><th scope="row">G2 · Cœur gauche</th><td>&gt; 15</td><td>≤ 2 (isolée) / &gt; 2 (combinée)</td><td>PAPO (rétro-transmission)</td><td>Échocardiographie</td></tr>
+                                        <tr><th scope="row">G3 · Poumon</th><td>≤ 15</td><td>&gt; 2 UW (&gt; 5 : sévère)</td><td>RVP (hypoxie, perte de vaisseaux)</td><td>EFR, gazométrie, scanner</td></tr>
+                                        <tr><th scope="row">G4 · HTP-TEC</th><td>≤ 15</td><td>&gt; 2 UW</td><td>RVP (obstruction)</td><td>Scintigraphie V/Q</td></tr>
+                                        <tr><th scope="row">G5</th><td>variable</td><td>variable</td><td>plusieurs termes à la fois</td><td>selon la maladie</td></tr>
+                                        <tr><th scope="row">Hyperdébit</th><td>≤ 15</td><td>≤ 2 UW</td><td>DC (HTP non classée)</td><td>—</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                    </details>
+                    <details class="htp-more htp-facts-box">
+                        <summary>Causes, examen clé, traitement</summary>
+                        <dl id="htp-g-facts" class="htp-facts"></dl>
+                    </details>
+                    <details class="htp-more" id="htp-detect">
+                        <summary>Du mécanisme au score DETECT</summary>
+                        <p class="htp-p">Chaque variable du score repère une étape de la cascade de l'HTAP de la
+                            sclérodermie.</p>
+                        <ul id="htp-detect-list" class="htp-detect-list"></ul>
+                    </details>
+                    <details class="htp-more" id="htp-quiz">
+                        <summary>Quiz : quel groupe, quel profil ? <span id="htp-quiz-score" class="htp-quiz-score"></span></summary>
+                        <div id="htp-quiz-body"></div>
+                    </details>
+                    <details class="htp-more">
+                        <summary>Lexique des sigles</summary>
+                        <dl id="htp-lexique" class="htp-facts"></dl>
+                    </details>
+                    <details class="htp-more">
+                        <summary>Références</summary>
+                        <div class="reference-box">
+                            <span class="reference-label">Définitions et classification</span>
+                            <p>Humbert M, Kovacs G, Hoeper MM, et&nbsp;al. <em>2022 ESC/ERS Guidelines for the diagnosis
+                                    and treatment of pulmonary hypertension.</em> Eur Heart J 2022;43:3618–3731.</p>
+                            <span class="reference-label htp-ref-gap">PAPs → PAPm</span>
+                            <p>Chemla D, Castelain V, Humbert M, et&nbsp;al. <em>New formula for predicting mean
+                                    pulmonary artery pressure using systolic pulmonary artery pressure.</em> Chest
+                                2004;126:1313–1317.</p>
+                            <span class="reference-label htp-ref-gap">Modèle et limites</span>
+                            <p>Le schéma est volontairement simplifié. Le bleu et le rouge sont une convention (sang
+                                désoxygéné / oxygéné). Les dilatations, les pressions et le flux sont simulés à visée
+                                pédagogique. La POD, la PAPs, la Vmax IT, la surface OD et le TAPSE sont des estimations
+                                illustratives, à ne pas utiliser en clinique.</p>
                         </div>
-                    </div>
-                    <p class="htp-p">Chaque variable du score repère une étape de la cascade de l'HTAP de la
-                        sclérodermie.</p>
-                    <ul id="htp-detect-list" class="htp-detect-list"></ul>
-                </section>
+                    </details>
+                </div>
 
-                <section class="card" id="htp-quiz">
-                    <div class="card-header">
-                        <div class="step-heading">
-                            <span class="step-index">C</span>
-                            <h2>Quiz : quel groupe, quel profil ?</h2>
-                        </div>
-                        <span id="htp-quiz-score" class="htp-quiz-score"></span>
-                    </div>
-                    <div id="htp-quiz-body"></div>
-                </section>
-
-                <section class="card">
-                    <div class="card-header">
-                        <div class="step-heading">
-                            <span class="step-index">§</span>
-                            <h2>Références</h2>
-                        </div>
-                    </div>
-                    <div class="reference-box">
-                        <span class="reference-label">Définitions et classification</span>
-                        <p>Humbert M, Kovacs G, Hoeper MM, et&nbsp;al. <em>2022 ESC/ERS Guidelines for the diagnosis
-                                and treatment of pulmonary hypertension.</em> Eur Heart J 2022;43:3618–3731.</p>
-                        <span class="reference-label htp-ref-gap">Modèle anatomique 3D</span>
-                        <p>Human Reference Atlas, HuBMAP Consortium. <em>3D Reference Object Library</em> :
-                            cœur, vascularisation cardiaque et poumons de l'homme de référence (v1.2), d'après le
-                            Visible Human Project (National Library of Medicine). Licence
-                            <a href="https://creativecommons.org/licenses/by/4.0/deed.fr" target="_blank" rel="noopener">CC BY 4.0</a>.
-                            Modifications : fusion des trois modèles, retrait des valves, piliers et cartilages,
-                            simplification et compression, couleurs conventionnelles, déformations simulées.</p>
-                        <span class="reference-label htp-ref-gap">Modèle et limites</span>
-                        <p>La 3D provient d'un seul sujet, reconstruit à partir de coupes post-mortem (Visible Human Project) :
-                            sa forme ne correspond à aucune phase précise du cycle cardiaque et n'a pas de pressions de
-                            remplissage. Le bleu et le rouge sont une convention (sang désoxygéné / oxygéné). L'arbre
-                            artériel pulmonaire est schématique : le remodelage de l'HTAP touche des artérioles invisibles à
-                            cette échelle. Les dilatations, le battement, les pressions et le flux sont simulés à visée
-                            pédagogique ; le rapport VD/VG et le TAPSE affichés sont calculés à partir des pressions, pas
-                            mesurés sur le modèle.</p>
-                        <span class="reference-label htp-ref-gap">PAPs → PAPm</span>
-                        <p>Chemla D, Castelain V, Humbert M, et&nbsp;al. <em>New formula for predicting mean
-                                pulmonary artery pressure using systolic pulmonary artery pressure.</em> Chest
-                            2004;126:1313–1317.</p>
-                    </div>
-                    <p class="nomogram-note">Modèle volontairement simplifié, à visée pédagogique. La POD, la PAPs, la
-                        Vmax IT et la surface OD sont des estimations illustratives, à ne pas utiliser en clinique.</p>
-                </section>
+                <p class="htp-beta-note">Version bêta, à visée pédagogique : contenu en cours de relecture,
+                    ne pas utiliser pour une décision clinique.</p>
             </div>
 
             <div id="tab-nomogram" class="tab-content">
@@ -771,7 +682,7 @@
     </div>
 
     <script src="logic.js?v=25"></script>
-    <script src="app.js?v=29"></script>
+    <script src="app.js?v=30"></script>
     <script src="fx.js?v=25" defer></script>
     <script>
         if ('serviceWorker' in navigator && location.protocol === 'https:') {
