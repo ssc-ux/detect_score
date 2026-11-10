@@ -151,6 +151,55 @@ try {
             });
         }
         attachEnterNavigation();
+        attachControles();
+    }
+    // Contrôle de plausibilité : avertit sans bloquer et sans modifier le calcul.
+    const URATE_BORNES = { mgdl: [2, 12], mgl: [20, 120], umol: [120, 720] };
+    function bornes(inp) {
+        if (inp.id === 'urate') return URATE_BORNES[els.step1.inputs.urate_unit.value];
+        return [parseFloat(inp.min), parseFloat(inp.max)];
+    }
+    function messageSaisie(inp) {
+        if (inp.value === '') return '';
+        const v = parseFloat(inp.value);
+        if (isNaN(v)) return '';
+        const [min, max] = bornes(inp);
+        if (v >= min && v <= max) return '';
+        const fr = (n) => String(n).replace('.', ',');
+        if ((inp.id === 'dlco' || inp.id === 'ntprobnp') && v <= 0) {
+            return 'Valeur non prise en compte : elle doit être supérieure à 0.';
+        }
+        return 'Valeur inhabituelle (attendu : ' + fr(min) + ' à ' + fr(max) + '). Vérifiez la saisie' +
+            (inp.id === 'urate' ? ' et l\'unité.' : '.');
+    }
+    function controlerSaisie(inp) {
+        const col = inp.closest('.input-col');
+        if (!col) return;
+        let note = col.querySelector('.input-warn[data-for="' + inp.id + '"]');
+        const msg = messageSaisie(inp);
+        if (!msg) {
+            if (note) note.remove();
+            inp.removeAttribute('aria-invalid');
+            return;
+        }
+        if (!note) {
+            note = document.createElement('p');
+            note.className = 'input-warn';
+            note.dataset.for = inp.id;
+            note.setAttribute('role', 'status');
+            col.appendChild(note);
+        }
+        note.textContent = msg;
+        inp.setAttribute('aria-invalid', 'true');
+    }
+    function attachControles() {
+        const liste = ['fvc', 'dlco', 'ntprobnp', 'urate', 'ra_area', 'tr_vel'].map((id) => document.getElementById(id)).filter(Boolean);
+        liste.forEach((inp) => inp.addEventListener('input', () => controlerSaisie(inp)));
+        els.step1.inputs.urate_unit.addEventListener('change', () => controlerSaisie(els.step1.inputs.urate));
+    }
+    function effacerControles() {
+        document.querySelectorAll('.input-warn').forEach((n) => n.remove());
+        document.querySelectorAll('input[aria-invalid]').forEach((i) => i.removeAttribute('aria-invalid'));
     }
     function attachEnterNavigation() {
         const chain = ['fvc', 'dlco', 'ntprobnp', 'urate', 'ra_area', 'tr_vel'];
@@ -185,6 +234,7 @@ try {
         if (els.step1.gaugeBar) els.step1.gaugeBar.style.left = '0%';
         if (els.step2.gaugeBar) els.step2.gaugeBar.style.left = '0%';
         step1Result = null;
+        effacerControles();
         if (els.step1CarriedScore) els.step1CarriedScore.textContent = '--';
         els.step1.card.scrollIntoView({ behavior: "smooth" });
     }
