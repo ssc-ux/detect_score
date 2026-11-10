@@ -1228,3 +1228,17 @@ footer select {
         font-size: 0.75rem;
     }
 }
+
+/* Avertissement de saisie inhabituelle (non bloquant) */
+.input-warn {
+    margin: 6px 0 0;
+    padding: 6px 8px;
+    border-radius: var(--radius-sm);
+    background: var(--bad-soft);
+    color: var(--bad);
+    font-size: 0.8rem;
+    line-height: 1.35;
+}
+input[aria-invalid='true'] {
+    border-color: var(--bad);
+}
