@@ -4,17 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Calculateur DETECT — Dépistage HTAP · Sclérodermie</title>
+    <meta name="description" content="Calculateur DETECT : dépistage de l'HTAP dans la sclérodermie systémique, fidèle au nomogramme princeps, en deux étapes. Calcul local, aucune donnée transmise.">
     <meta name="theme-color" content="#1f5fbf">
     <script>try{var t=localStorage.getItem("theme");if(t==="sombre")document.documentElement.dataset.theme="dark";else if(t==="auto")delete document.documentElement.dataset.theme}catch(e){}</script>
     <link rel="icon" href="icon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="style.css?v=23">
+    <link rel="stylesheet" href="style.css?v=24">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="apple-touch-icon" href="icon-180.png">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
-        rel="stylesheet">
 </head>
 <body>
     <div class="app-container">
@@ -187,6 +183,7 @@
                             Réinitialiser
                         </button>
                     </div>
+                    <p id="step1-error" class="form-error hidden" role="alert"></p>
                     <div id="result-step1" class="result-box hidden">
                         <div class="gauge-wrapper">
                             <div class="gauge-row">
@@ -667,7 +664,7 @@
                 Outil d'aide (version bêta) : ne remplace pas le jugement médical ; l'exactitude des résultats
                 n'est pas garantie et la responsabilité clinique incombe au médecin référent.
             </p>
-            <p class="footer-author">Créé par <strong>Quentin Astouati</strong></p>
+            <p class="footer-author">Créé par <strong>Quentin Astouati</strong> · <a href="https://ssc-ux.github.io/MedInt-Tools/">Tous les outils MedInt Tools</a></p>
             <details>
                 <summary>Réglages</summary>
                 <label>Affichage
@@ -682,7 +679,7 @@
     </div>
 
     <script src="logic.js?v=25"></script>
-    <script src="app.js?v=30"></script>
+    <script src="app.js?v=31"></script>
     <script src="fx.js?v=25" defer></script>
     <script>
         if ('serviceWorker' in navigator && location.protocol === 'https:') {

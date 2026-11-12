@@ -172,6 +172,7 @@ try {
         });
     }
     function resetForm() {
+        hideStep1Error();
         document.querySelectorAll('input[type="number"]').forEach(i => i.value = '');
         document.querySelectorAll('.seg input[value="no"]').forEach(i => i.checked = true);
         document.querySelectorAll('.points-value').forEach(b => {
@@ -272,13 +273,32 @@ try {
             runStep2(true);
         }
     }
+    // Message sous le bouton : nomme les données manquantes (au lieu d'une alerte du navigateur)
+    const STEP1_LABELS = {
+        fvc_dlco: 'CVF et DLCO', telang: 'télangiectasies', aca: 'anticorps anti-centromère',
+        ntprobnp: 'NT-proBNP', urate: 'acide urique', rad: 'déviation axiale droite'
+    };
+    function hideStep1Error() {
+        const box = document.getElementById('step1-error');
+        if (box) box.classList.add('hidden');
+    }
+    function showStep1Error(inputs) {
+        const box = document.getElementById('step1-error');
+        if (!box) return;
+        const manquants = Object.keys(STEP1_LABELS).filter((k) => inputs[k] == null).map((k) => STEP1_LABELS[k]);
+        box.textContent = 'Calcul impossible : une seule donnée peut manquer ou être inconnue à l\'étape 1. '
+            + 'À compléter : ' + manquants.join(', ') + '.';
+        box.classList.remove('hidden');
+        box.scrollIntoView({ block: 'nearest' });
+    }
     function runStep1(auto) {
         const inputs = getStep1Inputs();
         const check = window.DETECT.calculateStep1Points(inputs);
         if (check.unable) {
-            if (!auto) alert("Calcul impossible : plus d'une donnée manquante ou inconnue à l'étape 1.");
+            if (!auto) showStep1Error(inputs);
             return;
         }
+        hideStep1Error();
         const result = window.DETECT.calculateStep1Points(inputs);
         step1Result = result;
         els.step1.resultBox.classList.remove('hidden');

@@ -1,3 +1,11 @@
+@font-face {
+    font-family: 'Plus Jakarta Sans';
+    font-style: normal;
+    font-weight: 200 800;
+    font-display: swap;
+    src: url('fonts/plus-jakarta-sans.woff2') format('woff2');
+}
+
 /* Style aligné sur CorticoPlan : fond clair, lignes fines, accent bleu. */
 :root {
     --bg: #f5f6fa;
@@ -1226,5 +1234,35 @@ footer select {
         min-width: 0;
         padding: 5px 8px;
         font-size: 0.75rem;
+    }
+}
+
+.form-error {
+    margin: 12px 0 0;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #e3b4b4;
+    background: #fdf1f1;
+    color: #8a1c1c;
+    font-size: 0.9rem;
+}
+:root[data-theme="dark"] .form-error {
+    border-color: #7a3a3a;
+    background: #3a2020;
+    color: #f3c4c4;
+}
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) .form-error {
+        border-color: #7a3a3a;
+        background: #3a2020;
+        color: #f3c4c4;
+    }
+}
+
+/* Les libellés de champ mobiles s'étirent (flex: 1) : pas ceux de « Non / Oui / Inconnu »,
+   sinon « Inconnu » déborde de sa case. */
+@media (max-width: 640px) {
+    .input-col .seg label {
+        flex: 0 0 auto;
     }
 }

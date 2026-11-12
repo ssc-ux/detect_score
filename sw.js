@@ -2,9 +2,10 @@
    L'onglet HTP n'est mis en cache qu'à sa première ouverture.
    Page HTML : réseau d'abord. Autres fichiers : cache d'abord, la clé étant l'URL complète
    (un nouveau ?v= force donc le réseau, sans mélange de versions après un déploiement). */
-const CACHE = 'detect-v11';
+const CACHE = 'detect-v12';
 const CORE = [
     './', 'index.html', 'style.css', 'logic.js', 'app.js', 'fx.js',
+    'fonts/plus-jakarta-sans.woff2',
     'icon.svg', 'icon-192.png', 'nomogramme.png', 'manifest.webmanifest'
 ];
 
